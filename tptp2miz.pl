@@ -2,11 +2,44 @@
 
 use warnings;
 use strict;
+
+require v5.10.0; # for the 'say' feature
+use feature 'say';
+
 use File::Copy qw(copy);
 use File::Basename qw(basename dirname);
 use Getopt::Long;
 use Pod::Usage;
 use Carp qw(croak carp);
+use IPC::Cmd qw(can_run);
+use Readonly;
+use charnames qw(:full);
+use Regexp::DefaultFlags;
+use Term::ANSIColor qw(colored);
+
+# Strings
+Readonly my $EMPTY_STRING => q{};
+Readonly my $SP => q{ };
+Readonly my $COLON => q{:};
+
+# Colors
+Readonly my $ERROR_COLOR => 'red';
+
+sub error_message {
+    my @message_parts = @_;
+    my $message = join ($EMPTY_STRING, @message_parts);
+    if ($message eq $EMPTY_STRING) {
+	say {*STDERR} colored ('Error', $ERROR_COLOR), $COLON, $SP, '(no error message is available)';
+    } else {
+	say {*STDERR} colored ('Error', $ERROR_COLOR), $COLON, $SP, $message;
+    }
+    return;
+}
+
+sub strip_extension {
+  my $path = shift;
+  return $path =~ / (.+) [.][^.]+ \z / ? $1 : $path;
+}
 
 my $help = 0;
 my $man = 0;
@@ -26,31 +59,22 @@ pod2usage(1) if (scalar @ARGV != 1);
 my @tptp_programs = ('tptp4X', 'GetSymbols');
 
 foreach my $program (@tptp_programs) {
-  my $which_status = system ("which $program > /dev/null 2>&1");
-  my $which_exit_code = $which_status >> 8;
-
-  if ($which_exit_code != 0) {
-    croak ('Error: the required program ', $program, ' does not appear to be available.');
-  }
-}
-
-sub strip_extension {
-  my $path = shift;
-  if ($path =~ / (.+) [.][^.]+ \z /x) {
-    return $1;
-  } else {
-    return $path;
-  }
+    if (! can_run ($program)) {
+	error_message ('The required program ', $program, ' does not appear to be available.');
+	exit 1;
+    }
 }
 
 my $tptp_file = $ARGV[0];
 
 if (! -e $tptp_file) {
-  croak ('Error: the supplied TPTP file,', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'does not exist.');
+    error_message ('The supplied TPTP file,', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'does not exist.');
+    exit 1;
 }
 
 if (! -r $tptp_file) {
-  croak ('Error: the supplied TPTP file,', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'is not readable.');
+    error_message ('The supplied TPTP file,', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'is not readable.');
+    exit 1;
 }
 
 my $tptp_basename = basename ($tptp_file);
