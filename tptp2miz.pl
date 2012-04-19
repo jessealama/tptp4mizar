@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-require v5.10.0; # for the 'say' feature
+require v5.10.0;		# for the 'say' feature
 use feature 'say';
 
 use File::Copy qw(copy);
@@ -37,8 +37,8 @@ Readonly my $ERROR_COLOR => 'red';
 Readonly my $WARNING_COLOR => 'yellow';
 
 sub ensure_readable_file {
-  my $file = shift;
-  return (-e $file && ! -d $file && -r $file);
+    my $file = shift;
+    return (-e $file && ! -d $file && -r $file);
 }
 
 sub message_with_colored_prefix {
@@ -65,8 +65,8 @@ sub warning_message {
 }
 
 sub strip_extension {
-  my $path = shift;
-  return $path =~ / (.+) [.][^.]+ \z / ? $1 : $path;
+    my $path = shift;
+    return $path =~ / (.+) [.][^.]+ \z / ? $1 : $path;
 }
 
 sub is_valid_tptp_file {
@@ -175,100 +175,100 @@ if (! is_valid_tptp_file ($tptp_file)) {
 }
 
 if ($verbose) {
-  print 'Sanity Check: The given TPTP file is valid according to TPTP4X.', "\n";
+    print 'Sanity Check: The given TPTP file is valid according to TPTP4X.', "\n";
 }
 
 # Load all symbols
 my $GetSymbols_result = `GetSymbols -all $tptp_file 2>/dev/null`;
 my $GetSymbols_exit_code = $? >> 8;
 if ($GetSymbols_exit_code != 0) {
-  croak ('Error: GetSymbols did not exit cleanly when extracting the symbols from ', $tptp_file, '.');
+    croak ('Error: GetSymbols did not exit cleanly when extracting the symbols from ', $tptp_file, '.');
 }
 chomp $GetSymbols_result;
 if ($GetSymbols_result =~ /\A symbols \( all, \[ (.*) \], \[ (.*) \] \) [.] \z/mx) {
-  (my $GetSymbols_functions, my $GetSymbols_predicates) = ($1, $2);
-  my @function_infos = split (/[,]/x, $GetSymbols_functions);
-  my @predicate_infos = split (/[,]/x, $GetSymbols_predicates);
+    (my $GetSymbols_functions, my $GetSymbols_predicates) = ($1, $2);
+    my @function_infos = split (/[,]/x, $GetSymbols_functions);
+    my @predicate_infos = split (/[,]/x, $GetSymbols_predicates);
 
-  # Confirm that no function occurs with two different arities
-  my %function_arity_table = ();
-  foreach my $function_info (@function_infos) {
-    if ($function_info =~ /\A (.+) \/ ([0-9]+) \/ [1-9][0-9]* \z/mx) {
-      (my $name, my $arity) = ($1, $2);
-      if (defined $function_arity_table{$name}) {
-	my $earlier_arity = $function_arity_table{$name};
-	if ($arity != $earlier_arity) {
-	  croak ('Error: the function named \'', $name, '\' occurs at least once with arity ', $earlier_arity, ' and once with arity ', $arity, '.');
+    # Confirm that no function occurs with two different arities
+    my %function_arity_table = ();
+    foreach my $function_info (@function_infos) {
+	if ($function_info =~ /\A (.+) \/ ([0-9]+) \/ [1-9][0-9]* \z/mx) {
+	    (my $name, my $arity) = ($1, $2);
+	    if (defined $function_arity_table{$name}) {
+		my $earlier_arity = $function_arity_table{$name};
+		if ($arity != $earlier_arity) {
+		    croak ('Error: the function named \'', $name, '\' occurs at least once with arity ', $earlier_arity, ' and once with arity ', $arity, '.');
+		}
+	    } else {
+		$function_arity_table{$name} = $arity;
+	    }
+	} else {
+	    croak ('Error: unable to make sense of the function symbol info string \'', $function_info, '\' coming from the GetSymbols utility.');
 	}
-      } else {
-	$function_arity_table{$name} = $arity;
-      }
-    } else {
-      croak ('Error: unable to make sense of the function symbol info string \'', $function_info, '\' coming from the GetSymbols utility.');
     }
-  }
 
-  if ($verbose) {
-    print 'Sanity Check: In the the given TPTP file, no function symbol occurs with different arities.', "\n";
-  }
+    if ($verbose) {
+	print 'Sanity Check: In the the given TPTP file, no function symbol occurs with different arities.', "\n";
+    }
 
-  # Confirm that no predicate occurs with two different arities
-  my %predicate_arity_table = ();
-  foreach my $predicate_info (@predicate_infos) {
-    if ($predicate_info =~ /\A (.+) \/ ([0-9]+) \/ [1-9][0-9]* \z/mx ) {
-      (my $name, my $arity) = ($1, $2);
-      if (defined $predicate_arity_table{$name}) {
-	my $earlier_arity = $predicate_arity_table{$name};
-	if ($arity != $earlier_arity) {
-	  croak ('Error: the predicate named \'', $name, '\' occurs at least once with arity ', $earlier_arity, ' and once with arity ', $arity, '.');
+    # Confirm that no predicate occurs with two different arities
+    my %predicate_arity_table = ();
+    foreach my $predicate_info (@predicate_infos) {
+	if ($predicate_info =~ /\A (.+) \/ ([0-9]+) \/ [1-9][0-9]* \z/mx ) {
+	    (my $name, my $arity) = ($1, $2);
+	    if (defined $predicate_arity_table{$name}) {
+		my $earlier_arity = $predicate_arity_table{$name};
+		if ($arity != $earlier_arity) {
+		    croak ('Error: the predicate named \'', $name, '\' occurs at least once with arity ', $earlier_arity, ' and once with arity ', $arity, '.');
+		}
+	    } else {
+		$predicate_arity_table{$name} = $arity;
+	    }
+	} else {
+	    croak ('Error: unable to make sense of the predicate symbol info string \'', $predicate_info, '\' coming from the GetSymbols utility.');
 	}
-      } else {
-	$predicate_arity_table{$name} = $arity;
-      }
-    } else {
-      croak ('Error: unable to make sense of the predicate symbol info string \'', $predicate_info, '\' coming from the GetSymbols utility.');
     }
-  }
 
-  if ($verbose) {
-    print 'Sanity Check: In the the given TPTP file, no predicate symbol occurs with different arities.', "\n";
-  }
-
-  # Confirm that no function occurs also as a predicate
-  foreach my $symbol (keys %function_arity_table) {
-    if (defined $predicate_arity_table{$symbol}) {
-      croak ('Error: the symbol \'', $symbol, '\' occurs both as a function and as a predicate in the given TPTP theory.');
+    if ($verbose) {
+	print 'Sanity Check: In the the given TPTP file, no predicate symbol occurs with different arities.', "\n";
     }
-  }
 
-  foreach my $symbol (keys %predicate_arity_table) {
-    if (defined $function_arity_table{$symbol}) {
-      croak ('Error: the symbol \'', $symbol, '\' occurs both as a function and as a predicate in the given TPTP theory.');
+    # Confirm that no function occurs also as a predicate
+    foreach my $symbol (keys %function_arity_table) {
+	if (defined $predicate_arity_table{$symbol}) {
+	    croak ('Error: the symbol \'', $symbol, '\' occurs both as a function and as a predicate in the given TPTP theory.');
+	}
     }
-  }
 
-  if ($verbose) {
-    print 'Sanity Check: In the given TPTP file, no symbol occurs both as a function and as a predicate.', "\n";
-  }
+    foreach my $symbol (keys %predicate_arity_table) {
+	if (defined $function_arity_table{$symbol}) {
+	    croak ('Error: the symbol \'', $symbol, '\' occurs both as a function and as a predicate in the given TPTP theory.');
+	}
+    }
+
+    if ($verbose) {
+	print 'Sanity Check: In the given TPTP file, no symbol occurs both as a function and as a predicate.', "\n";
+    }
 
 } else {
-  croak ('Error: Unable to make sense of the GetSymbols output', "\n", "\n", '  ', $GetSymbols_result);
+    croak ('Error: Unable to make sense of the GetSymbols output', "\n", "\n", '  ', $GetSymbols_result);
 }
 
 if (defined $db) {
-  if (-e $db) {
-    croak ('Error: the specified directory', "\n", "\n", '  ', $db, "\n", "\n", 'in which we are to save our work already exists.', "\n", 'Please use a different name');
-  } else {
-    mkdir $db
-      or croak ('Error: unable to make a directory at ', $db, '.');
-  }
+    if (-e $db) {
+	croak ('Error: the specified directory', "\n", "\n", '  ', $db, "\n", "\n", 'in which we are to save our work already exists.', "\n", 'Please use a different name');
+    } else {
+	mkdir $db
+	    or croak ('Error: unable to make a directory at ', $db, '.');
+    }
 } else {
-  if (-e $tptp_short_name) {
-    croak ('Error: we are to save our work in the directory \'', $tptp_short_name, '\' inferred from the name of the supplied TPTP theory.', "\n", 'But there is already a file or directory by that name in the current working directory.', "\n", 'Use the --db option to specify a destination, or move the current file or directory out of the way.');
-  }
-  mkdir $tptp_short_name
-    or croak ('Error: unable to make the directory \'', $tptp_short_name, '\' in the current working directory.');
-  $db = $tptp_short_name;
+    if (-e $tptp_short_name) {
+	croak ('Error: we are to save our work in the directory \'', $tptp_short_name, '\' inferred from the name of the supplied TPTP theory.', "\n", 'But there is already a file or directory by that name in the current working directory.', "\n", 'Use the --db option to specify a destination, or move the current file or directory out of the way.');
+    }
+    mkdir $tptp_short_name
+	or croak ('Error: unable to make the directory \'', $tptp_short_name, '\' in the current working directory.');
+    $db = $tptp_short_name;
 }
 
 
@@ -286,52 +286,52 @@ my $tptp2miz_stylesheet = "${stylesheet_home}/tptp2miz.xsl";
 my @extensions = ('dco', 'dno', 'voc', 'miz');
 my @stylesheets = ('tptp2dco.xsl', 'tptp2dno.xsl', 'tptp2voc.xsl');
 foreach my $stylesheet (@stylesheets) {
-  my $stylesheet_path = "${stylesheet_home}/${stylesheet}";
-  if (! -e $stylesheet_path) {
-    croak ('Error: the required stylsheet ', $stylesheet, ' could not be found in the directory', "\n", "\n", '  ', $stylesheet_home, "\n", "\n", 'where we expect to find it.');
-  }
-  if (! -r $stylesheet_path) {
-    croak ('Error: the required stylsheet ', $stylesheet, ' under', "\n", "\n", '  ', $stylesheet_home, "\n", "\n", 'is not readable.');
-  }
+    my $stylesheet_path = "${stylesheet_home}/${stylesheet}";
+    if (! -e $stylesheet_path) {
+	croak ('Error: the required stylsheet ', $stylesheet, ' could not be found in the directory', "\n", "\n", '  ', $stylesheet_home, "\n", "\n", 'where we expect to find it.');
+    }
+    if (! -r $stylesheet_path) {
+	croak ('Error: the required stylsheet ', $stylesheet, ' under', "\n", "\n", '  ', $stylesheet_home, "\n", "\n", 'is not readable.');
+    }
 }
 
 # Save a copy of the input TPTP file
 my $tptp_file_in_miz_db = "${db}/${tptp_basename}";
 copy ($tptp_file, $tptp_file_in_miz_db)
-  or croak ('Error: unable to copy the given TPTP file to the new Mizar db (', $db, '): ', $!);
+    or croak ('Error: unable to copy the given TPTP file to the new Mizar db (', $db, '): ', $!);
 
 # XMLize the TPTP file and save it under a temporary file
 
 my $tptp_xml = "${db}/${tptp_basename}.xml";
 my $tptp4X_xmlize_status
-  = system ("tptp4X -N -V -c -x -fxml $tptp_file > $tptp_xml 2> /dev/null");
+    = system ("tptp4X -N -V -c -x -fxml $tptp_file > $tptp_xml 2> /dev/null");
 my $tptp4X_xmlize_exit_code = $tptp4X_xmlize_status >> 8;
 if ($tptp4X_xmlize_exit_code != 0) {
-  croak ('Error: tptp4X did not exit cleanly when XMLizing the TPTP file at', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'Its exit code was ', $tptp4X_xmlize_exit_code, '.');
+    croak ('Error: tptp4X did not exit cleanly when XMLizing the TPTP file at', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'Its exit code was ', $tptp4X_xmlize_exit_code, '.');
 }
 
 # Sanity check: tptp4X generated a readable XML file
 
 if (! -e $tptp_xml) {
-  croak ('Error: tptp4X did not generate an XML version of the TPTP file at ', "\n", "\n", $tptp_file);
+    croak ('Error: tptp4X did not generate an XML version of the TPTP file at ', "\n", "\n", $tptp_file);
 }
 
 if (! -r $tptp_xml) {
-  croak ('Error: the XML reformatting of', "\n", "\n", $tptp_file, "\n", "\n", 'generated by tptp4X is not readable.');
+    croak ('Error: the XML reformatting of', "\n", "\n", $tptp_file, "\n", "\n", 'generated by tptp4X is not readable.');
 }
 
 my $xmllint_status = system ("xmllint --noout $tptp_xml > /dev/null 2>&1");
 my $xmllint_exit_code = $xmllint_status >> 8;
 
 if ($xmllint_exit_code != 0) {
-  croak ('Error: tptp4X failed to generate a valid XML document corresponding to the TPTP file at', "\n", "\n", '  ', $tptp_file);
+    croak ('Error: tptp4X failed to generate a valid XML document corresponding to the TPTP file at', "\n", "\n", '  ', $tptp_file);
 }
 
 # Make the required subdirectories
 
 foreach my $dir (@subdirs) {
-  mkdir "${db}/${dir}"
-    or croak ('Error: unable to make the directory \'', $dir, '\' in the Mizar db directory (', $db, ').');
+    mkdir "${db}/${dir}"
+	or croak ('Error: unable to make the directory \'', $dir, '\' in the Mizar db directory (', $db, ').');
 }
 
 # Make the vocabulary
@@ -339,21 +339,21 @@ my $voc_file = "${db}/dict/${tptp_short_name}.voc";
 my $tptp2voc_xsltproc_status = system ("xsltproc $tptp2voc_stylesheet $tptp_xml > $voc_file");
 my $tptp2voc_xsltproc_exit_code = $tptp2voc_xsltproc_status >> 8;
 if ($tptp2voc_xsltproc_exit_code != 0) {
-  croak ('Error: xsltproc did not exit cleanly when making the vocabulary (.voc) file for', "\n", "\n", '  ', $tptp_file);
+    croak ('Error: xsltproc did not exit cleanly when making the vocabulary (.voc) file for', "\n", "\n", '  ', $tptp_file);
 }
 
 # Make the environment
 foreach my $extension ('dno', 'dco') {
-  my $stylesheet = "${stylesheet_home}/tptp2${extension}.xsl";
-  if (! -e $stylesheet) {
-    croak ('Error: the required stylesheet for generating the .', $extension, ' file does not exist at the expected location (', $stylesheet, ').');
-  }
-  my $output_file = "${db}/prel/${tptp_short_name}.${extension}";
-  my $xsltproc_status = system ("xsltproc --stringparam article '$tptp_short_name' $stylesheet $tptp_xml > $output_file 2>/dev/null");
-  my $xsltproc_exit_code = $xsltproc_status >> 8;
-  if ($xsltproc_exit_code != 0) {
-    croak ('Error: xsltproc did not exit cleanly when generating the .', $extension, ' file for', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);
-  }
+    my $stylesheet = "${stylesheet_home}/tptp2${extension}.xsl";
+    if (! -e $stylesheet) {
+	croak ('Error: the required stylesheet for generating the .', $extension, ' file does not exist at the expected location (', $stylesheet, ').');
+    }
+    my $output_file = "${db}/prel/${tptp_short_name}.${extension}";
+    my $xsltproc_status = system ("xsltproc --stringparam article '$tptp_short_name' $stylesheet $tptp_xml > $output_file 2>/dev/null");
+    my $xsltproc_exit_code = $xsltproc_status >> 8;
+    if ($xsltproc_exit_code != 0) {
+	croak ('Error: xsltproc did not exit cleanly when generating the .', $extension, ' file for', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);
+    }
 }
 
 # Make the .miz
@@ -361,7 +361,7 @@ my $miz_file = "${db}/text/${tptp_short_name}.miz";
 my $xsltproc_status = system ("xsltproc --stringparam article '$tptp_short_name' $tptp2miz_stylesheet $tptp_xml > $miz_file 2>/dev/null");
 my $xsltproc_exit_code = $xsltproc_status >> 8;
 if ($xsltproc_exit_code != 0) {
-  croak ('Error: xsltproc did not exit cleanly when generating the .miz file for', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);
+    croak ('Error: xsltproc did not exit cleanly when generating the .miz file for', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);
 }
 
 __END__
