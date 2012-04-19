@@ -1,0 +1,9 @@
+* Wishlist
+** TODO Handle multiple TPTP theories
+   Try to infer an acceptable order on them.  (We may need user
+   interaction here.)
+** TODO Import proofs
+** TODO Link with SystemOnTPTP
+** TODO HTMLize the results
+** TODO Web frontend for this
+** TODO Export proofs back from Mizar to TPTP (if possible)
