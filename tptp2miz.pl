@@ -22,18 +22,45 @@ Readonly my $EMPTY_STRING => q{};
 Readonly my $SP => q{ };
 Readonly my $COLON => q{:};
 
+# Programs
+Readonly my $TPTP4X => 'tptp4X';
+Readonly my $GETSYMBOLS => 'GetSymbols';
+Readonly my @TPTP_PROGRAMS => (
+    $TPTP4X,
+    $GETSYMBOLS
+);
+
+
 # Colors
 Readonly my $ERROR_COLOR => 'red';
+Readonly my $WARNING_COLOR => 'yellow';
 
-sub error_message {
+sub ensure_readable_file {
+  my $file = shift;
+  return (-e $file && ! -d $file && -r $file);
+}
+
+sub message_with_colored_prefix {
+    my $prefix = shift;
+    my $color = shift;
     my @message_parts = @_;
+
     my $message = join ($EMPTY_STRING, @message_parts);
     if ($message eq $EMPTY_STRING) {
-	say {*STDERR} colored ('Error', $ERROR_COLOR), $COLON, $SP, '(no error message is available)';
+	say {*STDERR} colored ($prefix, $color), $COLON, $SP, '(no message is available)';
     } else {
-	say {*STDERR} colored ('Error', $ERROR_COLOR), $COLON, $SP, $message;
+	say {*STDERR} colored ($prefix, $color), $COLON, $SP, $message;
     }
+
     return;
+}
+
+sub error_message {
+    return message_with_colored_prefix ('Error', $ERROR_COLOR, @_);
+}
+
+sub warning_message {
+    return message_with_colored_prefix ('Warning', $WARNING_COLOR, @_);
 }
 
 sub strip_extension {
@@ -41,39 +68,78 @@ sub strip_extension {
   return $path =~ / (.+) [.][^.]+ \z / ? $1 : $path;
 }
 
+sub is_valid_tptp_file {
+    my $path = shift;
+
+    my @tptp4x_call = ($TPTP4X, '-N', '-c', '-x', $path);
+    my $tptp4x_out = $EMPTY_STRING;
+    my $tptp4x_err = $EMPTY_STRING;
+    my $tptp4x_harness = harness (\@tptp4x_call,
+				  '>', \$tptp4x_out,
+				  '2>', \$tptp4x_err);
+
+    $tptp4x_harness->start ();
+    $tptp4x_harness->finish ();
+
+    my $tptp4x_exit_code = $tptp4x_harness->result (0);
+
+    return ($tptp4x_exit_code == 0 ? 1 : 0);
+}
+
+sub ensure_tptp_pograms_available {
+    foreach my $program (@TPTP_PROGRAMS) {
+	if (! can_run ($program)) {
+	    error_message ('The required program ', $program, ' does not appear to be available.');
+	    exit 1;
+	}
+    }
+    return;
+}
+
 my $help = 0;
 my $man = 0;
 my $db = undef;
 my $verbose = 0;
 
-GetOptions ("db=s"     => \$db,
-            "verbose"  => \$verbose,
-	    'help' => \$help,
-	    'man' => \$man) or pod2usage(2);
-pod2usage(1) if $help;
-pod2usage(-exitstatus => 0, -verbose => 2) if $man;
-pod2usage(1) if (scalar @ARGV != 1);
+my $options_ok = GetOptions (
+    "db=s"     => \$db,
+    "verbose"  => \$verbose,
+    'help' => \$help,
+    'man' => \$man,
+);
+
+if (! $options_ok) {
+    pod2usage(
+	-exitval => 2,
+    );
+}
+
+if ($help) {
+    pod2usage(
+	-exitval => 1,
+    );
+}
+
+if ($man) {
+    pod2usage(
+	-exitstatus => 0,
+	-verbose => 2,
+    );
+}
+
+if (scalar @ARGV != 1) {
+    pod2usage(
+	-exitval => 1,
+    );
+}
 
 # Confirm that essential programs are available.
-
-my @tptp_programs = ('tptp4X', 'GetSymbols');
-
-foreach my $program (@tptp_programs) {
-    if (! can_run ($program)) {
-	error_message ('The required program ', $program, ' does not appear to be available.');
-	exit 1;
-    }
-}
+ensure_tptp_pograms_available ();
 
 my $tptp_file = $ARGV[0];
 
-if (! -e $tptp_file) {
-    error_message ('The supplied TPTP file,', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'does not exist.');
-    exit 1;
-}
-
-if (! -r $tptp_file) {
-    error_message ('The supplied TPTP file,', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'is not readable.');
+if (! ensure_readable_file ($tptp_file) ) {
+    error_message ('The supplied TPTP file,', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'does not exist, or is unreadable.');
     exit 1;
 }
 
@@ -81,17 +147,19 @@ my $tptp_basename = basename ($tptp_file);
 my $tptp_sans_extension = strip_extension ($tptp_basename);
 
 if (length $tptp_sans_extension == 0) {
-  croak 'Error: after stipping the extension of the supplied TPTP theory file, we are left with just the empty string, which is an unacceptable name for a Mizar article.';
+    error_message ('After stipping the extension of the supplied TPTP theory file, we are left with just the empty string, which is an unacceptable name for a Mizar article.');
+    exit 1;
 }
 
 my $tptp_short_name = substr $tptp_basename,0,8;
 
 if (length $tptp_sans_extension > 8) {
-  carp ('Warning: the length of the basename of the supplied file, even when its extension is stripped, exceeds 8 characters.', "\n", 'Since Mizar articles are requires to have names at most 8 characters long, we have truncated the name to \'', $tptp_short_name, '\'.', "\n");
+    warning_message ('The length of the basename of the supplied file, even when its extension is stripped, exceeds 8 characters.', "\n", 'Since Mizar articles are requires to have names at most 8 characters long, we have truncated the name to \'', $tptp_short_name, '\'.', "\n");
 }
 
 if ($tptp_short_name !~ / \A [a-zA-Z0-9_]{1,8} \z /x) {
-  croak ('Error: the name that we will use for the Mizar article, \'', $tptp_short_name, '\', is unacceptabl as the name of a Mizar article.', "\n", 'Valid names for Mizar articles are alphanumeric characters and the underscore \'_\'.');
+    error_message ('The name that we will use for the Mizar article, \'', $tptp_short_name, '\', is unacceptabl as the name of a Mizar article.', "\n", 'Valid names for Mizar articles are alphanumeric characters and the underscore \'_\'.');
+    exit 1;
 }
 
 ######################################################################
@@ -100,11 +168,9 @@ if ($tptp_short_name !~ / \A [a-zA-Z0-9_]{1,8} \z /x) {
 
 # Can TPTP4X handle the file at all?
 
-my $tptp4X_check_status = system ("tptp4X -N -V -c -x -umachine $tptp_file > /dev/null 2>&1");
-my $tptp4X_check_exit_code = $tptp4X_check_status >> 8;
-
-if ($tptp4X_check_exit_code != 0) {
-  croak ('Error: the supplied TPTP file,', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'is not a well-formed TPTP file.');
+if (! is_valid_tptp_file ($tptp_file)) {
+    error_message ('The supplied TPTP file,', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'is not a well-formed TPTP file.');
+    exit 1;
 }
 
 if ($verbose) {
