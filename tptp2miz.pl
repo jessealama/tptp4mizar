@@ -11,6 +11,7 @@ use File::Basename qw(basename dirname);
 use Getopt::Long;
 use Pod::Usage;
 use Carp qw(croak carp);
+use IPC::Run qw(harness);
 use IPC::Cmd qw(can_run);
 use Readonly;
 use charnames qw(:full);
