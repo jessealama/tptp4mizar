@@ -17,6 +17,7 @@ use Readonly;
 use charnames qw(:full);
 use Regexp::DefaultFlags;
 use Term::ANSIColor qw(colored);
+use FindBin qw($RealBin);
 
 # Strings
 Readonly my $EMPTY_STRING => q{};
@@ -31,6 +32,15 @@ Readonly my @TPTP_PROGRAMS => (
     $GETSYMBOLS
 );
 
+# Stylesheets
+Readonly my $STYLESHEET_HOME => $RealBin;
+Readonly my $TPTP2VOC_STYLESHEET => "${STYLESHEET_HOME}/tptp2voc.xsl";
+Readonly my $TPTP2MIZ_STYLESHEET => "${STYLESHEET_HOME}/tptp2miz.xsl";
+Readonly my @STYLESHEETS => (
+    'tptp2dco.xsl',
+    'tptp2dno.xsl',
+    'tptp2voc.xsl',
+);
 
 # Colors
 Readonly my $ERROR_COLOR => 'red';
@@ -178,82 +188,9 @@ if ($verbose) {
     print 'Sanity Check: The given TPTP file is valid according to TPTP4X.', "\n";
 }
 
-# Load all symbols
-my $GetSymbols_result = `GetSymbols -all $tptp_file 2>/dev/null`;
-my $GetSymbols_exit_code = $? >> 8;
-if ($GetSymbols_exit_code != 0) {
-    croak ('Error: GetSymbols did not exit cleanly when extracting the symbols from ', $tptp_file, '.');
-}
-chomp $GetSymbols_result;
-if ($GetSymbols_result =~ /\A symbols \( all, \[ (.*) \], \[ (.*) \] \) [.] \z/mx) {
-    (my $GetSymbols_functions, my $GetSymbols_predicates) = ($1, $2);
-    my @function_infos = split (/[,]/x, $GetSymbols_functions);
-    my @predicate_infos = split (/[,]/x, $GetSymbols_predicates);
-
-    # Confirm that no function occurs with two different arities
-    my %function_arity_table = ();
-    foreach my $function_info (@function_infos) {
-	if ($function_info =~ /\A (.+) \/ ([0-9]+) \/ [1-9][0-9]* \z/mx) {
-	    (my $name, my $arity) = ($1, $2);
-	    if (defined $function_arity_table{$name}) {
-		my $earlier_arity = $function_arity_table{$name};
-		if ($arity != $earlier_arity) {
-		    croak ('Error: the function named \'', $name, '\' occurs at least once with arity ', $earlier_arity, ' and once with arity ', $arity, '.');
-		}
-	    } else {
-		$function_arity_table{$name} = $arity;
-	    }
-	} else {
-	    croak ('Error: unable to make sense of the function symbol info string \'', $function_info, '\' coming from the GetSymbols utility.');
-	}
-    }
-
-    if ($verbose) {
-	print 'Sanity Check: In the the given TPTP file, no function symbol occurs with different arities.', "\n";
-    }
-
-    # Confirm that no predicate occurs with two different arities
-    my %predicate_arity_table = ();
-    foreach my $predicate_info (@predicate_infos) {
-	if ($predicate_info =~ /\A (.+) \/ ([0-9]+) \/ [1-9][0-9]* \z/mx ) {
-	    (my $name, my $arity) = ($1, $2);
-	    if (defined $predicate_arity_table{$name}) {
-		my $earlier_arity = $predicate_arity_table{$name};
-		if ($arity != $earlier_arity) {
-		    croak ('Error: the predicate named \'', $name, '\' occurs at least once with arity ', $earlier_arity, ' and once with arity ', $arity, '.');
-		}
-	    } else {
-		$predicate_arity_table{$name} = $arity;
-	    }
-	} else {
-	    croak ('Error: unable to make sense of the predicate symbol info string \'', $predicate_info, '\' coming from the GetSymbols utility.');
-	}
-    }
-
-    if ($verbose) {
-	print 'Sanity Check: In the the given TPTP file, no predicate symbol occurs with different arities.', "\n";
-    }
-
-    # Confirm that no function occurs also as a predicate
-    foreach my $symbol (keys %function_arity_table) {
-	if (defined $predicate_arity_table{$symbol}) {
-	    croak ('Error: the symbol \'', $symbol, '\' occurs both as a function and as a predicate in the given TPTP theory.');
-	}
-    }
-
-    foreach my $symbol (keys %predicate_arity_table) {
-	if (defined $function_arity_table{$symbol}) {
-	    croak ('Error: the symbol \'', $symbol, '\' occurs both as a function and as a predicate in the given TPTP theory.');
-	}
-    }
-
-    if ($verbose) {
-	print 'Sanity Check: In the given TPTP file, no symbol occurs both as a function and as a predicate.', "\n";
-    }
-
-} else {
-    croak ('Error: Unable to make sense of the GetSymbols output', "\n", "\n", '  ', $GetSymbols_result);
-}
+# We need to check that the TPTP theory does not have a predicate
+# symbol used as a function symbol, and that arities are distinct for
+# different symbols
 
 if (defined $db) {
     if (-e $db) {
@@ -279,19 +216,12 @@ if (defined $db) {
 my $tptp_dirname = dirname ($tptp_file);
 
 my @subdirs = ('text', 'prel', 'dict');
-
-my $stylesheet_home = '/Users/alama/sources/mizar/xsl4mizar/tptp2miz';
-my $tptp2voc_stylesheet = "${stylesheet_home}/tptp2voc.xsl";
-my $tptp2miz_stylesheet = "${stylesheet_home}/tptp2miz.xsl";
 my @extensions = ('dco', 'dno', 'voc', 'miz');
-my @stylesheets = ('tptp2dco.xsl', 'tptp2dno.xsl', 'tptp2voc.xsl');
-foreach my $stylesheet (@stylesheets) {
-    my $stylesheet_path = "${stylesheet_home}/${stylesheet}";
-    if (! -e $stylesheet_path) {
-	croak ('Error: the required stylsheet ', $stylesheet, ' could not be found in the directory', "\n", "\n", '  ', $stylesheet_home, "\n", "\n", 'where we expect to find it.');
-    }
-    if (! -r $stylesheet_path) {
-	croak ('Error: the required stylsheet ', $stylesheet, ' under', "\n", "\n", '  ', $stylesheet_home, "\n", "\n", 'is not readable.');
+foreach my $stylesheet (@STYLESHEETS) {
+    my $stylesheet_path = "${STYLESHEET_HOME}/${stylesheet}";
+    if (! ensure_readable_file ($stylesheet_path)) {
+	error_message ('The required stylsheet ', $stylesheet, ' could not be found in the directory', "\n", "\n", '  ', $STYLESHEET_HOME, "\n", "\n", 'where we expect to find it (or it does exist but is unreadable).');
+	exit 1;
     }
 }
 
@@ -336,7 +266,7 @@ foreach my $dir (@subdirs) {
 
 # Make the vocabulary
 my $voc_file = "${db}/dict/${tptp_short_name}.voc";
-my $tptp2voc_xsltproc_status = system ("xsltproc $tptp2voc_stylesheet $tptp_xml > $voc_file");
+my $tptp2voc_xsltproc_status = system ("xsltproc ${TPTP2VOC_STYLESHEET} ${tptp_xml} > $voc_file");
 my $tptp2voc_xsltproc_exit_code = $tptp2voc_xsltproc_status >> 8;
 if ($tptp2voc_xsltproc_exit_code != 0) {
     croak ('Error: xsltproc did not exit cleanly when making the vocabulary (.voc) file for', "\n", "\n", '  ', $tptp_file);
@@ -344,7 +274,7 @@ if ($tptp2voc_xsltproc_exit_code != 0) {
 
 # Make the environment
 foreach my $extension ('dno', 'dco') {
-    my $stylesheet = "${stylesheet_home}/tptp2${extension}.xsl";
+    my $stylesheet = "${STYLESHEET_HOME}/tptp2${extension}.xsl";
     if (! -e $stylesheet) {
 	croak ('Error: the required stylesheet for generating the .', $extension, ' file does not exist at the expected location (', $stylesheet, ').');
     }
@@ -358,7 +288,7 @@ foreach my $extension ('dno', 'dco') {
 
 # Make the .miz
 my $miz_file = "${db}/text/${tptp_short_name}.miz";
-my $xsltproc_status = system ("xsltproc --stringparam article '$tptp_short_name' $tptp2miz_stylesheet $tptp_xml > $miz_file 2>/dev/null");
+my $xsltproc_status = system ("xsltproc --stringparam article '$tptp_short_name' ${TPTP2MIZ_STYLESHEET} $tptp_xml > $miz_file 2>/dev/null");
 my $xsltproc_exit_code = $xsltproc_status >> 8;
 if ($xsltproc_exit_code != 0) {
     croak ('Error: xsltproc did not exit cleanly when generating the .miz file for', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);
