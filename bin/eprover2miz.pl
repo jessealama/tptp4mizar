@@ -33,14 +33,15 @@ Readonly my @TPTP_PROGRAMS => (
 );
 
 # Stylesheets
-Readonly my $STYLESHEET_HOME => "$RealBin/eprover";
-Readonly my $TPTP2VOC_STYLESHEET => "${STYLESHEET_HOME}/tptp2voc.xsl";
-Readonly my $TPTP2MIZ_STYLESHEET => "${STYLESHEET_HOME}/tptp2miz.xsl";
+Readonly my $STYLESHEET_HOME => "$RealBin/../xsl";
+Readonly my $TPTP2VOC_STYLESHEET => "${STYLESHEET_HOME}/eprover2voc.xsl";
+Readonly my $TPTP2MIZ_STYLESHEET => "${STYLESHEET_HOME}/eprover2miz.xsl";
 Readonly my @STYLESHEETS => (
-    'tptp2evl.xsl',
-    'tptp2dco.xsl',
-    'tptp2dno.xsl',
-    'tptp2voc.xsl',
+    'eprover2evl.xsl',
+    'eprover2dco.xsl',
+    'eprover2dno.xsl',
+    'eprover2voc.xsl',
+    'pp.xsl',
 );
 
 # Colors
@@ -158,21 +159,7 @@ if (! ensure_readable_file ($tptp_file) ) {
 my $tptp_basename = basename ($tptp_file);
 my $tptp_sans_extension = strip_extension ($tptp_basename);
 
-if (length $tptp_sans_extension == 0) {
-    error_message ('After stipping the extension of the supplied TPTP theory file, we are left with just the empty string, which is an unacceptable name for a Mizar article.');
-    exit 1;
-}
-
-my $tptp_short_name = substr $tptp_basename,0,8;
-
-if (length $tptp_sans_extension > 8) {
-    warning_message ('The length of the basename of the supplied file, even when its extension is stripped, exceeds 8 characters.', "\n", 'Since Mizar articles are requires to have names at most 8 characters long, we have truncated the name to \'', $tptp_short_name, '\'.', "\n");
-}
-
-if ($tptp_short_name !~ / \A [a-zA-Z0-9_]{1,8} \z /x) {
-    error_message ('The name that we will use for the Mizar article, \'', $tptp_short_name, '\', is unacceptabl as the name of a Mizar article.', "\n", 'Valid names for Mizar articles are alphanumeric characters and the underscore \'_\'.');
-    exit 1;
-}
+my $tptp_short_name = 'article'; # fixed boring name
 
 ######################################################################
 ## Sanity checking: the input TPTP theory file is coherent
@@ -189,34 +176,7 @@ if ($verbose) {
     print 'Sanity Check: The given TPTP file is valid according to TPTP4X.', "\n";
 }
 
-# We need to check that the TPTP theory does not have a predicate
-# symbol used as a function symbol, and that arities are distinct for
-# different symbols
-
-if (defined $db) {
-    if (-e $db) {
-	croak ('Error: the specified directory', "\n", "\n", '  ', $db, "\n", "\n", 'in which we are to save our work already exists.', "\n", 'Please use a different name');
-    } else {
-	mkdir $db
-	    or croak ('Error: unable to make a directory at ', $db, '.');
-    }
-} else {
-    if (-e $tptp_short_name) {
-	croak ('Error: we are to save our work in the directory \'', $tptp_short_name, '\' inferred from the name of the supplied TPTP theory.', "\n", 'But there is already a file or directory by that name in the current working directory.', "\n", 'Use the --db option to specify a destination, or move the current file or directory out of the way.');
-    }
-    mkdir $tptp_short_name
-	or croak ('Error: unable to make the directory \'', $tptp_short_name, '\' in the current working directory.');
-    $db = $tptp_short_name;
-}
-
-
-######################################################################
-## Creating the environment and the text
-######################################################################
-
-my $tptp_dirname = dirname ($tptp_file);
-
-my @subdirs = ('text', 'prel', 'dict');
+# All the needed stylesheets exist
 my @extensions = ('dco', 'dno', 'voc', 'miz');
 foreach my $stylesheet (@STYLESHEETS) {
     my $stylesheet_path = "${STYLESHEET_HOME}/${stylesheet}";
@@ -225,6 +185,30 @@ foreach my $stylesheet (@STYLESHEETS) {
 	exit 1;
     }
 }
+
+# We need to check that the TPTP theory does not have a predicate
+# symbol used as a function symbol, and that arities are distinct for
+# different symbols
+
+if (! defined $db) {
+    $db = "${tptp_sans_extension}-mizar";
+}
+
+if (-e $db) {
+    error_message ('The specified directory', "\n", "\n", '  ', $db, "\n", "\n", 'in which we are to save our work already exists.', "\n", 'Please use a different name');
+    exit 1;
+}
+
+mkdir $db
+    or die error_message ('Unable to make a directory at ', $db, ': ', $!);
+
+######################################################################
+## Creating the environment and the text
+######################################################################
+
+my $tptp_dirname = dirname ($tptp_file);
+
+my @subdirs = ('text', 'prel', 'dict');
 
 # Save a copy of the input TPTP file
 my $tptp_file_in_miz_db = "${db}/${tptp_basename}";
@@ -265,31 +249,32 @@ foreach my $dir (@subdirs) {
 	or croak ('Error: unable to make the directory \'', $dir, '\' in the Mizar db directory (', $db, ').');
 }
 
-# Make the vocabulary
-my $voc_file = "${db}/dict/${tptp_short_name}.voc";
-my $tptp2voc_xsltproc_status = system ("xsltproc ${TPTP2VOC_STYLESHEET} ${tptp_xml} > $voc_file");
-my $tptp2voc_xsltproc_exit_code = $tptp2voc_xsltproc_status >> 8;
-if ($tptp2voc_xsltproc_exit_code != 0) {
-    croak ('Error: xsltproc did not exit cleanly when making the vocabulary (.voc) file for', "\n", "\n", '  ', $tptp_file);
-}
+my %directory_for_extension = (
+    'voc' => 'dict',
+    'evl' => 'text',
+    'wsx' => 'text',
+    'dno' => 'prel',
+    'dco' => 'prel'
+);
 
-# Make the environment
-foreach my $extension ('dno', 'dco') {
-    my $stylesheet = "${STYLESHEET_HOME}/tptp2${extension}.xsl";
-    if (! -e $stylesheet) {
-	croak ('Error: the required stylesheet for generating the .', $extension, ' file does not exist at the expected location (', $stylesheet, ').');
-    }
-    my $output_file = "${db}/prel/${tptp_short_name}.${extension}";
-    my $xsltproc_status = system ("xsltproc --stringparam article '$tptp_short_name' $stylesheet $tptp_xml > $output_file 2>/dev/null");
+foreach my $extension (keys %directory_for_extension) {
+    my $subdir_name = $directory_for_extension{$extension};
+    my $subdir = "${db}/${subdir_name}";
+    my $stylesheet = "${STYLESHEET_HOME}/eprover2${extension}.xsl";
+    my $output_file = "${subdir}/${tptp_short_name}.${extension}";
+    my $xsltproc_status = system ("xsltproc --stringparam omit-skolem-functions '1' --stringparam article '$tptp_short_name' $stylesheet $tptp_xml > $output_file 2>/dev/null");
     my $xsltproc_exit_code = $xsltproc_status >> 8;
     if ($xsltproc_exit_code != 0) {
 	croak ('Error: xsltproc did not exit cleanly when generating the .', $extension, ' file for', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);
     }
 }
 
-# Make the .miz
-my $miz_file = "${db}/text/${tptp_short_name}.miz";
-my $xsltproc_status = system ("xsltproc --stringparam article '$tptp_short_name' ${TPTP2MIZ_STYLESHEET} $tptp_xml > $miz_file 2>/dev/null");
+# Now translate the
+my $pp_stylesheet = "${STYLESHEET_HOME}/pp.xsl";
+my $wsx_path = "${db}/text/${tptp_short_name}.wsx";
+my $miz_path = "${db}/text/${tptp_short_name}.miz";
+
+my $xsltproc_status = system ("xsltproc $pp_stylesheet $wsx_path > $miz_path 2>/dev/null");
 my $xsltproc_exit_code = $xsltproc_status >> 8;
 if ($xsltproc_exit_code != 0) {
     croak ('Error: xsltproc did not exit cleanly when generating the .miz file for', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);
