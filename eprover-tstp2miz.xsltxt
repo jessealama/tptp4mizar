@@ -234,7 +234,7 @@ tpl [formula] mode="conjecture" {
   <Item {
     @kind = "Theorem-Item";
     <Proposition {
-      apply [*[1]] mode="strip-universal-prefix"; // render the formula
+      apply [*[1]]; // render the formula
     }
     <Block {
       @kind = "Proof";
@@ -288,7 +288,7 @@ tpl [formula[@name and not(@name = "")]] mode="no-justification" {
       $step-name = `concat ("Step", $safe-name)`;
       @spelling = $step-name;
     }
-    apply [*[1]] mode="strip-universal-prefix";
+    apply [*[1]];
   }
 }
 
