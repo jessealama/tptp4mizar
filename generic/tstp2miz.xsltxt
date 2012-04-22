@@ -1,0 +1,338 @@
+stylesheet "1.0";
+
+output method=text;
+strip-space "*";
+
+//////////////////////////////////////////////////////////////////////
+// Stylesheet parameters
+//////////////////////////////////////////////////////////////////////
+
+#article = { ""; }
+#debug = { ""; }
+
+//////////////////////////////////////////////////////////////////////
+// Utilities
+//////////////////////////////////////////////////////////////////////
+
+$lcletters = { "abcdefghijklmnopqrstuvwxyz"; }
+$ucletters = { "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; }
+
+tpl lc (#s) { `translate($s, $ucletters, $lcletters)`; }
+tpl uc (#s) { `translate($s, $lcletters, $ucletters)`; }
+
+tpl capitalize-after-underscore (#string) {
+  if [contains ($string, "_")] {
+    $before = `substring-before ($string, "_")`;
+    $after = `substring-after ($string, "_")`;
+    if [$after = ""] {
+      `$before`;
+    } else {
+      $after-length = `string-length ($after)`;
+      $first-char-as-string = `substring ($after, 1, 1)`;
+      $after-first-char = `substring ($after, 2, $after-length)`;
+      $first-char-as-string-uc = uc (#s = $first-char-as-string);
+      $transformed-tail = capitalize-after-underscore (#string = $after-first-char);
+      `concat ($before, $first-char-as-string-uc, $transformed-tail)`;
+    }
+  } else {
+    `$string`;
+  }
+}
+
+tpl [/] {
+  choose {
+    when [not(tstp)] {
+      msg terminate="yes" "Error: this does not appear to be a TSTP XML document, because it lacks a 'tstp' root element.";
+    }
+    when [tstp[2]] {
+      msg terminate="yes" "Error: this does not appear to be a TSTP XML document, because it has multiple 'tstp' root elements.";
+    }
+    otherwise {
+      apply [tstp];
+    }
+  }
+}
+
+tpl [tstp] {
+
+  "environ"; "\n";
+
+  if [not($article = "")] {
+    $article-uc = uc (#s = `$article`);
+    "\n";
+    "vocabularies "; `$article-uc`; ";"; "\n";
+    "notations "; `$article-uc`; ";"; "\n";
+    "constructors "; `$article-uc`; ";"; "\n";
+  }
+
+  "\n";
+
+  "begin"; "\n";
+
+  if [descendant::variable] { "\n"; }
+
+  // give the type 'set' to all variables appearing in the problem
+  for-each [descendant::variable[@name
+                                 and not(@name = preceding::variable[@name]/@name)]] {
+    apply [.] mode="set";
+  }
+
+  if [descendant::variable] { "\n"; }
+
+  for-each [formula] {
+    apply [.]; "\n";
+  }
+}
+
+tpl [comment] {
+  // don't know how to properly deal with this yet.  We need to
+  // properly handle whitespace.
+
+  // ":: "; `text()`;
+}
+
+tpl [formula[not(@name)]] {
+  msg terminate="yes" "We encountered a formula element that lacks a name attribute.";
+}
+
+tpl [formula[@name and @status = "axiom"]] {
+  $safe-name = capitalize-after-underscore (#string = `@name`);
+  "axiom"; " "; `$safe-name`; ":"; "\n";
+  apply[*[1]]; ";"; "\n";
+}
+
+tpl [formula[@name and @status = "definition"]] {
+  $safe-name = capitalize-after-underscore (#string = `@name`);
+  $formula-position = `count (preceding-sibling::formula) + 1`;
+  // A heuristic to determine whether we can really read this formula
+  // as a definition in the sense that it is:
+  //
+  // * a universally quantified formula
+  // * whose matrix is an equivalence
+  // * the left-hand side of which is an atomic formula
+  //
+  // We might want to impose further conditions, but for now let's
+  // roll with these.
+  $looks-like-a-definition = detect-definition (#formula = `*[position() = last()]`);
+  if [$looks-like-a-definition = "1"] {
+    if [$debug = "1"] {
+      $message = `concat ("Formula #", $formula-position, " has the status of a definition, and we detect that it really is one.")`;
+      msg $message;
+    }
+    "definition"; "\n";
+    "  "; "pred";  " "; apply [*[position() = last()]] mode="extract-definiendum"; "\n";
+    "  "; "means"; " "; ":"; `$safe-name`; ":"; "\n";
+    "  "; apply [*[1]] mode="extract-definiens"; "\n";
+    "end;"; "\n";
+  } else {
+    if [$debug = "1"] {
+      $message = `concat ("Formula #", $formula-position, " has the status of a definition, but we were unable to unpack it as such.")`;
+      msg $message;
+    }
+    `$safe-name`; ":"; "\n";
+    apply[*[1]]; ";"; "\n";
+  }
+}
+
+tpl [formula[@name and not(@status = "axiom") and not(@status = "definition")]] {
+  $safe-name = capitalize-after-underscore (#string = `@name`);
+  `$safe-name`; ":"; "\n";
+  apply[*[1]]; ";"; "\n";
+}
+
+tpl [variable[not(@name)]] {
+  msg terminate="yes" "Error: unable to render a variable element that lacks a name attribute.";
+}
+
+tpl [variable[@name]] {
+  `@name`;
+}
+
+tpl [variable[not(@name)]] mode="set" {
+  msg terminate="yes" "Error: unable to assign the type 'set' to a variable that lacks a name";
+}
+
+tpl [variable[@name]] mode="set" {
+  "reserve "; `@name`; " for set;\n";
+}
+
+tpl [quantifier[not(@type)]] {
+  msg terminate="yes" "Error: we encountered a quantifier element that lacks a type attribute.";
+}
+
+tpl [quantifier[@type and not(@type = "universal" or @type = "existential")]] {
+  $type = `@type`;
+  $message = `concat ("Error: we encountered a quantifier element whose type, '", $type, "' is neither 'universal' nor 'existential', which are the only two types we handle.")`;
+  msg terminate="yes" `$message`;
+}
+
+tpl [quantifier[@type = "existential"]] {
+  "ex ";
+  ilist(#separ=",", #elems=`variable`);
+  " st ";
+  apply[*[position() = last()]];
+}
+
+tpl [quantifier[@type = "universal" and implication]] {
+  "for ";
+  ilist(#separ = ",", #elems = `variable`);
+  " st ";
+  apply [implication/*[1]];
+  " holds ";
+  apply [implication/*[2]];
+}
+
+tpl [quantifier[@type = "universal" and not(implication)]] {
+  "for ";
+  ilist(#separ=",", #elems=`variable`);
+  " holds ";
+  apply[*[position() = last()]];
+}
+
+tpl [negation|] { "not "; apply; }
+
+tpl [function[not(@name)]] {
+  msg terminate="yes" "Error: we cannot render a function element that lacks a name.";
+}
+
+tpl [predicate[not(@name)]] {
+  msg terminate="yes" "Error: we cannot render a predicate element that lacks a name.";
+}
+
+tpl [function[@name]|predicate[@name]] {
+  if [parent::quantifier] { "("; }
+
+  `@name`;
+
+  if[count(*) > 0] {
+    " "; ilist(#separ=",", #elems=`*`);
+  }
+
+  if [parent::quantifier] { ")"; }
+}
+
+tpl [*] (#connective) mode="binary-connective" {
+  "("; apply[*[1]]; " "; `$connective`; " "; apply[*[2]]; ")";
+}
+
+tpl [*] (#connective) mode="multiple-arity-connective" {
+  if [count(*) > 1] { "("; }
+  ilist(#separ = `concat (" ", $connective, " ")`,
+        #elems = `*`);
+  if [count(*) > 1] { ")"; }
+}
+
+tpl [conjunction] { apply [.] (#connective = "&") mode="multiple-arity-connective"; }
+
+// smart conjunction
+
+tpl [conjunction[predicate and conjunction]] {
+  apply [predicate]; " & "; apply [conjunction];
+}
+
+tpl [disjunction] { apply [.] (#connective = "or") mode="multiple-arity-connective"; }
+
+// smart disjunction
+
+tpl [disjunction[predicate and disjunction]] {
+  apply [predicate]; " & "; apply [disjunction];
+}
+
+tpl [implication] { apply [.] (#connective = "implies") mode="binary-connective"; }
+tpl [equivalence] { apply [.] (#connective = "iff") mode="binary-connective"; }
+
+// the name 'equal' as a defined-predicate: from an older version of tptp?
+tpl [defined-predicate[@name='equal']] {
+    if [parent::quantifier] { "("; }
+     " "; apply[*[1]]; " = "; apply[*[2]]; " ";
+    if [parent::quantifier] { ")"; }
+}
+
+tpl [predicate[@name = "="]] {
+    if [parent::quantifier] { "("; }
+    apply[*[1]]; " = "; apply[*[2]];
+    if [parent::quantifier] { ")"; }
+}
+
+//////////////////////////////////////////////////////////////////////
+// Defined predicates
+//////////////////////////////////////////////////////////////////////
+
+tpl [defined-predicate[not(@name)]] {
+  msg terminate="yes" "Error: unable to render a defined-predicate element that lacks a name attribute.";
+}
+
+tpl [defined-predicate[@name and not(@name = "true" or @name = "false")]] {
+  $n = `@name`;
+  $message = `concat ("Error: we are unable to handle a defined-predicate element whose name is '", $n, "'; we are able to handle only defined-predicates whose name is either 'true' or 'false'.")`;
+  msg terminate="yes" `$message`;
+}
+
+tpl [defined-predicate[@name = "false"]]  { "contradiction"; }
+tpl [defined-predicate[@name = "true"]]  { "not contradiction"; }
+
+tpl [non-logical-data] {
+  // no-op, for now
+}
+
+tpl ilist(#separ,#elems) {
+ for-each [$elems] {
+  apply[.]; if [not(position()=last())] { $separ; } }
+}
+
+//////////////////////////////////////////////////////////////////////
+// Detecting definitions and extracting their parts
+//////////////////////////////////////////////////////////////////////
+
+// Determine whether $formula looks like a definition
+tpl detect-definition (#formula) {
+  for-each [$formula] {
+    if [self::quantifier[@type = "universal"]] {
+      choose {
+        when [*[position() = last()][self::quantifier[@type = "universal"]]] {
+          detect-definition (#formula = `*[position() = last()]`);
+        }
+        when [*[position() = last()][self::equivalence]] {
+          for-each [*[position() = last()]] {
+            for-each [*[1]] {
+    	      if [self::predicate] {
+    	        "1";
+    	      } else {
+    	        "0";
+    	      }
+    	    }
+          }
+        }
+        otherwise {
+          "0";
+        }
+      }
+    } else {
+      "0";
+    }
+  }
+}
+
+tpl [*] mode="extract-definiendum" {
+  msg terminate="yes" "Error: we were asked to extract the definiendum from a formula that we don't know how to handle.";
+}
+
+tpl [quantifier[@type = "universal"]] mode="extract-definiendum" {
+  apply [*[position() = last()]] mode="extract-definiendum";
+}
+
+tpl [equivalence] mode="extract-definiendum" {
+  apply [*[1]];
+}
+
+tpl [*] mode="extract-definiens" {
+  msg terminate="yes" "Error: we were asked to extract the definiens from a formula that we don't know how to handle.";
+}
+
+tpl [quantifier[@type = "universal"]] mode="extract-definiens" {
+  apply [*[position() = last()]] mode="extract-definiens";
+}
+
+tpl [equivalence] mode="extract-definiens" {
+  apply [*[2]];
+}

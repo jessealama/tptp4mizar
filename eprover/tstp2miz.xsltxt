@@ -128,6 +128,9 @@ tpl [tstp] {
       $aid-uc = uc (#s = $article);
       <Text-Proper {
         @articleid = $aid-uc;
+        <Item {
+          @kind = "Section-Pragma";
+        }
         if [descendant::variable] {
           <Item {
             @kind = "Reservation";
@@ -146,7 +149,7 @@ tpl [tstp] {
         for-each [formula[@status = "axiom"]] {
           apply [.] mode="axiom";
         }
-        for-each [formula[@status = "plain"]] {
+        for-each [formula[@status = "plain" or source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] {
           apply [.] mode="lemma";
         }
         for-each [formula[@status = "conjecture"]] {
@@ -244,7 +247,7 @@ tpl [formula] mode="conjecture" {
           apply [following-sibling::formula[@status = "negated_conjecture"][1]] mode="no-justification";
         }
       }
-      for-each [following-sibling::formula[@status = "negated_conjecture"][position() > 1]] {
+      for-each [following-sibling::formula[@status = "negated_conjecture" and not(source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"])][position() > 1]] {
         apply [.] mode="full"; // "full" == label, proposition, justification
       }
       <Item {

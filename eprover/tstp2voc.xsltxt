@@ -1,0 +1,49 @@
+stylesheet "1.0";
+output method="text";
+
+//////////////////////////////////////////////////////////////////////
+// Stylesheet parameters
+//////////////////////////////////////////////////////////////////////
+
+#omit-skolem-functions = { "0"; }
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+tpl [/] {
+  choose {
+    when [not(tstp)] {
+      msg terminate="yes" "Error: this does not appear to be a TSTP XML document, because it lacks a 'tstp' root element.";
+    }
+    when [tstp[2]] {
+      msg terminate="yes" "Error: this does not appear to be a TSTP XML document, because it has multiple 'tstp' root elements.";
+    }
+    otherwise {
+      apply [tstp];
+    }
+  }
+}
+
+tpl [tstp] {
+  for-each [descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)]] {
+    apply [.]; "\n";
+  }
+  if [$omit-skolem-functions = "1"] {
+    for-each [descendant::function[@name and not(starts-with (@name, "esk")) and not(@name = preceding::function[@name]/@name)]] {
+      apply [.]; "\n";
+    }
+  } else {
+    for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name)]] {
+      apply [.]; "\n";
+    }
+  }
+}
+
+tpl [predicate[@name and not(@name = "=")]] {
+  "R"; `@name`;
+}
+
+tpl [function[@name]] {
+  "O"; `@name`;
+}
