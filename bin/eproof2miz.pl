@@ -33,10 +33,11 @@ Readonly my @TPTP_PROGRAMS => (
 );
 
 # Stylesheets
-Readonly my $STYLESHEET_HOME => $RealBin;
+Readonly my $STYLESHEET_HOME => "$RealBin/eprover";
 Readonly my $TPTP2VOC_STYLESHEET => "${STYLESHEET_HOME}/tptp2voc.xsl";
 Readonly my $TPTP2MIZ_STYLESHEET => "${STYLESHEET_HOME}/tptp2miz.xsl";
 Readonly my @STYLESHEETS => (
+    'tptp2evl.xsl',
     'tptp2dco.xsl',
     'tptp2dno.xsl',
     'tptp2voc.xsl',
