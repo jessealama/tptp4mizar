@@ -1,6 +1,5 @@
 stylesheet "1.0";
-
-output method=text;
+output method="text";
 
 tpl [/] {
   choose {
