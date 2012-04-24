@@ -10,8 +10,6 @@ output omit-xml-declaration="no";
 // The name of the article .dco that we will create
 #article = { ""; }
 
-#omit-skolem-functions = { "0"; }
-
 //////////////////////////////////////////////////////////////////////
 // Utilities
 //////////////////////////////////////////////////////////////////////
@@ -41,13 +39,7 @@ tpl [/] {
 
 tpl [tstp] {
   $num-predicates = `count(descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)])`;
-  $num-functions = {
-    if [$omit-skolem-functions = "1"] {
-      `count(descendant::function[@name and not(starts-with(@name, "esk")) and not(@name = preceding::function[@name]/@name)])`;
-    } else {
-      `count(descendant::function[@name and not(@name = preceding::function[@name]/@name)])`;
-    }
-  }
+  $num-functions = `count(descendant::function[@name and not(@name = preceding::function[@name]/@name)])`;
   $article-uc = uc (#s = `$article`);
   <Constructors {
     <Signature {
@@ -69,50 +61,26 @@ tpl [tstp] {
         }
       }
     }
-    if [$omit-skolem-functions = "1"] {
-      for-each [descendant::function[@name and not(starts-with (@name, "esk")) and not(@name = preceding::function[@name]/@name)]] {
-        <Constructor {
-          @kind = "K";
-          @nr = `position()`;
-          @aid = `$article-uc`;
-          @relnr = `position()`;
-          <ArgTypes {
-            for-each [*] {
-              <Typ {
-                @kind = "M";
-                @nr = "1";
-                <Cluster;
-              }
+    for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name)]] {
+      <Constructor {
+        @kind = "K";
+        @nr = `position()`;
+        @aid = `$article-uc`;
+        @relnr = `position()`;
+        @spelling = `@name`;
+        <ArgTypes {
+          for-each [*] {
+            <Typ {
+              @kind = "M";
+              @nr = "1";
+              <Cluster;
             }
-          }
-          <Typ {
-            @kind = "M";
-            @nr = "1";
-            <Cluster;
           }
         }
-      }
-    } else {
-      for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name)]] {
-        <Constructor {
-          @kind = "K";
-          @nr = `position()`;
-          @aid = `$article-uc`;
-          @relnr = `position()`;
-          <ArgTypes {
-            for-each [*] {
-              <Typ {
-                @kind = "M";
-                @nr = "1";
-                <Cluster;
-              }
-            }
-          }
-          <Typ {
-            @kind = "M";
-            @nr = "1";
-            <Cluster;
-          }
+        <Typ {
+          @kind = "M";
+          @nr = "1";
+          <Cluster;
         }
       }
     }
@@ -122,6 +90,7 @@ tpl [tstp] {
         @nr = `position()`;
         @aid = `$article-uc`;
         @relnr = `2 + position()`;
+        @spelling = `@name`;
         <ArgTypes {
           for-each [*] {
             <Typ {

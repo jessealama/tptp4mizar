@@ -10,6 +10,7 @@ use File::Copy qw(copy);
 use File::Basename qw(basename dirname);
 use Getopt::Long;
 use Pod::Usage;
+use Cwd qw(getcwd);
 use Carp qw(croak carp);
 use IPC::Run qw(harness);
 use IPC::Cmd qw(can_run);
@@ -41,6 +42,7 @@ Readonly my @STYLESHEETS => (
     'eprover2dco.xsl',
     'eprover2dno.xsl',
     'eprover2voc.xsl',
+    'eprover2def.xsl',
     'pp.xsl',
 );
 
@@ -113,12 +115,14 @@ my $help = 0;
 my $man = 0;
 my $db = undef;
 my $verbose = 0;
+my $opt_nested = 0;
 
 my $options_ok = GetOptions (
     "db=s"     => \$db,
     "verbose"  => \$verbose,
     'help' => \$help,
     'man' => \$man,
+    'nested' => \$opt_nested,
 );
 
 if (! $options_ok) {
@@ -254,27 +258,52 @@ my %directory_for_extension = (
     'evl' => 'text',
     'wsx' => 'text',
     'dno' => 'prel',
-    'dco' => 'prel'
+    'dco' => 'prel',
+    'def' => 'prel',
+    'the' => 'prel',
 );
 
-foreach my $extension (keys %directory_for_extension) {
+my @extensions_to_generate = ('voc', 'evl', 'dno', 'dco', 'wsx', 'def', 'the');
+
+my $cwd = getcwd;
+my $prel_subdir = "${db}/prel";
+my $prel_subdir_full = "${cwd}/${prel_subdir}";
+
+foreach my $extension (@extensions_to_generate) {
     my $subdir_name = $directory_for_extension{$extension};
     my $subdir = "${db}/${subdir_name}";
     my $stylesheet = "${STYLESHEET_HOME}/eprover2${extension}.xsl";
     my $output_file = "${subdir}/${tptp_short_name}.${extension}";
-    my $xsltproc_status = system ("xsltproc --stringparam omit-skolem-functions '1' --stringparam article '$tptp_short_name' $stylesheet $tptp_xml > $output_file 2>/dev/null");
+    my $xsltproc_parameters = "--stringparam article '$tptp_short_name' --stringparam prel-directory '${prel_subdir_full}'";
+    if ($opt_nested) {
+	$xsltproc_parameters .= " --stringparam shape 'nested' ";
+    } else {
+	$xsltproc_parameters .= " --stringparam shape 'flat' ";
+    }
+    my $xsltproc_status = system ("xsltproc ${xsltproc_parameters} $stylesheet $tptp_xml > $output_file");
+    my $xsltproc_error_message = $!;
     my $xsltproc_exit_code = $xsltproc_status >> 8;
     if ($xsltproc_exit_code != 0) {
-	croak ('Error: xsltproc did not exit cleanly when generating the .', $extension, ' file for', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);
+	croak ('Error: xsltproc did not exit cleanly when generating the .', $extension, ' file for', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'The exit code was ', $xsltproc_exit_code, '. The error message was:',  "\n", "\n", '  ', $xsltproc_error_message);
     }
 }
 
-# Now translate the
+my @skolem_extensions = ('def', 'the');
+
+foreach my $extension (@skolem_extensions) {
+    my $stylesheet = "${STYLESHEET_HOME}/eprover2${extension}.xsl";
+    my $path = "${db}/prel/skolem.${extension}";
+    my $xsltproc_status = system ("xsltproc --stringparam article '${tptp_short_name}' --stringparam prel-directory '${prel_subdir_full}' $stylesheet $tptp_xml > $path");
+    my $xsltproc_exit_code = $xsltproc_status >> 8;
+    if ($xsltproc_exit_code != 0) {
+	croak ('Error: xsltproc did not exit cleanly when generating skolem.', $extension, ' for', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);
+    }
+}
+
 my $pp_stylesheet = "${STYLESHEET_HOME}/pp.xsl";
 my $wsx_path = "${db}/text/${tptp_short_name}.wsx";
 my $miz_path = "${db}/text/${tptp_short_name}.miz";
-
-my $xsltproc_status = system ("xsltproc $pp_stylesheet $wsx_path > $miz_path 2>/dev/null");
+    my $xsltproc_status = system ("xsltproc $pp_stylesheet $wsx_path > $miz_path 2>/dev/null");
 my $xsltproc_exit_code = $xsltproc_status >> 8;
 if ($xsltproc_exit_code != 0) {
     croak ('Error: xsltproc did not exit cleanly when generating the .miz file for', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);

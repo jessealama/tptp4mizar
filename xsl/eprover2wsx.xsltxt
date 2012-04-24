@@ -7,6 +7,9 @@ output method="xml" indent="yes";
 
 #article = { ""; }
 
+// Should be either "flat" or "nested"
+#shape = { ""; }
+
 //////////////////////////////////////////////////////////////////////
 // Utilities
 //////////////////////////////////////////////////////////////////////
@@ -69,6 +72,12 @@ tpl [*] mode="no-justification" {
   msg terminate="yes" $message;
 }
 
+tpl [*] mode="negate-conjecture" {
+  $n = `name (.)`;
+  $message = `concat ("Error: we have arrived at an unhandled ", $n, " node in negate-conjecture mode.")`;
+  msg terminate="yes" $message;
+}
+
 tpl [*] mode="strip-universal-prefix" {
   $n = `name (.)`;
   $message = `concat ("Error: we have arrived at an unhandled ", $n, " node in strip-universal-prefix mode.")`;
@@ -99,6 +108,10 @@ tpl [*] mode="full" {
   msg terminate="yes" $message;
 }
 
+//////////////////////////////////////////////////////////////////////
+// Business as usual
+//////////////////////////////////////////////////////////////////////
+
 tpl [/] {
   choose {
     when [$article = ""] {
@@ -110,6 +123,12 @@ tpl [/] {
     when [contains ($article, " ")] {
       msg terminate="yes" "Error: the value of the article stylesheet parameter contains whitespace.";
     }
+    when [$shape = ""] {
+      msg terminate="yes" "Error: a non-empty value for the shape stylesheet parameter is mandatory.";
+    }
+    when [not($shape = "flat") and not($shape = "nested")] {
+      msg terminate="yes" "Error: the only permitted values of the shape stylesheet parameter are 'flat' and 'nested'.";
+    }
     when [tstp] {
       apply [tstp];
     }
@@ -119,47 +138,111 @@ tpl [/] {
   }
 }
 
-tpl [tstp] {
-  choose {
-    when [formula[@status = "conjecture"][2]] {
-      msg terminate="yes" "Error: there are multiple conjecture formulas, but we expected to find exactly one.";
-    }
-    when [formula[@status = "conjecture"]] {
-      $aid-uc = uc (#s = $article);
-      <Text-Proper {
-        @articleid = $aid-uc;
-        <Item {
-          @kind = "Section-Pragma";
-        }
-        if [descendant::variable] {
-          <Item {
-            @kind = "Reservation";
-            <Variables {
-              for-each [descendant::variable[@name and not(@name = preceding::variable[@name]/@name)]] {
-                <Variable {
-                  @spelling = `@name`;
-                }
-              }
-            }
-            <Standard-Type {
-              @spelling = "set";
-            }
+tpl [tstp[formula[@status = "conjecture"][2]]] {
+  msg terminate="yes" "Error: there are multiple conjecture formulas, but we expected to find exactly one.";
+}
+
+tpl [tstp[not(formula[@status = "conjecture"])]] {
+  msg terminate="yes" "Error: there is no conjecture formula.";
+}
+
+tpl reserve-variables {
+  if [descendant::variable] {
+    <Item {
+      @kind = "Reservation";
+      <Variables {
+        for-each [descendant::variable[@name and not(@name = preceding::variable[@name]/@name)]] {
+          <Variable {
+            @spelling = `@name`;
           }
         }
-        for-each [formula[@status = "axiom"]] {
-          apply [.] mode="axiom";
-        }
-        for-each [formula[@status = "plain" or source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] {
-          apply [.] mode="lemma";
-        }
-        for-each [formula[@status = "conjecture"]] {
-          apply [.] mode="conjecture";
+      }
+      <Standard-Type {
+        @spelling = "set";
+      }
+    }
+  }
+}
+
+tpl [tstp[formula[@status = "conjecture"]]] {
+  $aid-uc = uc (#s = $article);
+  <Text-Proper {
+    @articleid = $aid-uc;
+    <Item {
+      @kind = "Section-Pragma";
+    }
+    reserve-variables ();
+    choose {
+      when [$shape = "flat"] {
+        apply [.] mode="flat";
+      }
+      when [$shape = "nested"] {
+        apply [.] mode="nested";
+      }
+      otherwise {
+        $message = `concat ("Error: unknown shape '", $shape, "'.")`;
+        msg terminate="yes" $message;
+      }
+    }
+  }
+}
+
+tpl [tstp] mode="flat" {
+  for-each [formula[@status = "axiom"]] {
+    apply [.] mode="axiom";
+  }
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Diffuse-Statement";
+    <Label {
+      @spelling = "Refutation";
+    }
+    <Block {
+      @kind = "Now-Reasoning";
+      for-each [formula[not(@status = "axiom") and not(@status = "conjecture") and source/non-logical-data[@name = "inference"]]] {
+        choose {
+          when [@status = "negated_conjecture" and not(preceding-sibling::formula[@status = "negated_conjecture"])] {
+            <Item {
+              @kind = "Assumption";
+              <Single-Assumption {
+                apply [.] mode="no-justification";
+              }
+            }
+          }
+          when [position() = last()] {
+            apply [.] mode="conclusion";
+          }
+          otherwise {
+            apply [.] mode="lemma";
+          }
         }
       }
     }
-    otherwise {
-      msg terminate="yes" "Error: there is no conjecture formula.";
+  }
+  <Item {
+    @kind = "Theorem-Item";
+    for-each [formula[@status = "conjecture"]] {
+      <Proposition {
+      apply [*[1]]; // render the formula
+      }
     }
+    <Straightforward-Justification {
+      <Local-Reference {
+        @spelling = "Refutation";
+      }
+    }
+  }
+}
+
+tpl [tstp] mode="nested" {
+  for-each [formula[@status = "axiom"]] {
+    apply [.] mode="axiom";
+  }
+  for-each [formula[@status = "plain" or source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] {
+    apply [.] mode="lemma";
+  }
+  for-each [formula[@status = "conjecture"]] {
+    apply [.] mode="conjecture";
   }
 }
 
@@ -185,7 +268,9 @@ tpl [formula[@name]] mode="axiom" {
       }
       apply [*[1]] mode="strip-universal-prefix";
     }
-    <Straightforward-Justification;
+    <Block {
+      @kind = "Skipped-Proof";
+    }
   }
 }
 
@@ -225,6 +310,12 @@ tpl [formula[@name]] mode="lemma" {
                   @spelling = $step-name;
                 }
               }
+            }
+          }
+          if [non-logical-data[@name = "skolemize"]] {
+            <Definition-Reference {
+              @spelling = "SKOLEM";
+              @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]) + 1`;
             }
           }
         }
@@ -278,6 +369,12 @@ tpl [formula] mode="conjecture" {
               }
             }
           }
+          if [non-logical-data[@name = "skolemize"]] {
+            <Definition-Reference {
+              @spelling = "SKOLEM";
+              @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]) + 1`;
+            }
+          }
         }
       }
     }
@@ -294,6 +391,90 @@ tpl [formula[@name and not(@name = "")]] mode="no-justification" {
     apply [*[1]];
   }
 }
+
+tpl [formula[@name and not(@name = "")]] mode="no-label" {
+  <Proposition {
+    apply [*[1]];
+  }
+}
+
+tpl [formula[@name and not(@name = "")]] mode="conclusion" {
+  <Item {
+    @kind = "Conclusion";
+    @shape = "Compact-Statement";
+    <Proposition {
+      apply [*[1]];
+    }
+    <Straightforward-Justification {
+      for-each [source] {
+        choose {
+          when [number[@name]] {
+            for-each [number[@name]] {
+              $n = `@name`;
+              <Local-Reference {
+                if [key ("axiom", $n)] {
+                  for-each [key ("axiom", $n)] {
+                    for-each [source] {
+                      for-each [non-logical-data[@name = "file"]] {
+                        for-each [non-logical-data[position() = last()]] {
+                          $safe-name = capitalize-after-underscore (#string = `@name`);
+                          @spelling = $safe-name;
+                        }
+                      }
+                    }
+                  }
+                } else {
+                  $safe-name = capitalize-after-underscore (#string = $n);
+                  $step-name = `concat ("Step", $safe-name)`;
+                  @spelling = $step-name;
+                }
+              }
+            }
+          }
+          when [non-logical-data[@name = "inference"]] {
+            for-each [non-logical-data[@name = "inference"]] {
+              for-each [non-logical-data[position() = last()]] {
+                for-each [number[@name]] {
+                  <Local-Reference {
+                    $n = `@name`;
+                    if [key ("axiom", $n)] {
+                      for-each [key ("axiom", $n)] {
+                        for-each [source] {
+                          for-each [non-logical-data[@name = "file"]] {
+                            for-each [non-logical-data[position() = last()]] {
+                              $safe-name = capitalize-after-underscore (#string = `@name`);
+                              @spelling = $safe-name;
+                            }
+                          }
+                        }
+                      }
+                    } else {
+                      $safe-name = capitalize-after-underscore (#string = $n);
+                      $step-name = `concat ("Step", $safe-name)`;
+                      @spelling = $step-name;
+                    }
+                  }
+                }
+              }
+              if [non-logical-data[@name = "skolemize"]] {
+                <Definition-Reference {
+                  @spelling = "SKOLEM";
+                  @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]) + 1`;
+                }
+              }
+            }
+          }
+          otherwise {
+            apply [.] mode="trace";
+            msg terminate="yes" "Error: Unable to figure out how to deal with the justification of a formula";
+          }
+        }
+      }
+    }
+  }
+}
+
+
 
 tpl [formula[@name and not(@name = "")]] mode="full" {
   <Item {
@@ -356,6 +537,12 @@ tpl [formula[@name and not(@name = "")]] mode="full" {
                       @spelling = $step-name;
                     }
                   }
+                }
+              }
+              if [non-logical-data[@name = "skolemize"]] {
+                <Definition-Reference {
+                  @spelling = "SKOLEM";
+                  @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]) + 1`;
                 }
               }
             }

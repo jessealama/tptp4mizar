@@ -10,8 +10,6 @@ output omit-xml-declaration="no";
 // The name of the article we will create
 #article = { ""; }
 
-#omit-skolem-functions = { "0"; }
-
 //////////////////////////////////////////////////////////////////////
 // Utilities
 //////////////////////////////////////////////////////////////////////
@@ -49,13 +47,7 @@ tpl [/] {
 
 tpl [tstp] {
   $num-predicates = `count(descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)])`;
-  $num-functions = {
-    if [$omit-skolem-functions = "1"] {
-      `count(descendant::function[@name and not(starts-with(@name, "esk")) and not(@name = preceding::function[@name]/@name)])`;
-    } else {
-      `count(descendant::function[@name and not(@name = preceding::function[@name]/@name)])`;
-    }
-  }
+  $num-functions = `count(descendant::function[@name and not(@name = preceding::function[@name]/@name)])`;
   $article-uc = uc (#s = `$article`);
 
   <Notations {
@@ -130,58 +122,28 @@ tpl [tstp] {
     }
 
     // functions
-    if [$omit-skolem-functions = "1"] {
-      for-each [descendant::function[@name and not(starts-with (@name, "esk")) and not(@name = preceding::function[@name]/@name)]] {
-        <Pattern {
-          @kind = "K";
-          @nr = `position()`;
-          @aid = `$article-uc`;
-          @constrkind = "K";
-          @constrnr = `position()`;
-          <Format {
-            @kind = "O";
-            @symbolnr = `position()`;
-            @argnr = `count (*)`;
-            @leftargnr = "0";
-          }
-          <ArgTypes {
-            for-each [*] {
-              set ();
-            }
-          }
-          <Visible {
-            for-each [*] {
-              <Int {
-                @x = `position()`;
-              }
-            }
+    for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name)]] {
+      <Pattern {
+        @kind = "K";
+        @nr = `position()`;
+        @aid = `$article-uc`;
+        @constrkind = "K";
+        @constrnr = `position()`;
+        <Format {
+          @kind = "O";
+          @symbolnr = `position()`;
+          @argnr = `count (*)`;
+          @leftargnr = "0";
+        }
+        <ArgTypes {
+          for-each [*] {
+            set ();
           }
         }
-      }
-    } else {
-      for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name)]] {
-        <Pattern {
-          @kind = "K";
-          @nr = `position()`;
-          @aid = `$article-uc`;
-          @constrkind = "K";
-          @constrnr = `position()`;
-          <Format {
-            @kind = "O";
-            @symbolnr = `position()`;
-            @argnr = `count (*)`;
-            @leftargnr = "0";
-          }
-          <ArgTypes {
-            for-each [*] {
-              set ();
-            }
-          }
-          <Visible {
-            for-each [*] {
-              <Int {
-                @x = `position()`;
-              }
+        <Visible {
+          for-each [*] {
+            <Int {
+              @x = `position()`;
             }
           }
         }

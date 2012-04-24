@@ -5,8 +5,6 @@ output method="text";
 // Stylesheet parameters
 //////////////////////////////////////////////////////////////////////
 
-#omit-skolem-functions = { "0"; }
-
 //////////////////////////////////////////////////////////////////////
 // Templates
 //////////////////////////////////////////////////////////////////////
@@ -29,14 +27,8 @@ tpl [tstp] {
   for-each [descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)]] {
     apply [.]; "\n";
   }
-  if [$omit-skolem-functions = "1"] {
-    for-each [descendant::function[@name and not(starts-with (@name, "esk")) and not(@name = preceding::function[@name]/@name)]] {
-      apply [.]; "\n";
-    }
-  } else {
-    for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name)]] {
-      apply [.]; "\n";
-    }
+  for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name)]] {
+    apply [.]; "\n";
   }
 }
 

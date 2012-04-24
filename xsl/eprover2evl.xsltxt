@@ -66,5 +66,17 @@ tpl [tstp] {
         @"name" = $article-uc;
       }
     }
+    <Directive {
+      @"name" = "Definitions";
+      <Ident {
+        @"name" = "SKOLEM";
+      }
+    }
+    <Directive {
+      @"name" = "Theorems";
+      <Ident {
+        @"name" = "SKOLEM";
+      }
+    }
   }
 }
