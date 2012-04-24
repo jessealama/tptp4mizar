@@ -26,6 +26,10 @@ $ucletters = { "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; }
 tpl lc (#s) { `translate($s, $ucletters, $lcletters)`; }
 tpl uc (#s) { `translate($s, $lcletters, $ucletters)`; }
 
+tpl pad-axiom (#string) {
+  `concat ("Axiom", $string)`;
+}
+
 tpl capitalize-after-underscore (#string) {
   if [contains ($string, "_")] {
     $before = `substring-before ($string, "_")`;
@@ -308,7 +312,8 @@ tpl [formula[@name]] mode="axiom" {
             for-each [non-logical-data[@name = "file"]] {
               for-each [non-logical-data[position() = last()]] {
                 $safe-name = capitalize-after-underscore (#string = `@name`);
-                @spelling = $safe-name;
+                $padded = pad-axiom (#string = $safe-name);
+                @spelling = $padded;
               }
             }
           }
@@ -347,7 +352,8 @@ tpl [formula[@name]] mode="lemma" {
                       for-each [non-logical-data[@name = "file"]] {
                         for-each [non-logical-data[position() = last()]] {
                           $safe-name = capitalize-after-underscore (#string = `@name`);
-                          @spelling = $safe-name;
+                          $padded = pad-axiom (#string = $safe-name);
+                          @spelling = $padded;
                         }
                       }
                     }
@@ -456,7 +462,8 @@ tpl [formula[@name and not(@name = "")]] mode="conclusion" {
                       for-each [non-logical-data[@name = "file"]] {
                         for-each [non-logical-data[position() = last()]] {
                           $safe-name = capitalize-after-underscore (#string = `@name`);
-                          @spelling = $safe-name;
+                          $padded = pad-axiom (#string = $safe-name);
+                          @spelling = $padded;
                         }
                       }
                     }
@@ -481,7 +488,8 @@ tpl [formula[@name and not(@name = "")]] mode="conclusion" {
                           for-each [non-logical-data[@name = "file"]] {
                             for-each [non-logical-data[position() = last()]] {
                               $safe-name = capitalize-after-underscore (#string = `@name`);
-                              @spelling = $safe-name;
+                              $padded = pad-axiom (#string = $safe-name);
+                              @spelling = $padded;
                             }
                           }
                         }
@@ -539,7 +547,8 @@ tpl [formula[@name and not(@name = "")]] mode="full" {
                       for-each [non-logical-data[@name = "file"]] {
                         for-each [non-logical-data[position() = last()]] {
                           $safe-name = capitalize-after-underscore (#string = `@name`);
-                          @spelling = $safe-name;
+                          $padded = pad-axiom (#string = $safe-name);
+                          @spelling = $padded;
                         }
                       }
                     }
@@ -564,7 +573,8 @@ tpl [formula[@name and not(@name = "")]] mode="full" {
                           for-each [non-logical-data[@name = "file"]] {
                             for-each [non-logical-data[position() = last()]] {
                               $safe-name = capitalize-after-underscore (#string = `@name`);
-                              @spelling = $safe-name;
+                              $padded = pad-axiom (#string = $safe-name);
+                              @spelling = $padded;
                             }
                           }
                         }
