@@ -66,10 +66,12 @@ tpl [tstp] {
         @"name" = $article-uc;
       }
     }
-    <Directive {
-      @"name" = "Theorems";
-      <Ident {
-        @"name" = "SKOLEM";
+    if [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] {
+      <Directive {
+        @"name" = "Theorems";
+        <Ident {
+          @"name" = "SKOLEM";
+        }
       }
     }
   }
