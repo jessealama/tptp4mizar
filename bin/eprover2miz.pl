@@ -42,7 +42,6 @@ Readonly my @STYLESHEETS => (
     'eprover2dco.xsl',
     'eprover2dno.xsl',
     'eprover2voc.xsl',
-    'eprover2def.xsl',
     'pp.xsl',
 );
 
@@ -259,11 +258,10 @@ my %directory_for_extension = (
     'wsx' => 'text',
     'dno' => 'prel',
     'dco' => 'prel',
-    'def' => 'prel',
     'the' => 'prel',
 );
 
-my @extensions_to_generate = ('voc', 'evl', 'dno', 'dco', 'wsx', 'def', 'the');
+my @extensions_to_generate = ('voc', 'evl', 'dno', 'dco', 'wsx', 'the');
 
 my $cwd = getcwd;
 my $prel_subdir = "${db}/prel";
@@ -288,7 +286,7 @@ foreach my $extension (@extensions_to_generate) {
     }
 }
 
-my @skolem_extensions = ('def', 'the');
+my @skolem_extensions = ('the');
 
 foreach my $extension (@skolem_extensions) {
     my $stylesheet = "${STYLESHEET_HOME}/eprover2${extension}.xsl";
