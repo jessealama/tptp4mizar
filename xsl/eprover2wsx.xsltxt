@@ -11,6 +11,12 @@ output method="xml" indent="yes";
 #shape = { ""; }
 
 //////////////////////////////////////////////////////////////////////
+// Keys
+//////////////////////////////////////////////////////////////////////
+
+key "formulas" [formula[@name]] `@name`;
+
+//////////////////////////////////////////////////////////////////////
 // Utilities
 //////////////////////////////////////////////////////////////////////
 
@@ -234,12 +240,54 @@ tpl [tstp] mode="flat" {
   }
 }
 
+tpl any-depends-on-conjecture (#formula-names) {
+  if [$formula-names] {
+    $formula-name = `$formula-names[1]`;
+    if [key ("formulas", $formula-name)] {
+      for-each [key ("formulas", $formula-name)] {
+        $depends = depends-on-conjecture ();
+        if [$depends = "1"] {
+          "1";
+        } else {
+          any-depends-on-conjecture (#formula-names = `$formula-names[position() > 1]`);
+        }
+      }
+    } else {
+      $message = `concat ("Error: unknown formula '", $formula-name, "'.")`;
+      msg terminate="yes" $message;
+    }
+  } else {
+    "0";
+  }
+}
+
+tpl depends-on-conjecture {
+  if [self::formula[@status = "conjecture"]] {
+    "1";
+  } else {
+    for-each [source] {
+      if [non-logical-data[@name = "inference"]] {
+        for-each [non-logical-data[@name = "inference"]] {
+          for-each [non-logical-data[position() = last()]] {
+            any-depends-on-conjecture (#formula-names = `number[@name]/@name`);
+          }
+        }
+      } else {
+        "0";
+      }
+    }
+  }
+}
+
 tpl [tstp] mode="nested" {
   for-each [formula[@status = "axiom"]] {
     apply [.] mode="axiom";
   }
-  for-each [formula[@status = "plain" or source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] {
-    apply [.] mode="lemma";
+  for-each [formula[not(@status = "axiom") and source/non-logical-data[@name = "inference"]]] {
+    $depends-on-conjecture = depends-on-conjecture ();
+    if [$depends-on-conjecture = "0"] {
+      apply [.] mode="lemma";
+    }
   }
   for-each [formula[@status = "conjecture"]] {
     apply [.] mode="conjecture";
@@ -332,14 +380,30 @@ tpl [formula] mode="conjecture" {
     }
     <Block {
       @kind = "Proof";
-      <Item {
-        @kind = "Assumption";
-        <Single-Assumption {
-          apply [following-sibling::formula[@status = "negated_conjecture"][1]] mode="no-justification";
+      <Block {
+        @kind = "Now-Reasoning";
+        <Item {
+          @kind = "Assumption";
+          <Single-Assumption {
+            apply [following-sibling::formula[@status = "negated_conjecture"][1]] mode="no-justification";
+          }
         }
-      }
-      for-each [following-sibling::formula[@status = "negated_conjecture" and not(source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"])][position() > 1]] {
-        apply [.] mode="full"; // "full" == label, proposition, justification
+        for-each [following-sibling::formula[not(@status = "axiom") and source/non-logical-data[@name = "inference"]]] {
+          choose {
+            when [@status = "negated_conjecture" and not(preceding-sibling::formula[@status = "negated_conjecture"])] {
+              // ignore; we just dealt with this particular formula
+            }
+            when [position() = last()] {
+              apply [.] mode="conclusion";
+            }
+            otherwise {
+              $depends = depends-on-conjecture ();
+              if [$depends = "1"] {
+                apply [.] mode="full";
+              }
+            }
+          }
+        }
       }
       <Item {
         @kind = "Conclusion";
@@ -348,33 +412,7 @@ tpl [formula] mode="conjecture" {
           <Thesis;
         }
         <Straightforward-Justification {
-          <Local-Reference {
-            for-each [following-sibling::formula[@name and @status = "negated_conjecture"][position() = last()]] {
-              $n = `@name`;
-              if [key ("axiom", $n)] {
-                for-each [key ("axiom", $n)] {
-                  for-each [source] {
-                    for-each [non-logical-data[@name = "file"]] {
-                      for-each [non-logical-data[position() = last()]] {
-                        $safe-name = capitalize-after-underscore (#string = `@name`);
-                        @spelling = $safe-name;
-                      }
-                    }
-                  }
-                }
-              } else {
-                $safe-name = capitalize-after-underscore (#string = $n);
-                $step-name = `concat ("Step", $safe-name)`;
-                @spelling = $step-name;
-              }
-            }
-          }
-          if [non-logical-data[@name = "skolemize"]] {
-            <Definition-Reference {
-              @spelling = "SKOLEM";
-              @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]) + 1`;
-            }
-          }
+          <Link;
         }
       }
     }
