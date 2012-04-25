@@ -59,10 +59,11 @@ tpl [/] {
 // derived from anything
 tpl [tstp] {
   <tstp {
-    for-each [formula[@status = "axiom" or status = "conjecture" or source/non-logical-data[@name = "inference"]][1]] {
+    for-each [formula[@status = "axiom" or @status = "conjecture" or source/non-logical-data[@name = "inference"]][1]] {
       apply [.] (#same = ",,");
     }
   }
+
 }
 
 tpl [source[not(non-logical-data[@name = "inference"])]] mode="maybe-rewrite-references" {
@@ -117,22 +118,29 @@ tpl [formula[@name]] (#same) {
   $n = `@name`;
   $formula = `.`;
   $pseudo-token = `concat (",", $n, ":")`;
-  if [contains ($same, $pseudo-token)] {
-     // msg "not doing anything";
-    // don't do anything: this formula is identical to one we've already seen
-    apply [following-sibling::formula[@status = "axiom" or @status = "conjecture" or source/non-logical-data[@name = "inference"]][1]] (#same = $same);
-  } else {
-    apply [.] (#same = $same) mode="maybe-rewrite-references";
-    $same-formulas = identical-formulas (#formula = $formula,
-                                         #candidates = `following-sibling::formula[@status = "axiom" or @status = "conjecture" or source/non-logical-data[@name = "inference"]]`);
-    $same-message = `concat ("Here are the formulas identical to ", $n, ": ", $same-formulas)`;
-    // msg $same-message;
-    $same-is-empty = token-string-is-empty (#token-string = $same-formulas);
-    if [$same-is-empty = "1"] {
+  choose {
+    when [contains ($same, $pseudo-token)] {
+       // msg "not doing anything";
+      // don't do anything: this formula is identical to one we've already seen
       apply [following-sibling::formula[@status = "axiom" or @status = "conjecture" or source/non-logical-data[@name = "inference"]][1]] (#same = $same);
-    } else {
-      $new-same = append-token-strings (#a = $same, #b = $same-formulas);
-      apply [following-sibling::formula[@status = "axiom" or @status = "conjecture" or source/non-logical-data[@name = "inference"]][1]] (#same = $new-same);
+    }
+    when [@status = "conjecture"] {
+      apply [.] mode="copy";
+      apply [following-sibling::formula[@status = "axiom" or @status = "conjecture" or source/non-logical-data[@name = "inference"]][1]] (#same = $same);
+    }
+    otherwise {
+      apply [.] (#same = $same) mode="maybe-rewrite-references";
+      $same-formulas = identical-formulas (#formula = $formula,
+                                           #candidates = `following-sibling::formula[@status = "axiom" or @status = "conjecture" or source/non-logical-data[@name = "inference"]]`);
+      $same-message = `concat ("Here are the formulas identical to ", $n, ": ", $same-formulas)`;
+      // msg $same-message;
+      $same-is-empty = token-string-is-empty (#token-string = $same-formulas);
+      if [$same-is-empty = "1"] {
+        apply [following-sibling::formula[@status = "axiom" or @status = "conjecture" or source/non-logical-data[@name = "inference"]][1]] (#same = $same);
+      } else {
+        $new-same = append-token-strings (#b = $same, #a = $same-formulas);
+        apply [following-sibling::formula[@status = "axiom" or @status = "conjecture" or source/non-logical-data[@name = "inference"]][1]] (#same = $new-same);
+      }
     }
   }
 }
