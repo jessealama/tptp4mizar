@@ -43,6 +43,7 @@ Readonly my @STYLESHEETS => (
     'eprover2dno.xsl',
     'eprover2voc.xsl',
     'pp.xsl',
+    'eprover-safe-skolemizations.xsl',
 );
 
 # Colors
@@ -243,6 +244,13 @@ my $xmllint_exit_code = $xmllint_status >> 8;
 
 if ($xmllint_exit_code != 0) {
     croak ('Error: tptp4X failed to generate a valid XML document corresponding to the TPTP file at', "\n", "\n", '  ', $tptp_file);
+}
+
+my $safe_skolemization_stylesheet = "${STYLESHEET_HOME}/eprover-safe-skolemizations.xsl";
+my $safe_skolemization_status = system ("xsltproc ${safe_skolemization_stylesheet} ${tptp_xml} > /dev/null 2>&1");
+my $safe_skolemization_exit_code = $safe_skolemization_status >> 8;
+if ($safe_skolemization_status != 0) {
+    die error_message ('The given proof has at least one skolemization step that produces multiple skolem functions.');
 }
 
 # Make the required subdirectories
