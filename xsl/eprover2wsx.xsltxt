@@ -374,9 +374,6 @@ tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-
                     <Straightforward-Justification {
                       <Link;
                       <Local-Reference {
-                        @spelling = "Reiterate";
-                      }
-                      <Local-Reference {
                         for-each [$dependent-formula] {
                           $dependent-formula-name = `@name`;
                           if [@status = "axiom"] {
@@ -416,9 +413,6 @@ tpl [formula] mode="reiterate" {
     @kind = "Regular-Statement";
     @shape = "Compact-Statement";
     <Proposition {
-      <Label {
-        @spelling = "Reiterate";
-      }
       apply [*[1]] mode="strip-universal-prefix";
     }
     <Straightforward-Justification {
