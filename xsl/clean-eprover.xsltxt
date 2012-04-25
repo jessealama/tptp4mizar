@@ -81,7 +81,7 @@ tpl [source[non-logical-data[@name = "inference"]]] (#same) mode="maybe-rewrite-
           <non-logical-data {
             for-each [number[@name]] {
               $formula-number = `@name`;
-              $pseudo-token = `concat (",", $formula-number)`;
+              $pseudo-token = `concat (",", $formula-number, ":")`;
               if [contains ($same, $pseudo-token)] {
                 // we have seen before the formula that this one
                 // depends on.
