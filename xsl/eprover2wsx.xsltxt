@@ -14,6 +14,7 @@ output method="xml" indent="yes";
 // Keys
 //////////////////////////////////////////////////////////////////////
 
+key "axiom" [formula[@name and @status = "axiom"]] `@name`;
 key "formulas" [formula[@name]] `@name`;
 
 //////////////////////////////////////////////////////////////////////
@@ -73,48 +74,56 @@ key "axiom" [formula[@status = "axiom"]] `@name`;
 tpl [*] {
   $n = `name (.)`;
   $message = `concat ("Error: we have arrived at an unhandled ", $n, " node.")`;
+  apply [.] mode="trace";
   msg terminate="yes" $message;
 }
 
 tpl [*] mode="no-justification" {
   $n = `name (.)`;
   $message = `concat ("Error: we have arrived at an unhandled ", $n, " node in no-justification mode.")`;
+  apply [.] mode="trace";
   msg terminate="yes" $message;
 }
 
 tpl [*] mode="negate-conjecture" {
   $n = `name (.)`;
   $message = `concat ("Error: we have arrived at an unhandled ", $n, " node in negate-conjecture mode.")`;
+  apply [.] mode="trace";
   msg terminate="yes" $message;
 }
 
 tpl [*] mode="strip-universal-prefix" {
   $n = `name (.)`;
   $message = `concat ("Error: we have arrived at an unhandled ", $n, " node in strip-universal-prefix mode.")`;
+  apply [.] mode="trace";
   msg terminate="yes" $message;
 }
 
 tpl [*] mode="axiom" {
   $n = `name (.)`;
   $message = `concat ("Error: we have arrived at an unhandled ", $n, " node in axiom mode.")`;
+  apply [.] mode="trace";
   msg terminate="yes" $message;
 }
 
 tpl [*] mode="lemma" {
   $n = `name (.)`;
   $message = `concat ("Error: we have arrived at an unhandled ", $n, " node in lemma mode.")`;
+  apply [.] mode="trace";
   msg terminate="yes" $message;
 }
 
 tpl [*] mode="conjecture" {
   $n = `name (.)`;
   $message = `concat ("Error: we have arrived at an unhandled ", $n, " node in conjecture mode.")`;
+  apply [.] mode="trace";
   msg terminate="yes" $message;
 }
 
 tpl [*] mode="full" {
   $n = `name (.)`;
   $message = `concat ("Error: we have arrived at an unhandled ", $n, " node in full mode.")`;
+  apply [.] mode="trace";
   msg terminate="yes" $message;
 }
 
@@ -258,6 +267,7 @@ tpl any-depends-on-conjecture (#formula-names) {
       }
     } else {
       $message = `concat ("Error: unknown formula '", $formula-name, "'.")`;
+      apply [.] mode="trace";
       msg terminate="yes" $message;
     }
   } else {
@@ -327,7 +337,106 @@ tpl [formula[@name]] mode="axiom" {
   }
 }
 
-tpl [formula[@name]] mode="lemma" {
+tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "csr"]]] mode="lemma" {
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Compact-Statement";
+    <Proposition {
+      <Label {
+        $safe-name = capitalize-after-underscore (#string = `@name`);
+        $step-name = `concat ("Step", $safe-name)`;
+        @spelling = $step-name;
+      }
+      apply [*[1]] mode="strip-universal-prefix";
+    }
+    <Block {
+      @kind = "Proof";
+      for-each [source] {
+        for-each [non-logical-data[@name = "inference"]] {
+          for-each [non-logical-data[position() = last()]] {
+            for-each [number[@name]] {
+              $n = `@name`;
+              $position = `position ()`;
+              $dependent-formula = `key ("formulas", $n)`;
+              choose {
+                when [position() = 1] {
+                  for-each [$dependent-formula] {
+                    apply [.] mode="reiterate";
+                  }
+                }
+                when [position() = 2] {
+                  <Item {
+                    @kind = "Conclusion";
+                    @shape = "Compact-Statement";
+                    <Proposition {
+                      <Thesis;
+                    }
+                    <Straightforward-Justification {
+                      <Link;
+                      <Local-Reference {
+                        @spelling = "Reiterate";
+                      }
+                      <Local-Reference {
+                        for-each [$dependent-formula] {
+                          $dependent-formula-name = `@name`;
+                          if [@status = "axiom"] {
+                            $safe-name = capitalize-after-underscore (#string = $dependent-formula-name);
+                            $padded = pad-axiom (#string = $safe-name);
+                            @spelling = $padded;
+                          } else {
+                            @spelling = `concat ("Step", $dependent-formula-name)`;
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+                otherwise {
+                  apply [.] mode="trace";
+                  msg terminate="yes" "Error: we are dealing with a CSR inference having more than two premises.";
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+tpl [*] mode="reiterate" {
+  $n = `name (.)`;
+  $message = `concat ("Error: we have arrived at an unhandled ", $n, " node in reiterate mode.")`;
+  apply [.] mode="trace";
+  msg terminate="yes" $message;
+}
+
+tpl [formula] mode="reiterate" {
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Compact-Statement";
+    <Proposition {
+      <Label {
+        @spelling = "Reiterate";
+      }
+      apply [*[1]] mode="strip-universal-prefix";
+    }
+    <Straightforward-Justification {
+      if [@status = "axiom"] {
+        $safe-name = capitalize-after-underscore (#string = `@name`);
+        $padded = pad-axiom (#string = $safe-name);
+        @spelling = $padded;
+      } else {
+        <Local-Reference {
+          $n = `@name`;
+          @spelling = `concat ("Step", $n)`;
+        }
+      }
+    }
+  }
+}
+
+tpl [formula[@name and not(source/non-logical-data[@name = "inference"]/non-logical-data[@name = "csr"])]] mode="lemma" {
   <Item {
     @kind = "Regular-Statement";
     @shape = "Compact-Statement";
@@ -405,7 +514,11 @@ tpl [formula] mode="conjecture" {
             otherwise {
               $depends = depends-on-conjecture ();
               if [$depends = "1"] {
-                apply [.] mode="full";
+                if [source/non-logical-data[@name = "inference"]/non-logical-data[@name = "csr"]] {
+                  apply [.] mode="lemma";
+                } else {
+                  apply [.] mode="full";
+                }
               }
             }
           }
