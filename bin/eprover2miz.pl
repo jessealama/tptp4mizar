@@ -44,6 +44,7 @@ Readonly my @STYLESHEETS => (
     'eprover2voc.xsl',
     'pp.xsl',
     'eprover-safe-skolemizations.xsl',
+    'clean-eprover.xsl',
 );
 
 # Colors
@@ -253,6 +254,16 @@ if ($safe_skolemization_status != 0) {
     die error_message ('The given proof has at least one skolemization step that produces multiple skolem functions.');
 }
 
+# Clean the HTML
+my $clean_tptp_xml = "${db}/${tptp_basename}.xml.clean";
+my $clean_stylesheet = "${STYLESHEET_HOME}/clean-eprover.xsl";
+my $clean_status = system ("xsltproc ${clean_stylesheet} ${tptp_xml} > ${clean_tptp_xml}");
+my $clean_exit_code = $clean_status >> 8;
+
+if ($clean_exit_code != 0) {
+    die error_message ('Error: xsltproc did not exit cleanly when cleaning up ${tptp_xml}.');
+}
+
 # Make the required subdirectories
 
 foreach my $dir (@subdirs) {
@@ -286,7 +297,7 @@ foreach my $extension (@extensions_to_generate) {
     } else {
 	$xsltproc_parameters .= " --stringparam shape 'flat' ";
     }
-    my $xsltproc_status = system ("xsltproc ${xsltproc_parameters} $stylesheet $tptp_xml > $output_file");
+    my $xsltproc_status = system ("xsltproc ${xsltproc_parameters} $stylesheet ${clean_tptp_xml} > $output_file");
     my $xsltproc_error_message = $!;
     my $xsltproc_exit_code = $xsltproc_status >> 8;
     if ($xsltproc_exit_code != 0) {
@@ -299,7 +310,7 @@ my @skolem_extensions = ('the');
 foreach my $extension (@skolem_extensions) {
     my $stylesheet = "${STYLESHEET_HOME}/eprover2${extension}.xsl";
     my $path = "${db}/prel/skolem.${extension}";
-    my $xsltproc_status = system ("xsltproc --stringparam article '${tptp_short_name}' --stringparam prel-directory '${prel_subdir_full}' $stylesheet $tptp_xml > $path");
+    my $xsltproc_status = system ("xsltproc --stringparam article '${tptp_short_name}' --stringparam prel-directory '${prel_subdir_full}' $stylesheet ${clean_tptp_xml} > $path");
     my $xsltproc_exit_code = $xsltproc_status >> 8;
     if ($xsltproc_exit_code != 0) {
 	croak ('Error: xsltproc did not exit cleanly when generating skolem.', $extension, ' for', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);
