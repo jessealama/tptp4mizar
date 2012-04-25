@@ -320,7 +320,7 @@ foreach my $extension (@skolem_extensions) {
 my $pp_stylesheet = "${STYLESHEET_HOME}/pp.xsl";
 my $wsx_path = "${db}/text/${tptp_short_name}.wsx";
 my $miz_path = "${db}/text/${tptp_short_name}.miz";
-    my $xsltproc_status = system ("xsltproc $pp_stylesheet $wsx_path > $miz_path 2>/dev/null");
+    my $xsltproc_status = system ("xsltproc $pp_stylesheet $wsx_path > $miz_path");
 my $xsltproc_exit_code = $xsltproc_status >> 8;
 if ($xsltproc_exit_code != 0) {
     croak ('Error: xsltproc did not exit cleanly when generating the .miz file for', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);
