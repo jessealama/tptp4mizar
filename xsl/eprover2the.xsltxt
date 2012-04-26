@@ -320,13 +320,45 @@ tpl [conjunction] (#variable-alist) mode="render-definiens" {
   }
 }
 
+tpl [disjunction] (#variable-alist) mode="render-definiens" {
+  <Not {
+    <And {
+      <Not {
+        apply [*[1]] (#variable-alist = $variable-alist) mode="render-definiens";
+      }
+      <Not {
+        apply [*[2]] (#variable-alist = $variable-alist) mode="render-definiens";
+      }
+    }
+  }
+}
+
 tpl [negation] (#variable-alist) mode="render-definiens" {
   <Not {
     apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
   }
 }
 
-tpl [predicate[@name]] (#variable-alist) mode="render-definiens" {
+tpl [implication] (#variable-alist) mode="render-definiens" {
+  <Not {
+    <And {
+      apply [*[1]] (#variable-alist = $variable-alist) mode="render-definiens";
+      <Not {
+        apply [*[2]] (#variable-alist = $variable-alist) mode="render-definiens";
+      }
+    }
+  }
+}
+
+tpl [predicate[@name = "="]] (#variable-alist) mode="render-definiens" {
+  <Pred {
+    @kind = "R";
+    @nr = "1";  // magic constant: equality is the very first relation in HIDDEN
+    apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
+  }
+}
+
+tpl [predicate[@name and not(@name = "=")]] (#variable-alist) mode="render-definiens" {
   <Pred {
     @kind = "R";
     // @spelling = `@name`;
