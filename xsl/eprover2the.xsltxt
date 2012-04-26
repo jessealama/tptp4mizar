@@ -166,8 +166,8 @@ tpl [/] {
 }
 
 tpl [tstp] {
-  $num-functions = `count(descendant::function[@name and not(@name = preceding::function[@name]/@name)])`;
   $article-uc = uc (#s = `$article`);
+
   <Theorems {
     <Signature {
       <ArticleID {
@@ -177,6 +177,17 @@ tpl [tstp] {
         @"name" = $article-uc;
       }
     }
+
+    // Generate the axioms
+    for-each [formula[@status = "axiom"]] {
+      <Theorem {
+        @kind = "T";
+        apply [.] mode="render-definiens";
+      }
+    }
+
+    // "Definitions" for skolem functions
+    $num-functions = `count(descendant::function[@name and not(@name = preceding::function[@name]/@name)])`;
     for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] {
       $this-formula-name = `@name`;
       <Theorem {
