@@ -1,0 +1,78 @@
+stylesheet "1.0";
+output method="xml" indent="yes";
+
+//////////////////////////////////////////////////////////////////////
+// Stylesheet parameters
+//////////////////////////////////////////////////////////////////////
+
+#article = { ""; }
+
+//////////////////////////////////////////////////////////////////////
+// Utilities
+//////////////////////////////////////////////////////////////////////
+
+$lcletters = { "abcdefghijklmnopqrstuvwxyz"; }
+$ucletters = { "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; }
+
+tpl lc (#s) { `translate($s, $ucletters, $lcletters)`; }
+tpl uc (#s) { `translate($s, $lcletters, $ucletters)`; }
+
+// If we don't handle something explicitly, we don't handle it at all.
+tpl [*] {
+  $n = `name (.)`;
+  $message = `concat ("Error: we have arrived at an unhandled ", $n, " node.")`;
+  msg terminate="yes" $message;
+}
+
+tpl [/] {
+  choose {
+    when [$article = ""] {
+      msg terminate="yes" "Error: the empty string is not an acceptable value for the article stylesheet parameter.";
+    }
+    when [string-length ($article) > 8] {
+      msg terminate="yes" "Error: the value of the article stylesheet parameter is too long (it must be at most 8 characters).";
+    }
+    when [contains ($article, " ")] {
+      msg terminate="yes" "Error: the value of the article stylesheet parameter contains whitespace.";
+    }
+    when [tstp] {
+      apply [tstp];
+    }
+    otherwise {
+      msg terminate="yes" "Error: the required tstp document element is missing.";
+    }
+  }
+}
+
+tpl [tstp] {
+  $article-uc = uc (#s = $article);
+  <Environ {
+    @aid = $article-uc;
+    <Directive {
+      @"name" = "Vocabularies";
+      <Ident {
+        @"name" = $article-uc;
+      }
+    }
+    <Directive {
+      @"name" = "Notations";
+      <Ident {
+        @"name" = $article-uc;
+      }
+    }
+    <Directive {
+      @"name" = "Constructors";
+      <Ident {
+        @"name" = $article-uc;
+      }
+    }
+    if [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] {
+      <Directive {
+        @"name" = "Theorems";
+        <Ident {
+          @"name" = "SKOLEM";
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+stylesheet "1.0";
+output method="text";
+
+// If we don't handle something explicitly, we don't handle it at all.
+tpl [*] {
+  $n = `name (.)`;
+  $message = `concat ("Error: we have arrived at an unhandled ", $n, " node.")`;
+  msg terminate="yes" $message;
+}
+
+tpl [/] {
+  if [tstp] {
+    apply [tstp];
+  } else {
+    msg terminate="yes" "Error: the required tstp document element is missing.";
+  }
+}
+
+tpl [tstp] {
+  apply [formula];
+}
+
+tpl [formula[@name and source]] {
+  apply [source] (#formula = `@name`);
+}
+
+tpl [source] (#formula) {
+  apply [non-logical-data[@name = "inference"]] (#formula = $formula);
+}
+
+tpl [non-logical-data[@name = "inference"]] (#formula) {
+  for-each [non-logical-data[position() = last()]] {
+    for-each [number[@name]] {
+      `@name`; " "; `$formula`; "\n";
+    }
+  }
+}

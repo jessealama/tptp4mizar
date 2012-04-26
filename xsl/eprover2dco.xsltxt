@@ -7,6 +7,7 @@ output omit-xml-declaration="no";
 // Stylesheet parameters
 //////////////////////////////////////////////////////////////////////
 
+// The name of the article .dco that we will create
 #article = { ""; }
 
 //////////////////////////////////////////////////////////////////////
@@ -40,7 +41,6 @@ tpl [tstp] {
   $num-predicates = `count(descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)])`;
   $num-functions = `count(descendant::function[@name and not(@name = preceding::function[@name]/@name)])`;
   $article-uc = uc (#s = `$article`);
-
   <Constructors {
     <Signature {
       <ArticleID {
@@ -67,6 +67,7 @@ tpl [tstp] {
         @nr = `position()`;
         @aid = `$article-uc`;
         @relnr = `position()`;
+        @spelling = `@name`;
         <ArgTypes {
           for-each [*] {
             <Typ {
@@ -83,13 +84,13 @@ tpl [tstp] {
         }
       }
     }
-
     for-each [descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)]] {
       <Constructor {
         @kind = "R";
         @nr = `position()`;
         @aid = `$article-uc`;
         @relnr = `2 + position()`;
+        @spelling = `@name`;
         <ArgTypes {
           for-each [*] {
             <Typ {
