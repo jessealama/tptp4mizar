@@ -21,6 +21,46 @@ tpl [/] {
   }
 }
 
-tpl [Text-Proper] {
+tpl [*] {
+  $n = `name (.)`;
+  <$n {
+    for-each [@*] { copy-of `.`; }
+    apply [*];
+  }
+}
 
+tpl [*] mode="copy" {
+  $n = `name (.)`;
+  <$n {
+    for-each [@*] { copy-of `.`; }
+    apply [*] mode="copy";
+  }
+}
+
+tpl consider-recommendation (#recommendation) {
+  choose {
+    when [$recommendation = "604"] {
+      $message = `concat ("604 recommendation accepted; skipping this reference.")`;
+      msg $message;
+      // don't do anything further
+    }
+    otherwise {
+      $message = `concat ("Warning: Unable to make sense of the recommendation '", $recommendation, "'.")`;
+      msg $message;
+      apply [.] mode="copy";
+    }
+  }
+}
+
+tpl [Local-Reference[@line and @col]] {
+  $line = `@line`;
+  $col = `@col`;
+  $pseudo-token = `concat (",", $line, ":", $col, ":")`;
+  if [contains ($recommendations, $pseudo-token)] {
+    $after-token = `substring-after ($recommendation, $pseudo-token)`;
+    $recommendation = `substring-before ($after-token, ",")`;
+    consider-recommendation (#recommendation = $recommendation);
+  } else {
+    apply [.] mode="copy";
+  }
 }
