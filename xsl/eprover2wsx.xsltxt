@@ -317,22 +317,24 @@ tpl [formula[@name]] mode="axiom" {
     @shape = "Compact-Statement";
     <Proposition {
       <Label {
-        for-each [key ("axiom", $n)] {
           for-each [source] {
-            for-each [non-logical-data[@name = "file"]] {
-              for-each [non-logical-data[position() = last()]] {
-                $safe-name = capitalize-after-underscore (#string = `@name`);
-                $padded = pad-axiom (#string = $safe-name);
-                @spelling = $padded;
-              }
+          for-each [non-logical-data[@name = "file"]] {
+            for-each [non-logical-data[position() = last()]] {
+              $safe-name = capitalize-after-underscore (#string = `@name`);
+              $padded = pad-axiom (#string = $safe-name);
+              @spelling = $padded;
             }
           }
         }
       }
-      apply [*[1]] mode="strip-universal-prefix";
+        apply [*[1]] mode="strip-universal-prefix";
     }
-    <Block {
-      @kind = "Skipped-Proof";
+    <Straightforward-Justification {
+      <Theorem-Reference {
+        $article-uc = uc (#s = $article);
+        @spelling = $article-uc;
+	@"number" = `count (preceding::formula[@status = "axiom"]) + 1`;
+      }
     }
   }
 }
