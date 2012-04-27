@@ -83,6 +83,11 @@ tpl fragile-recommendation-applied-to-any (#candidates) {
 
 tpl consider-recommendation (#recommendation) {
   choose {
+    when [$recommendation = "601"] { // chklab
+      $message = "chklab recommendation accepted; rewriting justification.";
+      msg $message;
+      // nothing further to do
+    }
     when [$recommendation = "604"] {
       // Check whether there is already a reference in the current
       // list of references to which we have already applied the 604
@@ -122,6 +127,19 @@ tpl consider-recommendation (#recommendation) {
       msg $message;
       apply [.] mode="copy";
     }
+  }
+}
+
+tpl [Item[Proposition/Label[@spelling]]] {
+  $line = `@line`;
+  $col = `@col`;
+  $pseudo-token = `concat (",", $line, ":", $col, ":")`;
+  if [contains ($recommendations, $pseudo-token)] {
+    $after-token = `substring-after ($recommendations, $pseudo-token)`;
+    $recommendation = `substring-before ($after-token, ",")`;
+    consider-recommendation (#recommendation = $recommendation);
+  } else {
+    apply [.] mode="copy";
   }
 }
 
