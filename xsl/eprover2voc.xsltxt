@@ -27,7 +27,7 @@ tpl [tstp] {
   for-each [descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)]] {
     apply [.]; "\n";
   }
-  for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name)]] {
+  for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
     apply [.]; "\n";
   }
 }

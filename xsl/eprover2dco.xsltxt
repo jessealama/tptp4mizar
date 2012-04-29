@@ -39,7 +39,7 @@ tpl [/] {
 
 tpl [tstp] {
   $num-predicates = `count(descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)])`;
-  $num-functions = `count(descendant::function[@name and not(@name = preceding::function[@name]/@name)])`;
+  $num-functions = `count(descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)])`;
   $article-uc = uc (#s = `$article`);
   <Constructors {
     <Signature {
@@ -61,7 +61,7 @@ tpl [tstp] {
         }
       }
     }
-    for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name)]] {
+    for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
       <Constructor {
         @kind = "K";
         @nr = `position()`;
