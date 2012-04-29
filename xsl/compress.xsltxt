@@ -166,6 +166,10 @@ tpl consider-recommendation (#recommendation) {
       // Done ignoring formulas
       msg "Done ignoring formulas.";
     }
+    when [$recommendation = "602"] {  // irrelevant reference
+      msg "Ignoring irrelevant reference.";
+      // ignore
+    }
     otherwise {
       $message = `concat ("Warning: Unable to make sense of the recommendation '", $recommendation, "'.")`;
       msg $message;
