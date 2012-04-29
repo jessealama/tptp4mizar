@@ -12,7 +12,9 @@ output method="xml" indent="yes";
 // Keys
 //////////////////////////////////////////////////////////////////////
 
-key "labelled-formulas" [Item[Proposition/Label[@spelling]]] `Proposition/Label[@spelling]/@spelling`;
+key "labelled-formulas"
+    [Item[Proposition/Label[@spelling]]]
+    `Proposition/Label[@spelling]/@spelling`;
 
 //////////////////////////////////////////////////////////////////////
 // Utilities
@@ -35,6 +37,39 @@ tpl [*] mode="trace-recursive" {
 tpl [*] (#message) mode="die" {
   apply [.] mode="trace";
   msg terminate="yes" $message;
+}
+
+tpl token-string-tail (#token-string) {
+  $empty = token-string-is-empty (#token-string = $token-string);
+  if [$empty = "1"] {
+    msg terminate="yes" "Error: cannot take the tail of an empty token string.";
+  } else {
+    $after-first-comma = `substring-after ($token-string, ",")`;
+    $after-second-comma = `substring-after ($after-first-comma, ",")`;
+    if [$after-second-comma = ""] {
+      ",,";
+    } else {
+      `concat (",", $after-second-comma)`;
+    }
+  }
+}
+
+tpl token-string-head (#token-string) {
+  $empty = token-string-is-empty (#token-string = $token-string);
+  if [$empty = "1"] {
+    msg terminate="yes" "Error: cannot take the head of an empty token string.";
+  } else {
+    $after-first-comma = `substring-after ($token-string, ",")`;
+    `substring-before ($after-first-comma, ",")`;
+  }
+}
+
+tpl token-string-is-empty (#token-string) {
+  if [$token-string = ",,"] {
+    "1";
+  } else {
+    "0";
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -74,7 +109,8 @@ tpl fragile-recommendation-applied-to-any (#candidates) {
     if [contains ($recommendations, $token)] {
       "1";
     } else {
-      fragile-recommendation-applied-to-any (#candidates = `$candidates[position() > 1]`);
+      $remaining-candidates = `$candidates[position() > 1]`;
+      fragile-recommendation-applied-to-any (#candidates = $remaining-candidates);
     }
   } else {
     "0";
@@ -122,6 +158,14 @@ tpl consider-recommendation (#recommendation) {
         }
       }
     }
+    when [$recommendation = "610"] {
+      // Start to ignore some formulas (inacc)
+      msg "Starting to ignore inaccessible formulas...";
+    }
+    when [$recommendation = "611"] {
+      // Done ignoring formulas
+      msg "Done ignoring formulas.";
+    }
     otherwise {
       $message = `concat ("Warning: Unable to make sense of the recommendation '", $recommendation, "'.")`;
       msg $message;
@@ -130,7 +174,7 @@ tpl consider-recommendation (#recommendation) {
   }
 }
 
-tpl [Item[Proposition/Label[@spelling]]] {
+tpl [Label[@spelling]] {
   $line = `@line`;
   $col = `@col`;
   $pseudo-token = `concat (",", $line, ":", $col, ":")`;
@@ -140,6 +184,244 @@ tpl [Item[Proposition/Label[@spelling]]] {
     consider-recommendation (#recommendation = $recommendation);
   } else {
     apply [.] mode="copy";
+  }
+}
+
+tpl between-start-inacc-recommendation-1 (#a-line, #b-line, #a-col, #b-col, #recs) {
+  $recs-empty = token-string-is-empty (#token-string = $recs);
+  if [$recs-empty = "1"] {
+    "0";
+  } else {
+    $head = token-string-head (#token-string = $recs);
+    $tail = token-string-tail (#token-string = $recs);
+    $after-first-comma = `substring-after ($head, ",")`;
+    $line = `substring-before ($after-first-comma, ":")`;
+    $after-first-colon = `substring-after ($after-first-comma, ":")`;
+    $col = `substring-before ($after-first-colon, ":")`;
+    $after-second-colon = `substring-after ($after-first-colon, ":")`;
+    $recommendation = `substring-before ($after-second-colon, ",")`;
+    if [$recommendation = "610"] {
+      choose {
+        when [$a-line < $line] {
+          choose {
+            when [$b-line < $line] {
+              between-start-inacc-recommendation-1 (#a-line = $a-line,
+                                            #b-line = $b-line,
+                                            #a-col = $a-col,
+                                            #b-col = $b-col,
+                                            #recs = $tail);
+            }
+            when [$b-line = $line] {
+              if [$col < $b-col] {
+                "1";
+              } else {
+                between-start-inacc-recommendation-1 (#a-line = $a-line,
+                                              #b-line = $b-line,
+                                              #a-col = $a-col,
+                                              #b-col = $b-col,
+                                              #recs = $tail);
+              }
+            }
+            when [$b-line > $line] {
+              "1";
+            }
+          }
+        }
+        when [$a-line = $line] {
+          if [$a-col < $col] {
+            choose {
+              when [$b-line < $line] {
+                between-start-inacc-recommendation-1 (#a-line = $a-line,
+                                              #b-line = $b-line,
+                                              #a-col = $a-col,
+                                              #b-col = $b-col,
+                                              #recs = $tail);
+              }
+              when [$b-line = $line] {
+                if [$col < $b-col] {
+                  "1";
+                } else {
+                  between-start-inacc-recommendation-1 (#a-line = $a-line,
+                                                #b-line = $b-line,
+                                                #a-col = $a-col,
+                                                #b-col = $b-col,
+                                                #recs = $tail);
+                }
+              }
+              when [$b-line > $line] {
+                "1";
+              }
+            }
+          } else {
+            between-start-inacc-recommendation-1 (#a-line = $a-line,
+                                          #b-line = $b-line,
+                                          #a-col = $a-col,
+                                          #b-col = $b-col,
+                                          #recs = $tail);
+          }
+        }
+        when [$a-line > $line] {
+          between-start-inacc-recommendation-1 (#a-line = $a-line,
+                                        #b-line = $b-line,
+                                        #a-col = $a-col,
+                                        #b-col = $b-col,
+                                        #recs = $tail);
+        }
+      }
+    } else {
+      between-start-inacc-recommendation-1 (#a-line = $a-line,
+                                    #b-line = $b-line,
+                                    #a-col = $a-col,
+                                    #b-col = $b-col,
+                                    #recs = $tail);
+    }
+  }
+}
+
+tpl within-region (#line, #col, #region-start-line, #region-start-col, #region-end-line, #region-end-col) {
+  choose {
+    when [$line < $region-start-line] {
+      "0";
+    }
+    when [$line = $region-start-line] {
+      if [$region-start-col < $col] {
+        "1";
+      } else {
+        "0";
+      }
+    }
+    when [$line > $region-start-line] {
+      choose {
+        when [$line < $region-end-line] {
+          "1";
+        }
+        when [$line = $region-end-line] {
+          if [$col < $region-end-col] {
+            "1";
+          } else {
+            "0";
+          }
+        }
+        when [$line > $region-end-line] {
+          "0";
+        }
+      }
+    }
+  }
+}
+
+tpl between-start-inacc-recommendation (#a-line, #a-col, #b-line, #b-col) {
+  between-start-inacc-recommendation-1 (#a-line = $a-line,
+                                #b-line = $b-line,
+                                #a-col = $a-col,
+                                #b-col = $b-col,
+                                #recs = $recommendations);
+}
+
+tpl substring-after-final (#substring, #string) {
+  if [contains ($string, $substring)] {
+    $after-first = `substring-after ($string, $substring)`;
+    if [contains ($after-first, $substring)] {
+      substring-after-final (#substring = $substring,
+                             #string = $after-first);
+    } else {
+      $after-first;
+    }
+  } else {
+    "";
+  }
+}
+
+tpl next-inacc-begin (#recs) {
+  $pseudo-token = `concat (":", "610", ",")`;
+  if [contains ($recs, $pseudo-token)] {
+    $before-pseudo-token = `substring-before ($recs, $pseudo-token)`;
+    substring-after-final (#string = $before-pseudo-token,
+    			   #substring = ",");
+  } else {
+    "";
+  }
+}
+
+tpl next-inacc-end (#recs) {
+  $pseudo-token = `concat (":", "611", ",")`;
+  if [contains ($recs, $pseudo-token)] {
+    $before-pseudo-token = `substring-before ($recs, $pseudo-token)`;
+    substring-after-final (#string = $before-pseudo-token,
+    			   #substring = ",");
+  } else {
+    "";
+  }
+}
+
+tpl within-inacc-block-1 (#line, #col, #recs) {
+  $empty = token-string-is-empty (#token-string = $recs);
+  if [$empty = "1"] {
+    "0";
+  } else {
+    $inacc-begin-token = next-inacc-begin (#recs = $recs);
+    if [$inacc-begin-token = ""] {
+      "0";
+    } else {
+      $inacc-end-token = next-inacc-end (#recs = $recs);
+      if [$inacc-end-token = ""] {
+        msg terminate="yes" "Error: we found a 610 recommendation without a matching 611 recommendation.";
+      } else {
+        $inacc-msg = `concat ("We found an inacc block: ", $inacc-begin-token, " to ", $inacc-end-token)`;
+        // msg $inacc-msg;
+        $inacc-begin-line = `substring-before ($inacc-begin-token, ":")`;
+        $inacc-begin-col = `substring-after ($inacc-begin-token, ":")`;
+        $inacc-end-line = `substring-before ($inacc-end-token, ":")`;
+        $inacc-end-col = `substring-after ($inacc-end-token, ":")`;
+        $within = within-region (#line = $line,
+                                 #col = $col,
+                                 #region-start-line = $inacc-begin-line,
+                                 #region-start-col = $inacc-begin-col,
+                                 #region-end-line = $inacc-end-line,
+                                 #region-end-col = $inacc-end-col);
+        if [$within = "1"] {
+          "1";
+        } else {
+          $pseudo-token = `concat (":", "611", ",")`;
+          $after-pseudo-token = `substring-after ($recs, $pseudo-token)`;
+          if [$after-pseudo-token = ""] {
+            "0";
+          } else {
+            within-inacc-block-1 (#line = $line,
+	    			  #col = $col,
+				  #recs = `concat (",", $after-pseudo-token)`);
+          }
+        }
+      }
+    }
+  }
+}
+
+tpl within-inacc-block (#line, #col) {
+  within-inacc-block-1 (#line = $line,
+                        #col = $col,
+                        #recs = $recommendations);
+}
+
+tpl [Item[Proposition]] {
+  $item = `.`;
+  $current-line = `@line`;
+  $current-col = `@col`; // for inacc
+  for-each [preceding::*[@line and @col][1]] {
+    $preceding-line = `@line`;
+    $preceding-col = `@col`;
+    $within = within-inacc-block (#line = $current-line, #col = $current-col);
+    if [$within = "1"] {
+      // keep skipping
+      msg "Skipping an item inside an inacc block";
+    } else {
+      <Item {
+        for-each [$item] {
+          for-each [@*] { copy-of `.`; }
+          apply [*];
+        }
+      }
+    }
   }
 }
 
