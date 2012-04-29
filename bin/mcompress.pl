@@ -34,7 +34,7 @@ Readonly my @CORE_PROGRAMS => (
 );
 Readonly my @DANGEROUS_ENHANCERS => (
     'relinfer',
-    # 'relprem',
+    'relprem',
 );
 Readonly my @SAFE_ENHANCERS => (
     # 'trivdemo',
