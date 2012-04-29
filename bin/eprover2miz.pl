@@ -45,6 +45,7 @@ Readonly my @STYLESHEETS => (
     'pp.xsl',
     'eprover-safe-skolemizations.xsl',
     'clean-eprover.xsl',
+    'eprover2the.xsl',
 );
 
 # Colors
