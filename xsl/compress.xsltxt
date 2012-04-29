@@ -411,19 +411,15 @@ tpl [Item[Proposition]] {
   $item = `.`;
   $current-line = `@line`;
   $current-col = `@col`; // for inacc
-  for-each [preceding::*[@line and @col][1]] {
-    $preceding-line = `@line`;
-    $preceding-col = `@col`;
-    $within = within-inacc-block (#line = $current-line, #col = $current-col);
-    if [$within = "1"] {
-      // keep skipping
-      msg "Skipping an item inside an inacc block";
-    } else {
-      <Item {
-        for-each [$item] {
-          for-each [@*] { copy-of `.`; }
-          apply [*];
-        }
+  $within = within-inacc-block (#line = $current-line, #col = $current-col);
+  if [$within = "1"] {
+    // keep skipping
+    msg "Skipping an item inside an inacc block";
+  } else {
+    <Item {
+      for-each [$item] {
+        for-each [@*] { copy-of `.`; }
+        apply [*];
       }
     }
   }
