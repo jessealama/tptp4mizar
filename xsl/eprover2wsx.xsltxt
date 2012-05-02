@@ -23,12 +23,6 @@ key "formulas" [formula[@name]] `@name`;
 // Utilities
 //////////////////////////////////////////////////////////////////////
 
-$lcletters = { "abcdefghijklmnopqrstuvwxyz"; }
-$ucletters = { "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; }
-
-tpl lc (#s) { `translate($s, $ucletters, $lcletters)`; }
-tpl uc (#s) { `translate($s, $lcletters, $ucletters)`; }
-
 tpl pad-axiom (#string) {
   `concat ("Axiom", $string)`;
 }
