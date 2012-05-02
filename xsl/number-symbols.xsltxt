@@ -1,0 +1,44 @@
+stylesheet "1.0";
+output method="text" indent="yes";
+
+//////////////////////////////////////////////////////////////////////
+// Stylesheet parameters
+//////////////////////////////////////////////////////////////////////
+
+#kind = { ""; }
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+tpl [/] {
+  if [tstp] {
+    apply [tstp];
+  } else {
+    msg terminate="yes" "Error: the required tstp document element is missing.";
+  }
+}
+
+tpl [tstp] {
+  choose {
+    when [$kind = ""] {
+      msg terminate="yes" "Error: please supply a non-empty value for the kind stylesheet parameter.";
+    }
+    when [not($kind = "predicates") and not($kind = "functions")] {
+      msg terminate="yes" "Error: the only two permitted values for the kind stylesheet parameter are 'predicates' and 'functions'.";
+    }
+    when [$kind = "predicates"] {
+      for-each [descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name) and not(@name = ancestor::predicate[@name]/@name)]] {
+        `@name`; " "; `position ()`; "\n";
+      }
+    }
+    when [$kind = "functions"] {
+      for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
+        `@name`; " "; `position ()`; "\n";
+      }
+    }
+    otherwise {
+      msg terminate="yes" "Error: What should we do?";
+    }
+  }
+}
