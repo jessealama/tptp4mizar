@@ -1,0 +1,140 @@
+stylesheet "1.0";
+//output method="xml";
+
+//////////////////////////////////////////////////////////////////////
+// Terms
+//////////////////////////////////////////////////////////////////////
+
+tpl [variable[@name and not(@name = "")]] {
+  <Variable {
+    @spelling = `@name`;
+  }
+}
+
+tpl [function[@name and not(@name = "")]] {
+  <Infix-Term {
+    @spelling = `@name`;
+    <Arguments;
+    <Arguments {
+      apply [*];
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// Formulas
+//////////////////////////////////////////////////////////////////////
+
+tpl [*] mode="strip-universal-prefix" {
+  apply [.]; // if we don't handle it, just move along
+}
+
+tpl [quantifier[@type = "universal"]] mode="strip-universal-prefix" {
+  apply [*[position() = last()]] mode="strip-universal-prefix";
+}
+
+tpl [quantifier[@type = "universal"]] (#started, #variables) {
+  if [$started = "1"] {
+    if [$variables] {
+      $variable = `$variables[1]`;
+      <Universal-Quantifier-Formula {
+        <Implicitly-Qualified-Segment {
+          apply [$variable];
+        }
+        apply [.] (#started = "1",
+	      	   #variables = `$variables[position() > 1]`);
+      }
+    } else {
+      apply [*[position() = last()]];
+    }
+  } else {
+    apply [.] (#started = "1",
+    	       #variables = `variable`);
+  }
+}
+
+tpl [quantifier[@type = "existential"]] (#started, #variables) {
+  if [$started = "1"] {
+    if [$variables] {
+      $variable = `$variables[1]`;
+      <Existential-Quantifier-Formula {
+        <Implicitly-Qualified-Segment {
+          apply [$variable];
+        }
+        apply [.] (#started = "1",
+	      	   #variables = `$variables[position() > 1]`);
+      }
+    } else {
+      apply [*[position() = last()]];
+    }
+  } else {
+    apply [.] (#started = "1",
+    	       #variables = `variable`);
+  }
+}
+
+tpl [implication[count(*) = 2]] {
+  <Conditional-Formula {
+    apply [*[1]];
+    apply [*[2]];
+  }
+}
+
+tpl [equivalence[count(*) = 2]] {
+  <Biconditional-Formula {
+    apply [*[1]];
+    apply [*[2]];
+  }
+}
+
+tpl [negation[count(*) = 1]] {
+  <Negated-Formula {
+    apply [*[1]];
+  }
+}
+
+tpl [conjunction[count(*) = 2]] {
+  <Conjunctive-Formula {
+    apply [*[1]];
+    apply [*[2]];
+  }
+}
+
+tpl [disjunction[count(*) = 2]] {
+  <Disjunctive-Formula {
+    apply [*[1]];
+    apply [*[2]];
+  }
+}
+
+tpl [predicate[@name = "="]] {
+  <Predicative-Formula {
+    @spelling = "=";
+    <Arguments {
+      apply [*[1]];
+    }
+    <Arguments {
+      apply [*[2]];
+    }
+  }
+}
+
+tpl [predicate[@name and not(@name = "=")]] {
+  <Predicative-Formula {
+    @spelling = `@name`;
+    <Arguments;
+    <Arguments {
+      apply [*];
+    }
+  }
+}
+
+tpl [defined-predicate[@name = "true"]] {
+  <Negated-Formula {
+    <Contradiction;
+  }
+}
+
+tpl [defined-predicate[@name = "false"]] {
+  <Contradiction;
+}
