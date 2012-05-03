@@ -24,8 +24,10 @@ use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
 use Strings qw($LF
 	       $EMPTY_STRING);
-use Utils qw(is_readable_file);
+use Utils qw(is_readable_file
+	     strip_extension);
 use Colors;
+use TPTPProblem qw(is_valid_tptp_file);
 
 # Colors
 Readonly my $STYLE_COLOR => 'blue';
@@ -163,7 +165,7 @@ if ($verbose) {
 my @extensions = ('dco', 'dno', 'voc', 'miz');
 foreach my $stylesheet (@STYLESHEETS) {
     my $stylesheet_path = "${STYLESHEET_HOME}/${stylesheet}";
-    if (! ensure_readable_file ($stylesheet_path)) {
+    if (! is_readable_file ($stylesheet_path)) {
 	error_message ('The required stylsheet ', $stylesheet, ' could not be found in the directory', "\n", "\n", '  ', $STYLESHEET_HOME, "\n", "\n", 'where we expect to find it (or it does exist but is unreadable).');
 	exit 1;
     }
