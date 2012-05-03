@@ -46,8 +46,6 @@ Readonly my @TPTP_PROGRAMS => (
 
 # Stylesheets
 Readonly my $STYLESHEET_HOME => "$RealBin/../xsl";
-Readonly my $TPTP2VOC_STYLESHEET => "${STYLESHEET_HOME}/eprover2voc.xsl";
-Readonly my $TPTP2MIZ_STYLESHEET => "${STYLESHEET_HOME}/eprover2miz.xsl";
 Readonly my @STYLESHEETS => (
     'eprover2evl.xsl',
     'eprover2dco.xsl',
