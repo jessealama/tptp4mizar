@@ -1,10 +1,10 @@
 package Utils;
 
-use Exporter;
-our @EXPORT_OK = qw(is_valid_tptp_file
-		    error_message
+use base qw(Exporter);
+our @EXPORT_OK = qw(error_message
 		    warning_message
-		    strip_extension);
+		    strip_extension
+		    is_readable_file);
 
 use Colors qw($ERROR_COLOR $WARNING_COLOR);
 
