@@ -32,6 +32,7 @@ use Utils qw(is_readable_file
 use Colors;
 use TPTPProblem qw(is_valid_tptp_file);
 use EproverDerivation;
+use VampireDerivation;
 
 # Colors
 Readonly my $STYLE_COLOR => 'blue';
