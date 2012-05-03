@@ -94,7 +94,6 @@ tpl [tstp] mode="flat" {
             }
           }
           when [source/non-logical-data[@name = "introduced"]/non-logical-data[@name = "backtracking_splitting_component"]] {
-            msg "hey!";
             apply [.] mode="private-predicate-definition";
           }
           when [position() = last()] {
