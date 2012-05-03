@@ -1,6 +1,9 @@
 package TSTPDerivation;
 
 use Moose;
+
+extends 'TPTPProblem';
+
 use Pod::Find qw(pod_where);
 use Pod::Usage;
 use Data::Dumper;
@@ -12,8 +15,6 @@ use charnames qw(:full);
 use List::MoreUtils qw(none);
 
 use feature 'say';
-
-Readonly my $LF => "\N{LF}";
 
 has 'background_theory' => (
     is => 'ro',
