@@ -134,7 +134,7 @@ ensure_tptp_pograms_available ();
 
 my $tptp_file = $ARGV[0];
 
-if (! ensure_readable_file ($tptp_file) ) {
+if (! is_readable_file ($tptp_file) ) {
     error_message ('The supplied TPTP file,', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'does not exist, or is unreadable.');
     exit 1;
 }
