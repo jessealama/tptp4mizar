@@ -201,6 +201,8 @@ my $tptp_dirname = dirname ($tptp_file);
 my $derivation = undef;
 if ($opt_style eq 'eprover') {
     $derivation = EproverDerivation->new (path => $tptp_file);
+} elsif ($opt_style eq 'vampire') {
+    $derivation = VampireDerivation->new (path => $tptp_file);
 } else {
     print {*STDERR} error_message ('Unknown derivation style \'', $opt_style, '\'.');
     exit 1;
