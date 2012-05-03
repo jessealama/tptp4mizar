@@ -30,7 +30,8 @@ tpl [/] {
       msg terminate="yes" "Error: the empty string is not an acceptable value for the article stylesheet parameter.";
     }
     when [string-length ($article) > 8] {
-      msg terminate="yes" "Error: the value of the article stylesheet parameter is too long (it must be at most 8 characters).";
+      $too-long-message = `concat ("Error: the value (", $article, ") of the article stylesheet parameter is too long (it must be at most 8 characters).")`;
+      msg terminate="yes" $too-long-message;
     }
     when [contains ($article, " ")] {
       msg terminate="yes" "Error: the value of the article stylesheet parameter contains whitespace.";
