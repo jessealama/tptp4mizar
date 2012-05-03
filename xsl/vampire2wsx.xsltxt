@@ -6,7 +6,123 @@ output method="xml" indent="yes";
 // Templates
 //////////////////////////////////////////////////////////////////////
 
-tpl [tstp[formula[@status = "conjecture"]]] {
+tpl [tstp] mode="nested" {
+  for-each [formula[@status = "axiom"]] {
+    apply [.] mode="axiom";
+  }
+  for-each [formula[not(@status = "axiom") and source/non-logical-data[@name = "inference"]]] {
+    $depends-on-conjecture = depends-on-conjecture ();
+    if [$depends-on-conjecture = "0"] {
+      apply [.] mode="lemma";
+    }
+  }
+  for-each [formula[@status = "conjecture"]] {
+    apply [.] mode="conjecture";
+  }
+}
+
+tpl [*] mode="private-predicate-definition" {
+  apply [.] (#message = "Error: we have reached an unhandled node in private-predicate-definition mode.") mode="die";
+}
+
+tpl [formula[source/non-logical-data[@name = "introduced"]/non-logical-data[@name = "backtracking_splitting_component"]]] mode="private-predicate-definition" {
+  for-each [*[1]] {
+    <Item {
+      @kind = "Private-Predicate-Definition";
+      for-each [*[position() = last()]] {
+        choose {
+          when [self::negation] {
+            msg "negation case";
+            if [defined-predicate[@name]] {
+              for-each [defined-predicate[@name]] {
+                <Variable {
+                  @spelling = `@name`;
+                }
+                <Type-List;
+                <Negated-Formula {
+                  for-each [parent::negation] {
+                    apply [preceding-sibling::*[1]];
+                  }
+                }
+              }
+            } else {
+              $n = `name (.)`;
+              $message = `concat ("Error: Don't know how to handle a ", $n, " node.  Where is the predicate definition?")`;
+              apply [.] (#message = $message) mode="die";
+            }
+          }
+          when [defined-predicate[@name]] {
+            for-each [defined-predicate[@name]] {
+              <Variable {
+                @spelling = `@name`;
+              }
+              <Type-List;
+              apply [preceding-sibling::*[1]];
+            }
+          }
+          otherwise {
+            $n = `name (.)`;
+            $message = `concat ("Error: Don't know how to handle a ", $n, " node.  Where is the predicate definition?")`;
+            apply [.] (#message = $message) mode="die";
+          }
+        }
+      }
+    }
+  }
+}
+
+tpl [tstp] mode="flat" {
+  for-each [formula[@status = "axiom"]] {
+    apply [.] mode="axiom";
+  }
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Diffuse-Statement";
+    <Label {
+      @spelling = "Refutation";
+    }
+    <Block {
+      @kind = "Now-Reasoning";
+      for-each [formula[not(@status = "axiom")]] {
+        choose {
+          when [@status = "negated_conjecture"] {
+            <Item {
+              @kind = "Assumption";
+              <Single-Assumption {
+                apply [.] mode="no-justification";
+              }
+            }
+          }
+          when [source/non-logical-data[@name = "introduced"]/non-logical-data[@name = "backtracking_splitting_component"]] {
+            msg "hey!";
+            apply [.] mode="private-predicate-definition";
+          }
+          when [position() = last()] {
+            apply [.] mode="conclusion";
+          }
+          otherwise {
+            apply [.] mode="lemma";
+          }
+        }
+      }
+    }
+  }
+  <Item {
+    @kind = "Theorem-Item";
+    for-each [formula[@status = "negated_conjecture"]] {
+      <Proposition {
+        apply [*[1]] mode="unnegate"; // render the formula
+      }
+    }
+    <Straightforward-Justification {
+      <Local-Reference {
+        @spelling = "Refutation";
+      }
+    }
+  }
+}
+
+tpl [tstp[formula[@status = "negated_conjecture"]]] {
   $aid-uc = uc (#s = $article);
   <Text-Proper {
     @articleid = $aid-uc;
@@ -29,142 +145,7 @@ tpl [tstp[formula[@status = "conjecture"]]] {
   }
 }
 
-tpl [tstp] mode="flat" {
-  for-each [formula[@status = "axiom"]] {
-    apply [.] mode="axiom";
-  }
-  <Item {
-    @kind = "Regular-Statement";
-    @shape = "Diffuse-Statement";
-    <Label {
-      @spelling = "Refutation";
-    }
-    <Block {
-      @kind = "Now-Reasoning";
-      for-each [formula[not(@status = "axiom") and not(@status = "conjecture") and source/non-logical-data[@name = "inference"]]] {
-        choose {
-          when [@status = "negated_conjecture" and not(preceding-sibling::formula[@status = "negated_conjecture"])] {
-            <Item {
-              @kind = "Assumption";
-              <Single-Assumption {
-                apply [.] mode="no-justification";
-              }
-            }
-          }
-          when [position() = last()] {
-            apply [.] mode="conclusion";
-          }
-          otherwise {
-            apply [.] mode="lemma";
-          }
-        }
-      }
-    }
-  }
-  <Item {
-    @kind = "Theorem-Item";
-    for-each [formula[@status = "conjecture"]] {
-      <Proposition {
-      apply [*[1]]; // render the formula
-      }
-    }
-    <Straightforward-Justification {
-      <Local-Reference {
-        @spelling = "Refutation";
-      }
-    }
-  }
-}
-
-// E 1.4 TSTP derivations have a conjecture formula
-tpl [tstp[formula[@status = "conjecture"][2]]] {
-  msg terminate="yes" "Error: there are multiple conjecture formulas, but we expected to find exactly one.";
-}
-
-tpl [tstp[not(formula[@status = "conjecture"])]] {
-  msg terminate="yes" "Error: there is no conjecture formula.";
-}
-
-tpl [tstp] mode="nested" {
-  for-each [formula[@status = "axiom"]] {
-    apply [.] mode="axiom";
-  }
-  for-each [formula[not(@status = "axiom") and source/non-logical-data[@name = "inference"]]] {
-    $depends-on-conjecture = depends-on-conjecture ();
-    if [$depends-on-conjecture = "0"] {
-      apply [.] mode="lemma";
-    }
-  }
-  for-each [formula[@status = "conjecture"]] {
-    apply [.] mode="conjecture";
-  }
-}
-
-tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "csr"]]] mode="lemma" {
-  <Item {
-    @kind = "Regular-Statement";
-    @shape = "Compact-Statement";
-    <Proposition {
-      <Label {
-        $safe-name = capitalize-after-underscore (#string = `@name`);
-        $step-name = `concat ("Step", $safe-name)`;
-        @spelling = $step-name;
-      }
-      apply [*[1]] mode="strip-universal-prefix";
-    }
-    <Block {
-      @kind = "Proof";
-      for-each [source] {
-        for-each [non-logical-data[@name = "inference"]] {
-          for-each [non-logical-data[position() = last()]] {
-            for-each [number[@name]] {
-              $n = `@name`;
-              $position = `position ()`;
-              $dependent-formula = `key ("formulas", $n)`;
-              choose {
-                when [position() = 1] {
-                  for-each [$dependent-formula] {
-                    apply [.] mode="reiterate";
-                  }
-                }
-                when [position() = 2] {
-                  <Item {
-                    @kind = "Conclusion";
-                    @shape = "Compact-Statement";
-                    <Proposition {
-                      <Thesis;
-                    }
-                    <Straightforward-Justification {
-                      <Link;
-                      <Local-Reference {
-                        for-each [$dependent-formula] {
-                          $dependent-formula-name = `@name`;
-                          if [@status = "axiom"] {
-                            $safe-name = capitalize-after-underscore (#string = $dependent-formula-name);
-                            $padded = pad-axiom (#string = $safe-name);
-                            @spelling = $padded;
-                          } else {
-                            @spelling = `concat ("Step", $dependent-formula-name)`;
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-                otherwise {
-                  apply [.] mode="trace";
-                  msg terminate="yes" "Error: we are dealing with a CSR inference having more than two premises.";
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-tpl [formula[@name and not(source/non-logical-data[@name = "inference"]/non-logical-data[@name = "csr"])]] mode="lemma" {
+tpl [formula[@name]] mode="lemma" {
   <Item {
     @kind = "Regular-Statement";
     @shape = "Compact-Statement";
@@ -180,7 +161,7 @@ tpl [formula[@name and not(source/non-logical-data[@name = "inference"]/non-logi
       for-each [source] {
         for-each [non-logical-data[@name = "inference"]] {
           for-each [non-logical-data[position() = last()]] {
-            for-each [number[@name]] {
+            for-each [non-logical-data[@name]] {
               $n = `@name`;
               <Local-Reference {
                 if [key ("axiom", $n)] {
@@ -203,11 +184,79 @@ tpl [formula[@name and not(source/non-logical-data[@name = "inference"]/non-logi
               }
             }
           }
-          if [non-logical-data[@name = "skolemize"]] {
+          if [non-logical-data[@name = "skolemisation"]] {
             <Definition-Reference {
               @spelling = "SKOLEM";
-              @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]) + 1`;
+              @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemisation"]]) + 1`;
             }
+          }
+        }
+      }
+    }
+  }
+}
+
+tpl [defined-predicate[@name and not(@name = "true") and not(@name = "false")]] {
+  <Private-Predicate-Formula {
+    @spelling = `@name`;
+  }
+}
+
+tpl [*] mode="unnegate" {
+  apply [.] (#message = "Error: we have reached an unhandled node in unnegate mode.") mode="die";
+}
+
+tpl [negation] mode="unnegate" {
+  apply [*[1]];
+}
+
+tpl [formula[@name and not(@name = "")]] mode="conclusion" {
+  <Item {
+    @kind = "Conclusion";
+    @shape = "Compact-Statement";
+    <Proposition {
+      apply [*[1]];
+    }
+    <Straightforward-Justification {
+      for-each [source] {
+        choose {
+          when [non-logical-data[@name = "inference"]] {
+            for-each [non-logical-data[@name = "inference"]] {
+              for-each [non-logical-data[position() = last()]] {
+                for-each [non-logical-data[@name]] {
+                  <Local-Reference {
+                    $n = `@name`;
+                    if [key ("axiom", $n)] {
+                      for-each [key ("axiom", $n)] {
+                        for-each [source] {
+                          for-each [non-logical-data[@name = "file"]] {
+                            for-each [non-logical-data[position() = last()]] {
+                              $safe-name = capitalize-after-underscore (#string = `@name`);
+                              $padded = pad-axiom (#string = $safe-name);
+                              @spelling = $padded;
+                            }
+                          }
+                        }
+                      }
+                    } else {
+                      $safe-name = capitalize-after-underscore (#string = $n);
+                      $step-name = `concat ("Step", $safe-name)`;
+                      @spelling = $step-name;
+                    }
+                  }
+                }
+              }
+              if [non-logical-data[@name = "skolemisation"]] {
+                <Definition-Reference {
+                  @spelling = "SKOLEM";
+                  @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemisation"]]) + 1`;
+                }
+              }
+            }
+          }
+          otherwise {
+            apply [.] mode="trace";
+            msg terminate="yes" "Error: Unable to figure out how to deal with the justification of a formula";
           }
         }
       }

@@ -1,6 +1,12 @@
 stylesheet "1.0";
 output method="text";
 
+//////////////////////////////////////////////////////////////////////
+// Keys
+//////////////////////////////////////////////////////////////////////
+
+key "formulas" [formula[@name]] `@name`;
+
 // If we don't handle something explicitly, we don't handle it at all.
 tpl [*] {
   $n = `name (.)`;
@@ -20,18 +26,21 @@ tpl [tstp] {
   apply [formula];
 }
 
+tpl [formula[not(source)]] {
+ ""; // formulas without a source depend on nothing
+}
+
 tpl [formula[@name and source]] {
   apply [source] (#formula = `@name`);
 }
 
 tpl [source] (#formula) {
-  apply [non-logical-data[@name = "inference"]] (#formula = $formula);
-}
-
-tpl [non-logical-data[@name = "inference"]] (#formula) {
-  for-each [non-logical-data[position() = last()]] {
-    for-each [number[@name]] {
-      `@name`; " "; `$formula`; "\n";
+  for-each [descendant::*[@name]] {
+    $n = `@name`;
+    if [key ("formulas", $n)] {
+      for-each [key ("formulas", $n)] {
+        `@name`; " "; `$formula`; "\n";
+      }
     }
   }
 }

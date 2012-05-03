@@ -22,42 +22,27 @@ tpl token-string-is-empty (#token-string) {
 }
 
 tpl token-string-tail (#token-string) {
-  if [starts-with ($token-string, ",")] {
-    $after-first-comma = `substring-after ($token-string, ",")`;
-    if [contains ($after-first-comma, ",")] {
-      $after-second-comma = `substring-after ($after-first-comma, ",")`;
-      if [$after-second-comma = ""] {
-        ",,";
-      } else {
-        `concat (",", $after-second-comma)`;
-      }
-    } else {
-    $message = `concat ("We cannot take the tail of the token string '", $token-string, "': since it does not contain at least two commas")`;
-    msg terminate="yes" $message;
-    }
+  $empty = token-string-is-empty (#token-string = $token-string);
+  if [$empty = "1"] {
+    msg terminate="yes" "Error: cannot take the tail of an empty token string.";
   } else {
-    $message = `concat ("We cannot take the tail of the token string '", $token-string, "': since it does not begin with a comma, it is not actually a valid token string")`;
-    msg terminate="yes" $message;
+    $after-first-comma = `substring-after ($token-string, ",")`;
+    $after-second-comma = `substring-after ($after-first-comma, ",")`;
+    if [$after-second-comma = ""] {
+      ",,";
+    } else {
+      `concat (",", $after-second-comma)`;
+    }
   }
 }
 
 tpl token-string-head (#token-string) {
-  if [starts-with ($token-string, ",")] {
-    $after-first-comma = `substring-after ($token-string, ",")`;
-    if [contains ($after-first-comma, ",")] {
-      $after-second-comma = `substring-after ($after-first-comma, ",")`;
-      if [$after-second-comma = ""] {
-        msg terminate="yes" "Error: cannot take the head of an empty token string.";
-      } else {
-        `substring-before ($after-first-comma, ",")`;
-      }
-    } else {
-      $message = `concat ("We cannot take the head of the token string '", $token-string, "': since it does not contain at least two commas")`;
-      msg terminate="yes" $message;
-    }
+  $empty = token-string-is-empty (#token-string = $token-string);
+  if [$empty = "1"] {
+    msg terminate="yes" "Error: cannot take the head of an empty token string.";
   } else {
-    $message = `concat ("We cannot take the head of the token string '", $token-string, "': since it does not begin with a comma, it is not actually a valid token string")`;
-    msg terminate="yes" $message;
+    $after-first-comma = `substring-after ($token-string, ",")`;
+    `substring-before ($after-first-comma, ",")`;
   }
 }
 

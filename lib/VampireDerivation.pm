@@ -48,14 +48,6 @@ sub to_miz {
 	    or confess error_message ('Unable to make the \'', $subdir_name, '\' subdirectory of ', $directory_full, '.');
     }
 
-    (my $tmp_xml_fh, my $tptp_xml) = tempfile ();
-    my @tptp4X_call = ('tptp4X', '-N', '-V', '-c', '-x', '-fxml', $path);
-    my $tptp4X_harness = harness (\@tptp4X_call,
-				  '>', $tptp_xml);
-
-    $tptp4X_harness->start ();
-    $tptp4X_harness->finish ();
-
     my $prel_subdir_full = "${directory_full}/prel";
 
     foreach my $extension (@extensions_to_generate) {
@@ -80,7 +72,7 @@ sub to_miz {
 	}
 
 	push (@xsltproc_call, "${STYLESHEET_HOME}/vampire2${extension}.xsl");
-	push (@xsltproc_call, $tptp_xml);
+	push (@xsltproc_call, $path);
 
 	my $xsltproc_err = $EMPTY_STRING;
 	my $xsltproc_harness = harness (\@xsltproc_call,
@@ -102,7 +94,7 @@ sub to_miz {
     foreach my $extension (@skolem_extensions) {
 	my $stylesheet = "${STYLESHEET_HOME}/vampire2${extension}.xsl";
 	my $skolem_path = "${directory}/prel/skolem.${extension}";
-	my $xsltproc_status = system ("xsltproc --stringparam article 'article' --stringparam prel-directory '${prel_subdir_full}' $stylesheet ${tptp_xml} > $skolem_path");
+	my $xsltproc_status = system ("xsltproc --stringparam article 'article' --stringparam prel-directory '${prel_subdir_full}' $stylesheet ${path} > $skolem_path");
     my $xsltproc_exit_code = $xsltproc_status >> 8;
 	if ($xsltproc_exit_code != 0) {
 	    croak ('Error: xsltproc did not exit cleanly when generating skolem.', $extension, ' for', "\n", "\n", '  ', $path, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);

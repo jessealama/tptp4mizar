@@ -22,8 +22,6 @@ use FindBin qw($RealBin);
 
 # Our packages
 use lib "$RealBin/../lib";
-use Strings qw($LF
-	       $EMPTY_STRING);
 use Utils qw(is_readable_file
 	     is_valid_xml_file
 	     strip_extension
@@ -57,6 +55,11 @@ Readonly my @STYLESHEETS => (
     'clean-eprover.xsl',
     'eprover2the.xsl',
 );
+
+# Strings
+Readonly my $LF => "\N{LF}";
+Readonly my $SP => q{ };
+Readonly my $EMPTY_STRING => q{};
 
 # Derivation styles
 Readonly my %STYLES => (
@@ -190,9 +193,44 @@ if (-e $db) {
 mkdir $db
     or die error_message ('Unable to make a directory at ', $db, ': ', $!);
 
-######################################################################
-## Creating the environment and the text
-######################################################################
+my $tptp_file_basename = basename ($tptp_file);
+my $tptp_file_in_db = "${db}/problem.tptp";
+copy ($tptp_file, $tptp_file_in_db)
+    or die error_message ('Unable to save a copy of the derivation to', $SP, $db);
+
+# XMLize
+my $tptp_xml_in_db = "${db}/problem.xml";
+my $tptp4X_status = system ("tptp4X -N -V -c -x -fxml ${tptp_file_in_db} > ${tptp_xml_in_db}");
+my $tptp4X_exit_code = $tptp4X_status >> 8;
+if ($tptp4X_exit_code != 0) {
+    say {*STDERR} error_message ('tptp4X did not terminate cleanly when XMLizing', $SP, $tptp_file_in_db);
+}
+
+# Sort
+my $dependencies_str = undef;
+my $dependencies_stylesheet = "${STYLESHEET_HOME}/tstp-dependencies.xsl";
+my @xsltproc_deps_call = ('xsltproc', $dependencies_stylesheet, $tptp_xml_in_db);
+my @tsort_call = ('tsort');
+my $sort_harness = harness (\@xsltproc_deps_call,
+			   '|',
+			   \@tsort_call,
+			   '>', \$dependencies_str);
+$sort_harness->start ();
+$sort_harness->finish ();
+
+my @dependencies = split ($LF, $dependencies_str);
+my $dependencies_token_string = ',' . join (',', @dependencies) . ',';
+
+warn 'Dependencies token string:', $LF, $dependencies_token_string;
+
+my $sort_tstp_stylesheet = "${STYLESHEET_HOME}/sort-tstp.xsl";
+my $sorted_tptp_xml_in_db = "${db}/problem.xml.sorted";
+my $xsltproc_sort_status = system ("xsltproc --stringparam ordering '${dependencies_token_string}' ${sort_tstp_stylesheet} ${tptp_xml_in_db} > ${sorted_tptp_xml_in_db}");
+my $xsltproc_sort_exit_code = $xsltproc_sort_status >> 8;
+if ($xsltproc_sort_exit_code != 0) {
+    say {*STDERR} error_message ('xsltproc did not exit cleanly sorting', $SP, $tptp_xml_in_db);
+    exit 1;
+}
 
 my $tptp_dirname = dirname ($tptp_file);
 
@@ -200,9 +238,9 @@ my $tptp_dirname = dirname ($tptp_file);
 
 my $derivation = undef;
 if ($opt_style eq 'eprover') {
-    $derivation = EproverDerivation->new (path => $tptp_file);
+    $derivation = EproverDerivation->new (path => $sorted_tptp_xml_in_db);
 } elsif ($opt_style eq 'vampire') {
-    $derivation = VampireDerivation->new (path => $tptp_file);
+    $derivation = VampireDerivation->new (path => $sorted_tptp_xml_in_db);
 } else {
     print {*STDERR} error_message ('Unknown derivation style \'', $opt_style, '\'.');
     exit 1;
