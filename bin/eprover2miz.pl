@@ -52,11 +52,6 @@ Readonly my @STYLESHEETS => (
 Readonly my $ERROR_COLOR => 'red';
 Readonly my $WARNING_COLOR => 'yellow';
 
-sub ensure_readable_file {
-    my $file = shift;
-    return (-e $file && ! -d $file && -r $file);
-}
-
 sub message_with_colored_prefix {
     my $prefix = shift;
     my $color = shift;
