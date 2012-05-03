@@ -41,23 +41,5 @@ sub strip_extension {
     return $path =~ / (.+) [.][^.]+ \z / ? $1 : $path;
 }
 
-sub is_valid_tptp_file {
-    my $path = shift;
-
-    my @tptp4x_call = ($TPTP4X, '-N', '-c', '-x', $path);
-    my $tptp4x_out = $EMPTY_STRING;
-    my $tptp4x_err = $EMPTY_STRING;
-    my $tptp4x_harness = harness (\@tptp4x_call,
-				  '>', \$tptp4x_out,
-				  '2>', \$tptp4x_err);
-
-    $tptp4x_harness->start ();
-    $tptp4x_harness->finish ();
-
-    my $tptp4x_exit_code = $tptp4x_harness->result (0);
-
-    return ($tptp4x_exit_code == 0 ? 1 : 0);
-}
-
 1;
 __END__
