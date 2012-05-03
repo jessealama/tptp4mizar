@@ -10,6 +10,7 @@ use File::Copy qw(copy);
 use File::Basename qw(basename dirname);
 use Getopt::Long;
 use Pod::Usage;
+use Cwd qw(getcwd);
 use Carp qw(croak carp);
 use IPC::Run qw(harness);
 use IPC::Cmd qw(can_run);
@@ -19,10 +20,10 @@ use Regexp::DefaultFlags;
 use Term::ANSIColor qw(colored);
 use FindBin qw($RealBin);
 
-# Strings
-Readonly my $EMPTY_STRING => q{};
-Readonly my $SP => q{ };
-Readonly my $COLON => q{:};
+# Our packages
+use lib "$RealBin/../lib";
+use Strings;
+use Utils qw(is_readable_file);
 
 # Programs
 Readonly my $TPTP4X => 'tptp4X';
@@ -33,69 +34,19 @@ Readonly my @TPTP_PROGRAMS => (
 );
 
 # Stylesheets
-Readonly my $STYLESHEET_HOME => $RealBin;
-Readonly my $TPTP2VOC_STYLESHEET => "${STYLESHEET_HOME}/tptp2voc.xsl";
-Readonly my $TPTP2MIZ_STYLESHEET => "${STYLESHEET_HOME}/tptp2miz.xsl";
+Readonly my $STYLESHEET_HOME => "$RealBin/../xsl";
+Readonly my $TPTP2VOC_STYLESHEET => "${STYLESHEET_HOME}/eprover2voc.xsl";
+Readonly my $TPTP2MIZ_STYLESHEET => "${STYLESHEET_HOME}/eprover2miz.xsl";
 Readonly my @STYLESHEETS => (
-    'tptp2dco.xsl',
-    'tptp2dno.xsl',
-    'tptp2voc.xsl',
+    'eprover2evl.xsl',
+    'eprover2dco.xsl',
+    'eprover2dno.xsl',
+    'eprover2voc.xsl',
+    'pp.xsl',
+    'eprover-safe-skolemizations.xsl',
+    'clean-eprover.xsl',
+    'eprover2the.xsl',
 );
-
-# Colors
-Readonly my $ERROR_COLOR => 'red';
-Readonly my $WARNING_COLOR => 'yellow';
-
-sub ensure_readable_file {
-    my $file = shift;
-    return (-e $file && ! -d $file && -r $file);
-}
-
-sub message_with_colored_prefix {
-    my $prefix = shift;
-    my $color = shift;
-    my @message_parts = @_;
-
-    my $message = join ($EMPTY_STRING, @message_parts);
-    if ($message eq $EMPTY_STRING) {
-	say {*STDERR} colored ($prefix, $color), $COLON, $SP, '(no message is available)';
-    } else {
-	say {*STDERR} colored ($prefix, $color), $COLON, $SP, $message;
-    }
-
-    return;
-}
-
-sub error_message {
-    return message_with_colored_prefix ('Error', $ERROR_COLOR, @_);
-}
-
-sub warning_message {
-    return message_with_colored_prefix ('Warning', $WARNING_COLOR, @_);
-}
-
-sub strip_extension {
-    my $path = shift;
-    return $path =~ / (.+) [.][^.]+ \z / ? $1 : $path;
-}
-
-sub is_valid_tptp_file {
-    my $path = shift;
-
-    my @tptp4x_call = ($TPTP4X, '-N', '-c', '-x', $path);
-    my $tptp4x_out = $EMPTY_STRING;
-    my $tptp4x_err = $EMPTY_STRING;
-    my $tptp4x_harness = harness (\@tptp4x_call,
-				  '>', \$tptp4x_out,
-				  '2>', \$tptp4x_err);
-
-    $tptp4x_harness->start ();
-    $tptp4x_harness->finish ();
-
-    my $tptp4x_exit_code = $tptp4x_harness->result (0);
-
-    return ($tptp4x_exit_code == 0 ? 1 : 0);
-}
 
 sub ensure_tptp_pograms_available {
     foreach my $program (@TPTP_PROGRAMS) {
@@ -111,12 +62,14 @@ my $help = 0;
 my $man = 0;
 my $db = undef;
 my $verbose = 0;
+my $opt_nested = 0;
 
 my $options_ok = GetOptions (
     "db=s"     => \$db,
     "verbose"  => \$verbose,
     'help' => \$help,
     'man' => \$man,
+    'nested' => \$opt_nested,
 );
 
 if (! $options_ok) {
@@ -157,21 +110,7 @@ if (! ensure_readable_file ($tptp_file) ) {
 my $tptp_basename = basename ($tptp_file);
 my $tptp_sans_extension = strip_extension ($tptp_basename);
 
-if (length $tptp_sans_extension == 0) {
-    error_message ('After stipping the extension of the supplied TPTP theory file, we are left with just the empty string, which is an unacceptable name for a Mizar article.');
-    exit 1;
-}
-
-my $tptp_short_name = substr $tptp_basename,0,8;
-
-if (length $tptp_sans_extension > 8) {
-    warning_message ('The length of the basename of the supplied file, even when its extension is stripped, exceeds 8 characters.', "\n", 'Since Mizar articles are requires to have names at most 8 characters long, we have truncated the name to \'', $tptp_short_name, '\'.', "\n");
-}
-
-if ($tptp_short_name !~ / \A [a-zA-Z0-9_]{1,8} \z /x) {
-    error_message ('The name that we will use for the Mizar article, \'', $tptp_short_name, '\', is unacceptabl as the name of a Mizar article.', "\n", 'Valid names for Mizar articles are alphanumeric characters and the underscore \'_\'.');
-    exit 1;
-}
+my $tptp_short_name = 'article'; # fixed boring name
 
 ######################################################################
 ## Sanity checking: the input TPTP theory file is coherent
@@ -188,34 +127,7 @@ if ($verbose) {
     print 'Sanity Check: The given TPTP file is valid according to TPTP4X.', "\n";
 }
 
-# We need to check that the TPTP theory does not have a predicate
-# symbol used as a function symbol, and that arities are distinct for
-# different symbols
-
-if (defined $db) {
-    if (-e $db) {
-	croak ('Error: the specified directory', "\n", "\n", '  ', $db, "\n", "\n", 'in which we are to save our work already exists.', "\n", 'Please use a different name');
-    } else {
-	mkdir $db
-	    or croak ('Error: unable to make a directory at ', $db, '.');
-    }
-} else {
-    if (-e $tptp_short_name) {
-	croak ('Error: we are to save our work in the directory \'', $tptp_short_name, '\' inferred from the name of the supplied TPTP theory.', "\n", 'But there is already a file or directory by that name in the current working directory.', "\n", 'Use the --db option to specify a destination, or move the current file or directory out of the way.');
-    }
-    mkdir $tptp_short_name
-	or croak ('Error: unable to make the directory \'', $tptp_short_name, '\' in the current working directory.');
-    $db = $tptp_short_name;
-}
-
-
-######################################################################
-## Creating the environment and the text
-######################################################################
-
-my $tptp_dirname = dirname ($tptp_file);
-
-my @subdirs = ('text', 'prel', 'dict');
+# All the needed stylesheets exist
 my @extensions = ('dco', 'dno', 'voc', 'miz');
 foreach my $stylesheet (@STYLESHEETS) {
     my $stylesheet_path = "${STYLESHEET_HOME}/${stylesheet}";
@@ -224,6 +136,30 @@ foreach my $stylesheet (@STYLESHEETS) {
 	exit 1;
     }
 }
+
+# We need to check that the TPTP theory does not have a predicate
+# symbol used as a function symbol, and that arities are distinct for
+# different symbols
+
+if (! defined $db) {
+    $db = "${tptp_sans_extension}-mizar";
+}
+
+if (-e $db) {
+    error_message ('The specified directory', "\n", "\n", '  ', $db, "\n", "\n", 'in which we are to save our work already exists.', "\n", 'Please use a different name');
+    exit 1;
+}
+
+mkdir $db
+    or die error_message ('Unable to make a directory at ', $db, ': ', $!);
+
+######################################################################
+## Creating the environment and the text
+######################################################################
+
+my $tptp_dirname = dirname ($tptp_file);
+
+my @subdirs = ('text', 'prel', 'dict');
 
 # Save a copy of the input TPTP file
 my $tptp_file_in_miz_db = "${db}/${tptp_basename}";
@@ -257,6 +193,23 @@ if ($xmllint_exit_code != 0) {
     croak ('Error: tptp4X failed to generate a valid XML document corresponding to the TPTP file at', "\n", "\n", '  ', $tptp_file);
 }
 
+my $safe_skolemization_stylesheet = "${STYLESHEET_HOME}/eprover-safe-skolemizations.xsl";
+my $safe_skolemization_status = system ("xsltproc ${safe_skolemization_stylesheet} ${tptp_xml} > /dev/null 2>&1");
+my $safe_skolemization_exit_code = $safe_skolemization_status >> 8;
+if ($safe_skolemization_status != 0) {
+    die error_message ('The given proof has at least one skolemization step that produces multiple skolem functions.');
+}
+
+# Clean the HTML
+my $clean_tptp_xml = "${db}/${tptp_basename}.xml.clean";
+my $clean_stylesheet = "${STYLESHEET_HOME}/clean-eprover.xsl";
+my $clean_status = system ("xsltproc ${clean_stylesheet} ${tptp_xml} > ${clean_tptp_xml}");
+my $clean_exit_code = $clean_status >> 8;
+
+if ($clean_exit_code != 0) {
+    die error_message ('Error: xsltproc did not exit cleanly when cleaning up ${tptp_xml}.');
+}
+
 # Make the required subdirectories
 
 foreach my $dir (@subdirs) {
@@ -264,31 +217,56 @@ foreach my $dir (@subdirs) {
 	or croak ('Error: unable to make the directory \'', $dir, '\' in the Mizar db directory (', $db, ').');
 }
 
-# Make the vocabulary
-my $voc_file = "${db}/dict/${tptp_short_name}.voc";
-my $tptp2voc_xsltproc_status = system ("xsltproc ${TPTP2VOC_STYLESHEET} ${tptp_xml} > $voc_file");
-my $tptp2voc_xsltproc_exit_code = $tptp2voc_xsltproc_status >> 8;
-if ($tptp2voc_xsltproc_exit_code != 0) {
-    croak ('Error: xsltproc did not exit cleanly when making the vocabulary (.voc) file for', "\n", "\n", '  ', $tptp_file);
-}
+my %directory_for_extension = (
+    'voc' => 'dict',
+    'evl' => 'text',
+    'wsx' => 'text',
+    'dno' => 'prel',
+    'dco' => 'prel',
+    'the' => 'prel',
+);
 
-# Make the environment
-foreach my $extension ('dno', 'dco') {
-    my $stylesheet = "${STYLESHEET_HOME}/tptp2${extension}.xsl";
-    if (! -e $stylesheet) {
-	croak ('Error: the required stylesheet for generating the .', $extension, ' file does not exist at the expected location (', $stylesheet, ').');
+my @extensions_to_generate = ('voc', 'evl', 'dno', 'dco', 'wsx', 'the');
+
+my $cwd = getcwd;
+my $prel_subdir = "${db}/prel";
+my $prel_subdir_full = "${cwd}/${prel_subdir}";
+
+foreach my $extension (@extensions_to_generate) {
+    my $subdir_name = $directory_for_extension{$extension};
+    my $subdir = "${db}/${subdir_name}";
+    my $stylesheet = "${STYLESHEET_HOME}/eprover2${extension}.xsl";
+    my $output_file = "${subdir}/${tptp_short_name}.${extension}";
+    my $xsltproc_parameters = "--stringparam article '$tptp_short_name' --stringparam prel-directory '${prel_subdir_full}'";
+    if ($opt_nested) {
+	$xsltproc_parameters .= " --stringparam shape 'nested' ";
+    } else {
+	$xsltproc_parameters .= " --stringparam shape 'flat' ";
     }
-    my $output_file = "${db}/prel/${tptp_short_name}.${extension}";
-    my $xsltproc_status = system ("xsltproc --stringparam article '$tptp_short_name' $stylesheet $tptp_xml > $output_file 2>/dev/null");
+    my $xsltproc_status = system ("xsltproc ${xsltproc_parameters} $stylesheet ${clean_tptp_xml} > $output_file");
+    my $xsltproc_error_message = $!;
     my $xsltproc_exit_code = $xsltproc_status >> 8;
     if ($xsltproc_exit_code != 0) {
-	croak ('Error: xsltproc did not exit cleanly when generating the .', $extension, ' file for', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);
+	croak ('Error: xsltproc did not exit cleanly when generating the .', $extension, ' file for', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'The exit code was ', $xsltproc_exit_code, '. The error message was:',  "\n", "\n", '  ', $xsltproc_error_message);
     }
 }
 
-# Make the .miz
-my $miz_file = "${db}/text/${tptp_short_name}.miz";
-my $xsltproc_status = system ("xsltproc --stringparam article '$tptp_short_name' ${TPTP2MIZ_STYLESHEET} $tptp_xml > $miz_file 2>/dev/null");
+my @skolem_extensions = ('the');
+
+foreach my $extension (@skolem_extensions) {
+    my $stylesheet = "${STYLESHEET_HOME}/eprover2${extension}.xsl";
+    my $path = "${db}/prel/skolem.${extension}";
+    my $xsltproc_status = system ("xsltproc --stringparam article '${tptp_short_name}' --stringparam prel-directory '${prel_subdir_full}' $stylesheet ${clean_tptp_xml} > $path");
+    my $xsltproc_exit_code = $xsltproc_status >> 8;
+    if ($xsltproc_exit_code != 0) {
+	croak ('Error: xsltproc did not exit cleanly when generating skolem.', $extension, ' for', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);
+    }
+}
+
+my $pp_stylesheet = "${STYLESHEET_HOME}/pp.xsl";
+my $wsx_path = "${db}/text/${tptp_short_name}.wsx";
+my $miz_path = "${db}/text/${tptp_short_name}.miz";
+    my $xsltproc_status = system ("xsltproc $pp_stylesheet $wsx_path > $miz_path");
 my $xsltproc_exit_code = $xsltproc_status >> 8;
 if ($xsltproc_exit_code != 0) {
     croak ('Error: xsltproc did not exit cleanly when generating the .miz file for', "\n", "\n", '  ', $tptp_file, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);
@@ -298,13 +276,13 @@ __END__
 
 =pod
 
-=head1 TPTP2MIZ
+=head1 TSTP2MIZ
 
-tptp2miz.pl - Transform a TPTP file into a Mizar article
+tstp2miz - Transform a TSTP derivation into a Mizar article
 
 =head1 SYNOPSIS
 
-tptp2miz.pl [options] [tptp-file]
+tstp2miz.pl [options] [tptp-file]
 
 =head1 OPTIONS
 
@@ -333,7 +311,7 @@ directory.  It is an error if the supplied directory already exists.
 
 =head1 DESCRIPTION
 
-B<tptp2miz.pl> will transform the supplied TPTP file into a
+B<tstp2miz.pl> will transform the supplied TPTP file into a
 corresponding Mizar article.
 
 =cut
