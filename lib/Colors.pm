@@ -1,7 +1,8 @@
 package Colors;
 
-use Exporter;
-our @EXPORT_OK = qw($ERROR_COLOR $WARNING_COLOR);
+use base qw(Exporter);
+our @EXPORT_OK = ('$ERROR_COLOR' => $ERROR_COLOR,
+		  '$WARNING_COLOR' => $WARNING_COLOR);
 use Readonly;
 
 # Colors
