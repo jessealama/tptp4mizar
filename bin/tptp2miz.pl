@@ -22,8 +22,13 @@ use FindBin qw($RealBin);
 
 # Our packages
 use lib "$RealBin/../lib";
-use Strings;
+use Strings qw($LF
+	       $EMPTY_STRING);
 use Utils qw(is_readable_file);
+use Colors;
+
+# Colors
+Readonly my $STYLE_COLOR => 'blue';
 
 # Programs
 Readonly my $TPTP4X => 'tptp4X';
@@ -48,6 +53,22 @@ Readonly my @STYLESHEETS => (
     'eprover2the.xsl',
 );
 
+# Derivation styles
+Readonly my %STYLES => (
+    'tptp' => 0,
+    'vampire' => 0,
+    'eprover' => 0,
+    'tstp' => 0,
+);
+
+sub summarize_styles {
+    my $summary = $EMPTY_STRING;
+    foreach my $style (sort keys %STYLES) {
+	$summary .= '  * ' . colored ($style, $STYLE_COLOR);
+    }
+    return $summary;
+}
+
 sub ensure_tptp_pograms_available {
     foreach my $program (@TPTP_PROGRAMS) {
 	if (! can_run ($program)) {
@@ -63,6 +84,7 @@ my $man = 0;
 my $db = undef;
 my $verbose = 0;
 my $opt_nested = 0;
+my $opt_style = 'tptp';
 
 my $options_ok = GetOptions (
     "db=s"     => \$db,
@@ -70,6 +92,7 @@ my $options_ok = GetOptions (
     'help' => \$help,
     'man' => \$man,
     'nested' => \$opt_nested,
+    'style=s' => \$opt_style,
 );
 
 if (! $options_ok) {
@@ -93,6 +116,15 @@ if ($man) {
 
 if (scalar @ARGV != 1) {
     pod2usage(
+	-exitval => 1,
+    );
+}
+
+if (! defined $STYLES{$opt_style}) {
+    my $message = 'Unknown derivation style \'' . $opt_style . '\'.  The available  styles are:' . $LF . $LF;
+    $message .= message (summarize_styles ());
+    pod2usage (
+	-message => error_message ($message),
 	-exitval => 1,
     );
 }
