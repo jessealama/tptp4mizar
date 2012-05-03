@@ -146,14 +146,6 @@ tpl [/] {
   }
 }
 
-tpl [tstp[formula[@status = "conjecture"][2]]] {
-  msg terminate="yes" "Error: there are multiple conjecture formulas, but we expected to find exactly one.";
-}
-
-tpl [tstp[not(formula[@status = "conjecture"])]] {
-  msg terminate="yes" "Error: there is no conjecture formula.";
-}
-
 tpl reserve-variables {
   if [descendant::variable] {
     <Item {
@@ -279,21 +271,6 @@ tpl depends-on-conjecture {
         "0";
       }
     }
-  }
-}
-
-tpl [tstp] mode="nested" {
-  for-each [formula[@status = "axiom"]] {
-    apply [.] mode="axiom";
-  }
-  for-each [formula[not(@status = "axiom") and source/non-logical-data[@name = "inference"]]] {
-    $depends-on-conjecture = depends-on-conjecture ();
-    if [$depends-on-conjecture = "0"] {
-      apply [.] mode="lemma";
-    }
-  }
-  for-each [formula[@status = "conjecture"]] {
-    apply [.] mode="conjecture";
   }
 }
 
