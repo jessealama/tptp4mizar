@@ -16,7 +16,7 @@ sub warning_message {
     return message_with_colored_prefix ('Warning', $WARNING_COLOR, @_);
 }
 
-sub ensure_readable_file {
+sub is_readable_file {
     my $file = shift;
     return (-e $file && ! -d $file && -r $file);
 }
