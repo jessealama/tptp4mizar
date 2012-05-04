@@ -1,4 +1,5 @@
 stylesheet "1.0";
+include "../utils/token-strings.xsl";
 output method="xml" indent="yes";
 
 //////////////////////////////////////////////////////////////////////
@@ -37,39 +38,6 @@ tpl [*] mode="trace-recursive" {
 tpl [*] (#message) mode="die" {
   apply [.] mode="trace";
   msg terminate="yes" $message;
-}
-
-tpl token-string-tail (#token-string) {
-  $empty = token-string-is-empty (#token-string = $token-string);
-  if [$empty = "1"] {
-    msg terminate="yes" "Error: cannot take the tail of an empty token string.";
-  } else {
-    $after-first-comma = `substring-after ($token-string, ",")`;
-    $after-second-comma = `substring-after ($after-first-comma, ",")`;
-    if [$after-second-comma = ""] {
-      ",,";
-    } else {
-      `concat (",", $after-second-comma)`;
-    }
-  }
-}
-
-tpl token-string-head (#token-string) {
-  $empty = token-string-is-empty (#token-string = $token-string);
-  if [$empty = "1"] {
-    msg terminate="yes" "Error: cannot take the head of an empty token string.";
-  } else {
-    $after-first-comma = `substring-after ($token-string, ",")`;
-    `substring-before ($after-first-comma, ",")`;
-  }
-}
-
-tpl token-string-is-empty (#token-string) {
-  if [$token-string = ",,"] {
-    "1";
-  } else {
-    "0";
-  }
 }
 
 //////////////////////////////////////////////////////////////////////
