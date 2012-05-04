@@ -1,0 +1,73 @@
+tptp4mizar: Generating Mizar texts from TPTP problems and solutions
+==========
+
+You have landed at the main documentation entry point for
+`tptp4mizar`, a suite of tools for generating Mizar texts from TPTP
+problems and solutions.
+
+Getting Started
+----------
+
+The main tool at the moment is `tptp2miz.pl`.  That program takes a TPTP
+problem file or a TSTP derivation and produces an equivalent Mizar
+text.  You can access the documentation for `tptp2miz.pl` by executing
+it with the --man option, like so:
+
+    tptp2miz.pl --man
+
+In short: given a TPTP problem file or a TSTP derivation, `tptp2miz.pl`
+makes a new directory containing containing the generated Mizar text
+and the needed auxiliary files.
+
+The intention is to be able to make [Vampire][vampire-homepage] and
+[E][eprover-homepage] proofs into Mizar-verifiable texts.
+
+An auxiliary program, `mcompress.pl`, may also be of interest.  This
+tool compresses Mizar texts using various 'enhancers' produced by the
+Mizar team.  A text is 'enhanced' if it can be compressed in some way:
+multiple steps can be combined into a single step, or some spurious
+justifications can be eliminated, unused parts of the reasoning can be
+deleted, etc.
+
+What is Mizar?  What is TPTP?  TSTP?
+----------
+
+[Mizar][mizar-homepage] is a language for writing mathematical texts
+in a natural style.  It features a kind of natural deduction proof
+language.  The library of knowledge formalized in Mizar, the Mizar
+Mathematical Library (MML), is quite advanced, going from the axioms
+of set theory to graduate-level pure mathematics.  For the purposes of
+tptp2mizar we are not interested in the MML.  Instead, tptp2mizar
+views Mizar as a language and a suite of tools for carrying out
+arbitrary reasoning in first-order classical logic.
+
+[TPTP][tptp-quickguide] (Thousands of Problems for Theorem Provers) is
+a framework for specifying problems and solutions for automated
+reasoning.  TSTP (Thousands of Solutions for Theorem Provers) is a
+spinoff of TPTP.
+
+Limitations
+----------
+
+It is known that this program does not always generate Mizar texts
+that are Mizar-verifiable.  We are working to provide greater
+coverage.  In the case of generic TPTP problems and TSTP derivations,
+we can make no promise that the generated text is Mizar-verifiable.
+For TSTP derivations emitted by Vampire and E, though, our aim is to
+ensure that the generated Mizar text is acceptable to Mizar.
+
+
+Acknowledgements
+----------
+
+Josef Urban provided the initial inspiration and discussion about this
+package.  He has some similar ideas for generating Mizar texts from
+non-Mizar derivations: see his
+[ott2miz] [ott2miz-home] for some code to
+translate Otter proofs to Mizar texts.
+
+[ott2miz-home]: https://github.com/JUrban/ott2miz "ott2miz"
+[vampire-homepage]: http://www.vprover.org "The Vampire theorem prover"
+[eprover-homepage]: http://www.eprover.org "The E theorem prover"
+[mizar-homepage]: http://www.mizar.org "The Mizar homepage"
+[tptp-quickguide]: http://www.cs.miami.edu/~tptp/TPTP/QuickGuide/ "The TPTP/TSTP Quick Guide"
