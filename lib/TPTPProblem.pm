@@ -3,9 +3,6 @@ package TPTPProblem;
 require v5.10.0; # for the 'say' feature
 use feature 'say';
 
-use base qw(Exporter);
-our @EXPORT_OK = qw(is_valid_tptp_file);
-
 use Moose;
 use Pod::Find qw(pod_where);
 use Pod::Usage;
@@ -17,6 +14,9 @@ use Regexp::DefaultFlags;
 use charnames qw(:full);
 use List::MoreUtils qw(none);
 use IPC::Run qw(harness);
+
+use base qw(Exporter);
+our @EXPORT_OK = qw(is_valid_tptp_file);
 
 # Our stuff
 use Utils qw(error_message);
