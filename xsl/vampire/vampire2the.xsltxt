@@ -197,17 +197,12 @@ tpl [tstp] {
         <Not {
           <And {
             for-each [source] {
-	      msg "source";
               for-each [non-logical-data[@name = "inference"]] {
-	        msg "inference";
                 for-each [non-logical-data[position() = last()]] {
-		  msg "last";
                   for-each [non-logical-data[@name]] {
-		    msg "inside";
                     $other-formula-name = `@name`;
                     if [key ("formulas", $other-formula-name)] {
                       for-each [key ("formulas", $other-formula-name)] {
-		        msg "bingo";
                         apply [*[1]] mode="render-definiens";
                       }
                     } else {
