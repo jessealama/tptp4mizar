@@ -10,6 +10,10 @@ output method="xml" indent="yes";
 // with a comma) of the order of the nodes that we should print
 #ordering = { ""; }
 
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
 // If we don't handle something explicitly, we don't handle it at all.
 tpl [*] {
   $n = `name (.)`;
