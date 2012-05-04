@@ -241,6 +241,10 @@ if ($opt_style eq 'eprover') {
     $derivation = EproverDerivation->new (path => $sorted_tptp_xml_in_db);
 } elsif ($opt_style eq 'vampire') {
     $derivation = VampireDerivation->new (path => $sorted_tptp_xml_in_db);
+} elsif ($opt_style eq 'tstp') {
+    $derivation = TSTPDerivation->new (path => $sorted_tptp_xml_in_db);
+} elsif ($opt_style eq 'tptp') {
+    $derivation = TPTPProblem->new (path => $sorted_tptp_xml_in_db);
 } else {
     print {*STDERR} error_message ('Unknown derivation style \'', $opt_style, '\'.');
     exit 1;
