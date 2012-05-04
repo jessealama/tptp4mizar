@@ -32,7 +32,11 @@ deleted, etc.
 Unfortunately `tptp2miz.pl` has a number of dependencies.  It is a
 Perl program that depends on a number of external Perl packages, and
 it requires several other programs to run correctly.  See the
-documentation for more details.
+documentation of `tptp2miz.pl` for more details.  If one really wants
+to start working with tptp4mizar from scratch, one will also need
+Java, which is needed for [xsltxt][xsltxt-homepage].  Several XSLT
+stylesheets are used, but I make my stylesheets in XSLTXT rather than
+plain XSL (yuck!).
 
 What is Mizar?  What is TPTP?  TSTP?
 ----------
@@ -83,3 +87,4 @@ to translate Otter proofs to Mizar texts.
 [eprover-homepage]: http://www.eprover.org "The E theorem prover"
 [mizar-homepage]: http://www.mizar.org "The Mizar homepage"
 [tptp-quickguide]: http://www.cs.miami.edu/~tptp/TPTP/QuickGuide/ "The TPTP/TSTP Quick Guide"
+[xsltxt-homepage]: http://savannah.nongnu.org/projects/xsltxt "XSLTXT: The XSLT compact form"
