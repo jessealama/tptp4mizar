@@ -186,6 +186,7 @@ tpl [Text-Proper] (#errs) {
           }
         }
       }
+      apply [.] (#errs = $tail);
     }
   }
 }
