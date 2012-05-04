@@ -1,7 +1,5 @@
 stylesheet "1.0";
-include "../tptp/tptp-formulas.xsl";
 include "../tptp/tptp2wsx.xsl";
-include "../utils/strings.xsl";
 output method="xml" indent="yes";
 
 //////////////////////////////////////////////////////////////////////
