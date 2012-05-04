@@ -1,13 +1,12 @@
 stylesheet "1.0";
 include "../tptp/tptp-formulas.xsl";
+include "../tptp/tptp2wsx.xsl";
 include "../utils/strings.xsl";
 output method="xml" indent="yes";
 
 //////////////////////////////////////////////////////////////////////
 // Stylesheet parameters
 //////////////////////////////////////////////////////////////////////
-
-#article = { ""; }
 
 // Should be either "flat" or "nested"
 #shape = { ""; }
@@ -22,10 +21,6 @@ key "formulas" [formula[@name]] `@name`;
 //////////////////////////////////////////////////////////////////////
 // Utilities
 //////////////////////////////////////////////////////////////////////
-
-tpl pad-axiom (#string) {
-  `concat ("Axiom", $string)`;
-}
 
 tpl [*] mode="trace" {
   $n = `name (.)`;
@@ -100,50 +95,6 @@ tpl [*] mode="full" {
 //////////////////////////////////////////////////////////////////////
 // Business as usual
 //////////////////////////////////////////////////////////////////////
-
-tpl [/] {
-  choose {
-    when [$article = ""] {
-      msg terminate="yes" "Error: the empty string is not an acceptable value for the article stylesheet parameter.";
-    }
-    when [string-length ($article) > 8] {
-      msg terminate="yes" "Error: the value of the article stylesheet parameter is too long (it must be at most 8 characters).";
-    }
-    when [contains ($article, " ")] {
-      msg terminate="yes" "Error: the value of the article stylesheet parameter contains whitespace.";
-    }
-    when [$shape = ""] {
-      msg terminate="yes" "Error: a non-empty value for the shape stylesheet parameter is mandatory.";
-    }
-    when [not($shape = "flat") and not($shape = "nested")] {
-      msg terminate="yes" "Error: the only permitted values of the shape stylesheet parameter are 'flat' and 'nested'.";
-    }
-    when [tstp] {
-      apply [tstp];
-    }
-    otherwise {
-      msg terminate="yes" "Error: the required tstp document element is missing.";
-    }
-  }
-}
-
-tpl reserve-variables {
-  if [descendant::variable] {
-    <Item {
-      @kind = "Reservation";
-      <Variables {
-        for-each [descendant::variable[@name and not(@name = preceding::variable[@name]/@name)]] {
-          <Variable {
-            @spelling = `@name`;
-          }
-        }
-      }
-      <Standard-Type {
-        @spelling = "set";
-      }
-    }
-  }
-}
 
 tpl any-depends-on-conjecture (#formula-names) {
   if [$formula-names] {
