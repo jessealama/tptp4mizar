@@ -1,5 +1,4 @@
 stylesheet "1.0";
-include "../utils/strings.xsl";
 include "../tstp/tstp2wsx.xsl";
 output method="xml" indent="yes";
 
