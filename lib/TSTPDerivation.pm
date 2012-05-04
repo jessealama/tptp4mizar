@@ -20,7 +20,8 @@ use List::MoreUtils qw(none);
 # Our stuff
 use Utils qw(error_message
 	     is_valid_xml_file);
-use Strings qw($SP);
+Readonly my $SP => q{ };
+Readonly my $LF => "\N{LF}";
 
 has 'background_theory' => (
     is => 'ro',
