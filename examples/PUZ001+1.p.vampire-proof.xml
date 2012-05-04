@@ -1,0 +1,1246 @@
+<tstp>
+  <formula name='f144' syntax='formula' status='plain'>
+    <defined-predicate name='false'/>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='subsumption_resolution'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f142'/>
+          <non-logical-data name='f68'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f68' syntax='formula' status='plain'>
+    <negation>
+      <predicate name='killed'>
+        <function name='butler'/>
+        <function name='agatha'/>
+      </predicate>
+    </negation>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='resolution'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f58'/>
+          <non-logical-data name='f48'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f48' syntax='formula' status='plain'>
+    <negation>
+      <predicate name='hates'>
+        <function name='butler'/>
+        <function name='butler'/>
+      </predicate>
+    </negation>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='superposition'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f37'/>
+          <non-logical-data name='f46'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f46' syntax='formula' status='plain'>
+    <predicate name='='>
+      <function name='butler'/>
+      <function name='sK0'>
+        <function name='butler'/>
+      </function>
+    </predicate>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='resolution'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f45'/>
+          <non-logical-data name='f33'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f33' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <disjunction>
+        <predicate name='hates'>
+          <function name='agatha'/>
+          <variable name='X0'/>
+        </predicate>
+        <predicate name='='>
+          <function name='butler'/>
+          <variable name='X0'/>
+        </predicate>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='cnf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f18'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f18' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <disjunction>
+        <predicate name='='>
+          <function name='butler'/>
+          <variable name='X0'/>
+        </predicate>
+        <predicate name='hates'>
+          <function name='agatha'/>
+          <variable name='X0'/>
+        </predicate>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='ennf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f9'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f9' syntax='formula' status='axiom'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <implication>
+        <negation>
+          <predicate name='='>
+            <function name='butler'/>
+            <variable name='X0'/>
+          </predicate>
+        </negation>
+        <predicate name='hates'>
+          <function name='agatha'/>
+          <variable name='X0'/>
+        </predicate>
+      </implication>
+    </quantifier>
+    <source>
+      <non-logical-data name='file'>
+        <non-logical-data name='unknown'/>
+        <non-logical-data name='pel55_7'/>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f45' syntax='formula' status='plain'>
+    <negation>
+      <predicate name='hates'>
+        <function name='agatha'/>
+        <function name='sK0'>
+          <function name='butler'/>
+        </function>
+      </predicate>
+    </negation>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='resolution'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f34'/>
+          <non-logical-data name='f37'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f34' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <disjunction>
+        <predicate name='hates'>
+          <function name='butler'/>
+          <variable name='X0'/>
+        </predicate>
+        <negation>
+          <predicate name='hates'>
+            <function name='agatha'/>
+            <variable name='X0'/>
+          </predicate>
+        </negation>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='cnf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f19'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f19' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <disjunction>
+        <negation>
+          <predicate name='hates'>
+            <function name='agatha'/>
+            <variable name='X0'/>
+          </predicate>
+        </negation>
+        <predicate name='hates'>
+          <function name='butler'/>
+          <variable name='X0'/>
+        </predicate>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='ennf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f11'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f11' syntax='formula' status='axiom'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <implication>
+        <predicate name='hates'>
+          <function name='agatha'/>
+          <variable name='X0'/>
+        </predicate>
+        <predicate name='hates'>
+          <function name='butler'/>
+          <variable name='X0'/>
+        </predicate>
+      </implication>
+    </quantifier>
+    <source>
+      <non-logical-data name='file'>
+        <non-logical-data name='unknown'/>
+        <non-logical-data name='pel55_9'/>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f37' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <negation>
+        <predicate name='hates'>
+          <variable name='X0'/>
+          <function name='sK0'>
+            <variable name='X0'/>
+          </function>
+        </predicate>
+      </negation>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='cnf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f25'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f25' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <negation>
+        <predicate name='hates'>
+          <variable name='X0'/>
+          <function name='sK0'>
+            <variable name='X0'/>
+          </function>
+        </predicate>
+      </negation>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='skolemisation'/>
+        <non-logical-data>
+          <non-logical-data name='status'>
+            <non-logical-data name='esa'/>
+          </non-logical-data>
+        </non-logical-data>
+        <non-logical-data>
+          <non-logical-data name='f22'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f22' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <quantifier type='existential'>
+        <variable name='X1'/>
+        <negation>
+          <predicate name='hates'>
+            <variable name='X0'/>
+            <variable name='X1'/>
+          </predicate>
+        </negation>
+      </quantifier>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='ennf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f12'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f12' syntax='formula' status='axiom'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <quantifier type='existential'>
+        <variable name='X1'/>
+        <negation>
+          <predicate name='hates'>
+            <variable name='X0'/>
+            <variable name='X1'/>
+          </predicate>
+        </negation>
+      </quantifier>
+    </quantifier>
+    <source>
+      <non-logical-data name='file'>
+        <non-logical-data name='unknown'/>
+        <non-logical-data name='pel55_10'/>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f58' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <disjunction>
+        <predicate name='hates'>
+          <function name='butler'/>
+          <variable name='X0'/>
+        </predicate>
+        <negation>
+          <predicate name='killed'>
+            <variable name='X0'/>
+            <function name='agatha'/>
+          </predicate>
+        </negation>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='resolution'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f39'/>
+          <non-logical-data name='f36'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f36' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <disjunction>
+        <predicate name='richer'>
+          <variable name='X0'/>
+          <function name='agatha'/>
+        </predicate>
+        <predicate name='hates'>
+          <function name='butler'/>
+          <variable name='X0'/>
+        </predicate>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='cnf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f21'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f21' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <disjunction>
+        <predicate name='richer'>
+          <variable name='X0'/>
+          <function name='agatha'/>
+        </predicate>
+        <predicate name='hates'>
+          <function name='butler'/>
+          <variable name='X0'/>
+        </predicate>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='ennf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f10'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f10' syntax='formula' status='axiom'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <implication>
+        <negation>
+          <predicate name='richer'>
+            <variable name='X0'/>
+            <function name='agatha'/>
+          </predicate>
+        </negation>
+        <predicate name='hates'>
+          <function name='butler'/>
+          <variable name='X0'/>
+        </predicate>
+      </implication>
+    </quantifier>
+    <source>
+      <non-logical-data name='file'>
+        <non-logical-data name='unknown'/>
+        <non-logical-data name='pel55_8'/>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f39' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <variable name='X1'/>
+      <disjunction>
+        <negation>
+          <predicate name='richer'>
+            <variable name='X0'/>
+            <variable name='X1'/>
+          </predicate>
+        </negation>
+        <negation>
+          <predicate name='killed'>
+            <variable name='X0'/>
+            <variable name='X1'/>
+          </predicate>
+        </negation>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='cnf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f24'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f24' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <variable name='X1'/>
+      <disjunction>
+        <negation>
+          <predicate name='killed'>
+            <variable name='X0'/>
+            <variable name='X1'/>
+          </predicate>
+        </negation>
+        <negation>
+          <predicate name='richer'>
+            <variable name='X0'/>
+            <variable name='X1'/>
+          </predicate>
+        </negation>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='ennf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f7'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f7' syntax='formula' status='axiom'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <variable name='X1'/>
+      <implication>
+        <predicate name='killed'>
+          <variable name='X0'/>
+          <variable name='X1'/>
+        </predicate>
+        <negation>
+          <predicate name='richer'>
+            <variable name='X0'/>
+            <variable name='X1'/>
+          </predicate>
+        </negation>
+      </implication>
+    </quantifier>
+    <source>
+      <non-logical-data name='file'>
+        <non-logical-data name='unknown'/>
+        <non-logical-data name='pel55_5'/>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f142' syntax='formula' status='plain'>
+    <predicate name='killed'>
+      <function name='butler'/>
+      <function name='agatha'/>
+    </predicate>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='superposition'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f41'/>
+          <non-logical-data name='f140'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f140' syntax='formula' status='plain'>
+    <predicate name='='>
+      <function name='butler'/>
+      <function name='sK1'/>
+    </predicate>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='backtracking_split_refutation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f91'/>
+          <non-logical-data name='f136_D'/>
+          <non-logical-data name='f139'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f139' syntax='formula' status='plain'>
+    <disjunction>
+      <defined-predicate name='false'/>
+      <defined-predicate name='spl1'/>
+    </disjunction>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='subsumption_resolution'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f137'/>
+          <non-logical-data name='f27'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f27' syntax='formula' status='plain'>
+    <negation>
+      <predicate name='killed'>
+        <function name='agatha'/>
+        <function name='agatha'/>
+      </predicate>
+    </negation>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='cnf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f15'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f15' syntax='formula' status='plain'>
+    <negation>
+      <predicate name='killed'>
+        <function name='agatha'/>
+        <function name='agatha'/>
+      </predicate>
+    </negation>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='ennf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f14'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f14' syntax='formula' status='negated_conjecture'>
+    <negation>
+      <predicate name='killed'>
+        <function name='agatha'/>
+        <function name='agatha'/>
+      </predicate>
+    </negation>
+    <source>
+      <non-logical-data name='file'>
+        <non-logical-data name='unknown'/>
+        <non-logical-data name='pel55'/>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f137' syntax='formula' status='plain'>
+    <disjunction>
+      <predicate name='killed'>
+        <function name='agatha'/>
+        <function name='agatha'/>
+      </predicate>
+      <defined-predicate name='spl1'/>
+    </disjunction>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='superposition'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f41'/>
+          <non-logical-data name='f136'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f136' syntax='formula' status='plain'>
+    <disjunction>
+      <predicate name='='>
+        <function name='agatha'/>
+        <function name='sK1'/>
+      </predicate>
+      <defined-predicate name='spl1'/>
+    </disjunction>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='cnf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f136_D'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f136_D' syntax='formula' status='plain'>
+    <equivalence>
+      <predicate name='='>
+        <function name='agatha'/>
+        <function name='sK1'/>
+      </predicate>
+      <negation>
+        <defined-predicate name='spl1'/>
+      </negation>
+    </equivalence>
+    <source>
+      <non-logical-data name='introduced'>
+        <non-logical-data name='backtracking_splitting_component'/>
+        <non-logical-data/>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f91' syntax='formula' status='plain'>
+    <disjunction>
+      <predicate name='='>
+        <function name='butler'/>
+        <function name='sK1'/>
+      </predicate>
+      <predicate name='='>
+        <function name='agatha'/>
+        <function name='sK1'/>
+      </predicate>
+    </disjunction>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='subsumption_resolution'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f90'/>
+          <non-logical-data name='f40'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f40' syntax='formula' status='plain'>
+    <predicate name='lives'>
+      <function name='sK1'/>
+    </predicate>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='cnf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f26'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f26' syntax='formula' status='plain'>
+    <conjunction>
+      <predicate name='lives'>
+        <function name='sK1'/>
+      </predicate>
+      <predicate name='killed'>
+        <function name='sK1'/>
+        <function name='agatha'/>
+      </predicate>
+    </conjunction>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='skolemisation'/>
+        <non-logical-data>
+          <non-logical-data name='status'>
+            <non-logical-data name='esa'/>
+          </non-logical-data>
+        </non-logical-data>
+        <non-logical-data>
+          <non-logical-data name='f1'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f1' syntax='formula' status='axiom'>
+    <quantifier type='existential'>
+      <variable name='X0'/>
+      <conjunction>
+        <predicate name='lives'>
+          <variable name='X0'/>
+        </predicate>
+        <predicate name='killed'>
+          <variable name='X0'/>
+          <function name='agatha'/>
+        </predicate>
+      </conjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='file'>
+        <non-logical-data name='unknown'/>
+        <non-logical-data name='pel55_1'/>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f90' syntax='formula' status='plain'>
+    <disjunction>
+      <predicate name='='>
+        <function name='butler'/>
+        <function name='sK1'/>
+      </predicate>
+      <disjunction>
+        <predicate name='='>
+          <function name='agatha'/>
+          <function name='sK1'/>
+        </predicate>
+        <negation>
+          <predicate name='lives'>
+            <function name='sK1'/>
+          </predicate>
+        </negation>
+      </disjunction>
+    </disjunction>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='subsumption_resolution'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f89'/>
+          <non-logical-data name='f31'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f31' syntax='formula' status='plain'>
+    <negation>
+      <predicate name='='>
+        <function name='agatha'/>
+        <function name='butler'/>
+      </predicate>
+    </negation>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='cnf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f13'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f13' syntax='formula' status='axiom'>
+    <negation>
+      <predicate name='='>
+        <function name='agatha'/>
+        <function name='butler'/>
+      </predicate>
+    </negation>
+    <source>
+      <non-logical-data name='file'>
+        <non-logical-data name='unknown'/>
+        <non-logical-data name='pel55_11'/>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f89' syntax='formula' status='plain'>
+    <disjunction>
+      <predicate name='='>
+        <function name='agatha'/>
+        <function name='butler'/>
+      </predicate>
+      <disjunction>
+        <predicate name='='>
+          <function name='butler'/>
+          <function name='sK1'/>
+        </predicate>
+        <disjunction>
+          <predicate name='='>
+            <function name='agatha'/>
+            <function name='sK1'/>
+          </predicate>
+          <negation>
+            <predicate name='lives'>
+              <function name='sK1'/>
+            </predicate>
+          </negation>
+        </disjunction>
+      </disjunction>
+    </disjunction>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='resolution'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f71'/>
+          <non-logical-data name='f41'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f71' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <variable name='X1'/>
+      <disjunction>
+        <negation>
+          <predicate name='killed'>
+            <variable name='X0'/>
+            <variable name='X1'/>
+          </predicate>
+        </negation>
+        <disjunction>
+          <predicate name='='>
+            <function name='butler'/>
+            <variable name='X1'/>
+          </predicate>
+          <disjunction>
+            <predicate name='='>
+              <function name='butler'/>
+              <variable name='X0'/>
+            </predicate>
+            <disjunction>
+              <predicate name='='>
+                <function name='agatha'/>
+                <variable name='X0'/>
+              </predicate>
+              <negation>
+                <predicate name='lives'>
+                  <variable name='X0'/>
+                </predicate>
+              </negation>
+            </disjunction>
+          </disjunction>
+        </disjunction>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='superposition'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f59'/>
+          <non-logical-data name='f32'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f32' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <disjunction>
+        <predicate name='='>
+          <function name='charles'/>
+          <variable name='X0'/>
+        </predicate>
+        <disjunction>
+          <predicate name='='>
+            <function name='butler'/>
+            <variable name='X0'/>
+          </predicate>
+          <disjunction>
+            <predicate name='='>
+              <function name='agatha'/>
+              <variable name='X0'/>
+            </predicate>
+            <negation>
+              <predicate name='lives'>
+                <variable name='X0'/>
+              </predicate>
+            </negation>
+          </disjunction>
+        </disjunction>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='cnf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f17'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f17' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <disjunction>
+        <negation>
+          <predicate name='lives'>
+            <variable name='X0'/>
+          </predicate>
+        </negation>
+        <disjunction>
+          <predicate name='='>
+            <function name='agatha'/>
+            <variable name='X0'/>
+          </predicate>
+          <disjunction>
+            <predicate name='='>
+              <function name='butler'/>
+              <variable name='X0'/>
+            </predicate>
+            <predicate name='='>
+              <function name='charles'/>
+              <variable name='X0'/>
+            </predicate>
+          </disjunction>
+        </disjunction>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='flattening'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f16'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f16' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <disjunction>
+        <negation>
+          <predicate name='lives'>
+            <variable name='X0'/>
+          </predicate>
+        </negation>
+        <disjunction>
+          <predicate name='='>
+            <function name='agatha'/>
+            <variable name='X0'/>
+          </predicate>
+          <disjunction>
+            <predicate name='='>
+              <function name='butler'/>
+              <variable name='X0'/>
+            </predicate>
+            <predicate name='='>
+              <function name='charles'/>
+              <variable name='X0'/>
+            </predicate>
+          </disjunction>
+        </disjunction>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='ennf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f5'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f5' syntax='formula' status='axiom'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <implication>
+        <predicate name='lives'>
+          <variable name='X0'/>
+        </predicate>
+        <disjunction>
+          <predicate name='='>
+            <function name='agatha'/>
+            <variable name='X0'/>
+          </predicate>
+          <disjunction>
+            <predicate name='='>
+              <function name='butler'/>
+              <variable name='X0'/>
+            </predicate>
+            <predicate name='='>
+              <function name='charles'/>
+              <variable name='X0'/>
+            </predicate>
+          </disjunction>
+        </disjunction>
+      </implication>
+    </quantifier>
+    <source>
+      <non-logical-data name='file'>
+        <non-logical-data name='unknown'/>
+        <non-logical-data name='pel55_3'/>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f59' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <disjunction>
+        <negation>
+          <predicate name='killed'>
+            <function name='charles'/>
+            <variable name='X0'/>
+          </predicate>
+        </negation>
+        <predicate name='='>
+          <function name='butler'/>
+          <variable name='X0'/>
+        </predicate>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='resolution'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f54'/>
+          <non-logical-data name='f33'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f54' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X1'/>
+      <disjunction>
+        <negation>
+          <predicate name='hates'>
+            <function name='agatha'/>
+            <variable name='X1'/>
+          </predicate>
+        </negation>
+        <negation>
+          <predicate name='killed'>
+            <function name='charles'/>
+            <variable name='X1'/>
+          </predicate>
+        </negation>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='resolution'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f38'/>
+          <non-logical-data name='f35'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f35' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <disjunction>
+        <negation>
+          <predicate name='hates'>
+            <function name='charles'/>
+            <variable name='X0'/>
+          </predicate>
+        </negation>
+        <negation>
+          <predicate name='hates'>
+            <function name='agatha'/>
+            <variable name='X0'/>
+          </predicate>
+        </negation>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='cnf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f20'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f20' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <disjunction>
+        <negation>
+          <predicate name='hates'>
+            <function name='agatha'/>
+            <variable name='X0'/>
+          </predicate>
+        </negation>
+        <negation>
+          <predicate name='hates'>
+            <function name='charles'/>
+            <variable name='X0'/>
+          </predicate>
+        </negation>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='ennf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f8'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f8' syntax='formula' status='axiom'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <implication>
+        <predicate name='hates'>
+          <function name='agatha'/>
+          <variable name='X0'/>
+        </predicate>
+        <negation>
+          <predicate name='hates'>
+            <function name='charles'/>
+            <variable name='X0'/>
+          </predicate>
+        </negation>
+      </implication>
+    </quantifier>
+    <source>
+      <non-logical-data name='file'>
+        <non-logical-data name='unknown'/>
+        <non-logical-data name='pel55_6'/>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f38' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <variable name='X1'/>
+      <disjunction>
+        <predicate name='hates'>
+          <variable name='X0'/>
+          <variable name='X1'/>
+        </predicate>
+        <negation>
+          <predicate name='killed'>
+            <variable name='X0'/>
+            <variable name='X1'/>
+          </predicate>
+        </negation>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='cnf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f23'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f23' syntax='formula' status='plain'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <variable name='X1'/>
+      <disjunction>
+        <negation>
+          <predicate name='killed'>
+            <variable name='X0'/>
+            <variable name='X1'/>
+          </predicate>
+        </negation>
+        <predicate name='hates'>
+          <variable name='X0'/>
+          <variable name='X1'/>
+        </predicate>
+      </disjunction>
+    </quantifier>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='ennf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f6'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f6' syntax='formula' status='axiom'>
+    <quantifier type='universal'>
+      <variable name='X0'/>
+      <variable name='X1'/>
+      <implication>
+        <predicate name='killed'>
+          <variable name='X0'/>
+          <variable name='X1'/>
+        </predicate>
+        <predicate name='hates'>
+          <variable name='X0'/>
+          <variable name='X1'/>
+        </predicate>
+      </implication>
+    </quantifier>
+    <source>
+      <non-logical-data name='file'>
+        <non-logical-data name='unknown'/>
+        <non-logical-data name='pel55_4'/>
+      </non-logical-data>
+    </source>
+  </formula>
+  <formula name='f41' syntax='formula' status='plain'>
+    <predicate name='killed'>
+      <function name='sK1'/>
+      <function name='agatha'/>
+    </predicate>
+    <source>
+      <non-logical-data name='inference'>
+        <non-logical-data name='cnf_transformation'/>
+        <non-logical-data/>
+        <non-logical-data>
+          <non-logical-data name='f26'/>
+        </non-logical-data>
+      </non-logical-data>
+    </source>
+  </formula>
+</tstp>

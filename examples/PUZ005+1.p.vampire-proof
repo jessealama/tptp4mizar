@@ -1,0 +1,148 @@
+% SZS status Theorem for unknown
+% SZS output start Proof for unknown
+fof(f370,plain,(
+  $false),
+  inference(resolution,[],[f369,f98])).
+fof(f98,plain,(
+  thursday(a_thursday)),
+  inference(cnf_transformation,[],[f4])).
+fof(f4,axiom,(
+  thursday(a_thursday)),
+  file(unknown,thursday)).
+fof(f369,plain,(
+  ( ! [X3] : (~thursday(X3)) )),
+  inference(subsumption_resolution,[],[f366,f117])).
+fof(f117,plain,(
+  ( ! [X0] : (wednesday(yesterday(X0)) | ~thursday(X0)) )),
+  inference(cnf_transformation,[],[f63])).
+fof(f63,plain,(
+  ! [X0] : (~thursday(X0) | wednesday(yesterday(X0)))),
+  inference(ennf_transformation,[],[f18])).
+fof(f18,axiom,(
+  ! [X0] : (thursday(X0) => wednesday(yesterday(X0)))),
+  file(unknown,thursday_follows_wednesday)).
+fof(f366,plain,(
+  ( ! [X3] : (~thursday(X3) | ~wednesday(yesterday(X3))) )),
+  inference(resolution,[],[f362,f128])).
+fof(f128,plain,(
+  ( ! [X0] : (~unicorn_lies(X0) | ~wednesday(X0)) )),
+  inference(cnf_transformation,[],[f74])).
+fof(f74,plain,(
+  ! [X0] : (~wednesday(X0) | ~unicorn_lies(X0))),
+  inference(ennf_transformation,[],[f31])).
+fof(f31,axiom,(
+  ! [X0] : (wednesday(X0) => ~unicorn_lies(X0))),
+  file(unknown,unicorn_does_not_lie_wednesday)).
+fof(f362,plain,(
+  ( ! [X2] : (unicorn_lies(yesterday(X2)) | ~thursday(X2)) )),
+  inference(subsumption_resolution,[],[f361,f122])).
+fof(f122,plain,(
+  ( ! [X0] : (~lion_lies(X0) | ~thursday(X0)) )),
+  inference(cnf_transformation,[],[f68])).
+fof(f68,plain,(
+  ! [X0] : (~thursday(X0) | ~lion_lies(X0))),
+  inference(ennf_transformation,[],[f25])).
+fof(f25,axiom,(
+  ! [X0] : (thursday(X0) => ~lion_lies(X0))),
+  file(unknown,lion_does_not_lie_thursday)).
+fof(f361,plain,(
+  ( ! [X2] : (lion_lies(X2) | unicorn_lies(yesterday(X2)) | ~thursday(X2)) )),
+  inference(subsumption_resolution,[],[f360,f104])).
+fof(f104,plain,(
+  ( ! [X0] : (~thursday(X0) | unicorn_lies(X0)) )),
+  inference(cnf_transformation,[],[f50])).
+fof(f50,plain,(
+  ! [X0] : (~thursday(X0) | unicorn_lies(X0))),
+  inference(ennf_transformation,[],[f32])).
+fof(f32,axiom,(
+  ! [X0] : (thursday(X0) => unicorn_lies(X0))),
+  file(unknown,unicorn_lies_thursday)).
+fof(f360,plain,(
+  ( ! [X2] : (lion_lies(X2) | ~unicorn_lies(X2) | unicorn_lies(yesterday(X2)) | ~thursday(X2)) )),
+  inference(resolution,[],[f357,f188])).
+fof(f188,plain,(
+  ( ! [X1] : (lion_lies(yesterday(X1)) | ~thursday(X1)) )),
+  inference(resolution,[],[f117,f105])).
+fof(f105,plain,(
+  ( ! [X0] : (~wednesday(X0) | lion_lies(X0)) )),
+  inference(cnf_transformation,[],[f51])).
+fof(f51,plain,(
+  ! [X0] : (~wednesday(X0) | lion_lies(X0))),
+  inference(ennf_transformation,[],[f24])).
+fof(f24,axiom,(
+  ! [X0] : (wednesday(X0) => lion_lies(X0))),
+  file(unknown,lion_lies_wednesday)).
+fof(f357,plain,(
+  ( ! [X5] : (~lion_lies(yesterday(X5)) | lion_lies(X5) | ~unicorn_lies(X5) | unicorn_lies(yesterday(X5))) )),
+  inference(subsumption_resolution,[],[f356,f130])).
+fof(f130,plain,(
+  ( ! [X0] : (~unicorn_lies(X0) | day(X0)) )),
+  inference(cnf_transformation,[],[f76])).
+fof(f76,plain,(
+  ! [X0] : (~unicorn_lies(X0) | day(X0))),
+  inference(ennf_transformation,[],[f37])).
+fof(f37,axiom,(
+  ! [X0] : (unicorn_lies(X0) => day(X0))),
+  file(unknown,unicorn_lies_on_a_day)).
+fof(f356,plain,(
+  ( ! [X5] : (~lion_lies(yesterday(X5)) | lion_lies(X5) | ~day(X5) | ~unicorn_lies(X5) | unicorn_lies(yesterday(X5))) )),
+  inference(subsumption_resolution,[],[f352,f131])).
+fof(f131,plain,(
+  ( ! [X0] : (~lion_lies(X0) | day(X0)) )),
+  inference(cnf_transformation,[],[f77])).
+fof(f77,plain,(
+  ! [X0] : (~lion_lies(X0) | day(X0))),
+  inference(ennf_transformation,[],[f36])).
+fof(f36,axiom,(
+  ! [X0] : (lion_lies(X0) => day(X0))),
+  file(unknown,lion_lies_on_a_day)).
+fof(f352,plain,(
+  ( ! [X5] : (~lion_lies(yesterday(X5)) | lion_lies(X5) | ~day(X5) | ~unicorn_lies(X5) | ~day(yesterday(X5)) | unicorn_lies(yesterday(X5))) )),
+  inference(resolution,[],[f348,f302])).
+fof(f302,plain,(
+  ( ! [X0] : (~lies_on_one_of(a_lion,X0,yesterday(X0)) | ~unicorn_lies(X0) | ~day(yesterday(X0)) | unicorn_lies(yesterday(X0))) )),
+  inference(subsumption_resolution,[],[f299,f130])).
+fof(f299,plain,(
+  ( ! [X0] : (unicorn_lies(yesterday(X0)) | ~unicorn_lies(X0) | ~day(yesterday(X0)) | ~lies_on_one_of(a_lion,X0,yesterday(X0)) | ~day(X0)) )),
+  inference(resolution,[],[f290,f94])).
+fof(f94,plain,(
+  ( ! [X0] : (~lies_on_one_of(a_unicorn,X0,yesterday(X0)) | ~lies_on_one_of(a_lion,X0,yesterday(X0)) | ~day(X0)) )),
+  inference(cnf_transformation,[],[f47])).
+fof(f47,plain,(
+  ! [X0] : (~day(X0) | ~lies_on_one_of(a_lion,X0,yesterday(X0)) | ~lies_on_one_of(a_unicorn,X0,yesterday(X0)))),
+  inference(ennf_transformation,[],[f46])).
+fof(f46,negated_conjecture,(
+  ~? [X0] : (day(X0) & lies_on_one_of(a_lion,X0,yesterday(X0)) & lies_on_one_of(a_unicorn,X0,yesterday(X0)))),
+  file(unknown,prove_there_are_close_lying_days)).
+fof(f290,plain,(
+  ( ! [X0,X1] : (lies_on_one_of(a_unicorn,X0,X1) | unicorn_lies(X1) | ~unicorn_lies(X0) | ~day(X1)) )),
+  inference(subsumption_resolution,[],[f135,f130])).
+fof(f135,plain,(
+  ( ! [X0,X1] : (unicorn_lies(X1) | lies_on_one_of(a_unicorn,X0,X1) | ~unicorn_lies(X0) | ~day(X1) | ~day(X0)) )),
+  inference(cnf_transformation,[],[f85])).
+fof(f85,plain,(
+  ! [X0] : (~day(X0) | ! [X1] : (~day(X1) | ~unicorn_lies(X0) | lies_on_one_of(a_unicorn,X0,X1) | unicorn_lies(X1)))),
+  inference(flattening,[],[f84])).
+fof(f84,plain,(
+  ! [X0] : (~day(X0) | ! [X1] : (~day(X1) | ((~unicorn_lies(X0) | lies_on_one_of(a_unicorn,X0,X1)) | unicorn_lies(X1))))),
+  inference(ennf_transformation,[],[f45])).
+fof(f45,axiom,(
+  ! [X0] : (day(X0) => ! [X1] : (day(X1) => ((unicorn_lies(X0) & ~lies_on_one_of(a_unicorn,X0,X1)) => unicorn_lies(X1))))),
+  file(unknown,unicorn_lies_on_both)).
+fof(f348,plain,(
+  ( ! [X0,X1] : (lies_on_one_of(a_lion,X0,X1) | ~lion_lies(X1) | lion_lies(X0) | ~day(X0)) )),
+  inference(subsumption_resolution,[],[f139,f131])).
+fof(f139,plain,(
+  ( ! [X0,X1] : (~lion_lies(X1) | lies_on_one_of(a_lion,X0,X1) | lion_lies(X0) | ~day(X1) | ~day(X0)) )),
+  inference(cnf_transformation,[],[f93])).
+fof(f93,plain,(
+  ! [X0] : (~day(X0) | ! [X1] : (~day(X1) | lion_lies(X0) | lies_on_one_of(a_lion,X0,X1) | ~lion_lies(X1)))),
+  inference(flattening,[],[f92])).
+fof(f92,plain,(
+  ! [X0] : (~day(X0) | ! [X1] : (~day(X1) | ((lion_lies(X0) | lies_on_one_of(a_lion,X0,X1)) | ~lion_lies(X1))))),
+  inference(ennf_transformation,[],[f40])).
+fof(f40,axiom,(
+  ! [X0] : (day(X0) => ! [X1] : (day(X1) => ((~lion_lies(X0) & ~lies_on_one_of(a_lion,X0,X1)) => ~lion_lies(X1))))),
+  file(unknown,lion_lies_on_neither)).
+% SZS output end Proof for unknown
+% Success in time 0.097 s

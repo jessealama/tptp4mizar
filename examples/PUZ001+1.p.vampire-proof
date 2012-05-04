@@ -1,0 +1,162 @@
+% SZS status Theorem for unknown
+% SZS output start Proof for unknown
+fof(f144,plain,(
+  $false),
+  inference(subsumption_resolution,[],[f142,f68])).
+fof(f68,plain,(
+  ~killed(butler,agatha)),
+  inference(resolution,[],[f58,f48])).
+fof(f48,plain,(
+  ~hates(butler,butler)),
+  inference(superposition,[],[f37,f46])).
+fof(f46,plain,(
+  butler = sK0(butler)),
+  inference(resolution,[],[f45,f33])).
+fof(f33,plain,(
+  ( ! [X0] : (hates(agatha,X0) | butler = X0) )),
+  inference(cnf_transformation,[],[f18])).
+fof(f18,plain,(
+  ! [X0] : (butler = X0 | hates(agatha,X0))),
+  inference(ennf_transformation,[],[f9])).
+fof(f9,axiom,(
+  ! [X0] : (butler != X0 => hates(agatha,X0))),
+  file(unknown,pel55_7)).
+fof(f45,plain,(
+  ~hates(agatha,sK0(butler))),
+  inference(resolution,[],[f34,f37])).
+fof(f34,plain,(
+  ( ! [X0] : (hates(butler,X0) | ~hates(agatha,X0)) )),
+  inference(cnf_transformation,[],[f19])).
+fof(f19,plain,(
+  ! [X0] : (~hates(agatha,X0) | hates(butler,X0))),
+  inference(ennf_transformation,[],[f11])).
+fof(f11,axiom,(
+  ! [X0] : (hates(agatha,X0) => hates(butler,X0))),
+  file(unknown,pel55_9)).
+fof(f37,plain,(
+  ( ! [X0] : (~hates(X0,sK0(X0))) )),
+  inference(cnf_transformation,[],[f25])).
+fof(f25,plain,(
+  ! [X0] : ~hates(X0,sK0(X0))),
+  inference(skolemisation,[status(esa)],[f22])).
+fof(f22,plain,(
+  ! [X0] : ? [X1] : ~hates(X0,X1)),
+  inference(ennf_transformation,[],[f12])).
+fof(f12,axiom,(
+  ! [X0] : ? [X1] : ~hates(X0,X1)),
+  file(unknown,pel55_10)).
+fof(f58,plain,(
+  ( ! [X0] : (hates(butler,X0) | ~killed(X0,agatha)) )),
+  inference(resolution,[],[f39,f36])).
+fof(f36,plain,(
+  ( ! [X0] : (richer(X0,agatha) | hates(butler,X0)) )),
+  inference(cnf_transformation,[],[f21])).
+fof(f21,plain,(
+  ! [X0] : (richer(X0,agatha) | hates(butler,X0))),
+  inference(ennf_transformation,[],[f10])).
+fof(f10,axiom,(
+  ! [X0] : (~richer(X0,agatha) => hates(butler,X0))),
+  file(unknown,pel55_8)).
+fof(f39,plain,(
+  ( ! [X0,X1] : (~richer(X0,X1) | ~killed(X0,X1)) )),
+  inference(cnf_transformation,[],[f24])).
+fof(f24,plain,(
+  ! [X0,X1] : (~killed(X0,X1) | ~richer(X0,X1))),
+  inference(ennf_transformation,[],[f7])).
+fof(f7,axiom,(
+  ! [X0,X1] : (killed(X0,X1) => ~richer(X0,X1))),
+  file(unknown,pel55_5)).
+fof(f142,plain,(
+  killed(butler,agatha)),
+  inference(superposition,[],[f41,f140])).
+fof(f140,plain,(
+  butler = sK1),
+  inference(backtracking_split_refutation,[],[f91,f136_D,f139])).
+fof(f139,plain,(
+  $false | $spl1),
+  inference(subsumption_resolution,[],[f137,f27])).
+fof(f27,plain,(
+  ~killed(agatha,agatha)),
+  inference(cnf_transformation,[],[f15])).
+fof(f15,plain,(
+  ~killed(agatha,agatha)),
+  inference(ennf_transformation,[],[f14])).
+fof(f14,negated_conjecture,(
+  ~killed(agatha,agatha)),
+  file(unknown,pel55)).
+fof(f137,plain,(
+  killed(agatha,agatha) | $spl1),
+  inference(superposition,[],[f41,f136])).
+fof(f136,plain,(
+  agatha = sK1 | $spl1),
+  inference(cnf_transformation,[],[f136_D])).
+fof(f136_D,plain,(
+  agatha = sK1 <=> ~$spl1),
+  introduced(backtracking_splitting_component,[])).
+fof(f91,plain,(
+  butler = sK1 | agatha = sK1),
+  inference(subsumption_resolution,[],[f90,f40])).
+fof(f40,plain,(
+  lives(sK1)),
+  inference(cnf_transformation,[],[f26])).
+fof(f26,plain,(
+  lives(sK1) & killed(sK1,agatha)),
+  inference(skolemisation,[status(esa)],[f1])).
+fof(f1,axiom,(
+  ? [X0] : (lives(X0) & killed(X0,agatha))),
+  file(unknown,pel55_1)).
+fof(f90,plain,(
+  butler = sK1 | agatha = sK1 | ~lives(sK1)),
+  inference(subsumption_resolution,[],[f89,f31])).
+fof(f31,plain,(
+  agatha != butler),
+  inference(cnf_transformation,[],[f13])).
+fof(f13,axiom,(
+  agatha != butler),
+  file(unknown,pel55_11)).
+fof(f89,plain,(
+  agatha = butler | butler = sK1 | agatha = sK1 | ~lives(sK1)),
+  inference(resolution,[],[f71,f41])).
+fof(f71,plain,(
+  ( ! [X0,X1] : (~killed(X0,X1) | butler = X1 | butler = X0 | agatha = X0 | ~lives(X0)) )),
+  inference(superposition,[],[f59,f32])).
+fof(f32,plain,(
+  ( ! [X0] : (charles = X0 | butler = X0 | agatha = X0 | ~lives(X0)) )),
+  inference(cnf_transformation,[],[f17])).
+fof(f17,plain,(
+  ! [X0] : (~lives(X0) | agatha = X0 | butler = X0 | charles = X0)),
+  inference(flattening,[],[f16])).
+fof(f16,plain,(
+  ! [X0] : (~lives(X0) | (agatha = X0 | butler = X0 | charles = X0))),
+  inference(ennf_transformation,[],[f5])).
+fof(f5,axiom,(
+  ! [X0] : (lives(X0) => (agatha = X0 | butler = X0 | charles = X0))),
+  file(unknown,pel55_3)).
+fof(f59,plain,(
+  ( ! [X0] : (~killed(charles,X0) | butler = X0) )),
+  inference(resolution,[],[f54,f33])).
+fof(f54,plain,(
+  ( ! [X1] : (~hates(agatha,X1) | ~killed(charles,X1)) )),
+  inference(resolution,[],[f38,f35])).
+fof(f35,plain,(
+  ( ! [X0] : (~hates(charles,X0) | ~hates(agatha,X0)) )),
+  inference(cnf_transformation,[],[f20])).
+fof(f20,plain,(
+  ! [X0] : (~hates(agatha,X0) | ~hates(charles,X0))),
+  inference(ennf_transformation,[],[f8])).
+fof(f8,axiom,(
+  ! [X0] : (hates(agatha,X0) => ~hates(charles,X0))),
+  file(unknown,pel55_6)).
+fof(f38,plain,(
+  ( ! [X0,X1] : (hates(X0,X1) | ~killed(X0,X1)) )),
+  inference(cnf_transformation,[],[f23])).
+fof(f23,plain,(
+  ! [X0,X1] : (~killed(X0,X1) | hates(X0,X1))),
+  inference(ennf_transformation,[],[f6])).
+fof(f6,axiom,(
+  ! [X0,X1] : (killed(X0,X1) => hates(X0,X1))),
+  file(unknown,pel55_4)).
+fof(f41,plain,(
+  killed(sK1,agatha)),
+  inference(cnf_transformation,[],[f26])).
+% SZS output end Proof for unknown

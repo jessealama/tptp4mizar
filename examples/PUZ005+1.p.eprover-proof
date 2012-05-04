@@ -1,0 +1,457 @@
+fof(4,axiom,(
+    thursday(a_thursday) ),
+    file('PUZ005+1.p',thursday)).
+
+fof(18,axiom,(
+    ! [X1] :
+      ( thursday(X1)
+     => wednesday(yesterday(X1)) ) ),
+    file('PUZ005+1.p',thursday_follows_wednesday)).
+
+fof(24,axiom,(
+    ! [X1] :
+      ( wednesday(X1)
+     => lion_lies(X1) ) ),
+    file('PUZ005+1.p',lion_lies_wednesday)).
+
+fof(25,axiom,(
+    ! [X1] :
+      ( thursday(X1)
+     => ~ lion_lies(X1) ) ),
+    file('PUZ005+1.p',lion_does_not_lie_thursday)).
+
+fof(31,axiom,(
+    ! [X1] :
+      ( wednesday(X1)
+     => ~ unicorn_lies(X1) ) ),
+    file('PUZ005+1.p',unicorn_does_not_lie_wednesday)).
+
+fof(32,axiom,(
+    ! [X1] :
+      ( thursday(X1)
+     => unicorn_lies(X1) ) ),
+    file('PUZ005+1.p',unicorn_lies_thursday)).
+
+fof(36,axiom,(
+    ! [X1] :
+      ( lion_lies(X1)
+     => day(X1) ) ),
+    file('PUZ005+1.p',lion_lies_on_a_day)).
+
+fof(37,axiom,(
+    ! [X1] :
+      ( unicorn_lies(X1)
+     => day(X1) ) ),
+    file('PUZ005+1.p',unicorn_lies_on_a_day)).
+
+fof(40,axiom,(
+    ! [X1] :
+      ( day(X1)
+     => ! [X2] :
+          ( day(X2)
+         => ( ( ~ lion_lies(X1)
+              & ~ lies_on_one_of(a_lion,X1,X2) )
+           => ~ lion_lies(X2) ) ) ) ),
+    file('PUZ005+1.p',lion_lies_on_neither)).
+
+fof(45,axiom,(
+    ! [X1] :
+      ( day(X1)
+     => ! [X2] :
+          ( day(X2)
+         => ( ( unicorn_lies(X1)
+              & ~ lies_on_one_of(a_unicorn,X1,X2) )
+           => unicorn_lies(X2) ) ) ) ),
+    file('PUZ005+1.p',unicorn_lies_on_both)).
+
+fof(46,conjecture,(
+    ? [X1] :
+      ( day(X1)
+      & lies_on_one_of(a_lion,X1,yesterday(X1))
+      & lies_on_one_of(a_unicorn,X1,yesterday(X1)) ) ),
+    file('PUZ005+1.p',prove_there_are_close_lying_days)).
+
+fof(47,negated_conjecture,(
+    ~ ? [X1] :
+        ( day(X1)
+        & lies_on_one_of(a_lion,X1,yesterday(X1))
+        & lies_on_one_of(a_unicorn,X1,yesterday(X1)) ) ),
+    inference(assume_negation,[status(cth)],[46])).
+
+fof(48,plain,(
+    ! [X1] :
+      ( thursday(X1)
+     => ~ lion_lies(X1) ) ),
+    inference(fof_simplification,[status(thm)],[25,theory(equality)])).
+
+fof(54,plain,(
+    ! [X1] :
+      ( wednesday(X1)
+     => ~ unicorn_lies(X1) ) ),
+    inference(fof_simplification,[status(thm)],[31,theory(equality)])).
+
+fof(58,plain,(
+    ! [X1] :
+      ( day(X1)
+     => ! [X2] :
+          ( day(X2)
+         => ( ( ~ lion_lies(X1)
+              & ~ lies_on_one_of(a_lion,X1,X2) )
+           => ~ lion_lies(X2) ) ) ) ),
+    inference(fof_simplification,[status(thm)],[40,theory(equality)])).
+
+fof(63,plain,(
+    ! [X1] :
+      ( day(X1)
+     => ! [X2] :
+          ( day(X2)
+         => ( ( unicorn_lies(X1)
+              & ~ lies_on_one_of(a_unicorn,X1,X2) )
+           => unicorn_lies(X2) ) ) ) ),
+    inference(fof_simplification,[status(thm)],[45,theory(equality)])).
+
+fof(67,plain,(
+    thursday(a_thursday) ),
+    inference(split_conjunct,[status(thm)],[4])).
+
+fof(101,plain,(
+    ! [X1] :
+      ( ~ thursday(X1)
+      | wednesday(yesterday(X1)) ) ),
+    inference(fof_nnf,[status(thm)],[18])).
+
+fof(102,plain,(
+    ! [X2] :
+      ( ~ thursday(X2)
+      | wednesday(yesterday(X2)) ) ),
+    inference(variable_rename,[status(thm)],[101])).
+
+fof(103,plain,(
+    ! [X1] :
+      ( wednesday(yesterday(X1))
+      | ~ thursday(X1) ) ),
+    inference(split_conjunct,[status(thm)],[102])).
+
+fof(119,plain,(
+    ! [X1] :
+      ( ~ wednesday(X1)
+      | lion_lies(X1) ) ),
+    inference(fof_nnf,[status(thm)],[24])).
+
+fof(120,plain,(
+    ! [X2] :
+      ( ~ wednesday(X2)
+      | lion_lies(X2) ) ),
+    inference(variable_rename,[status(thm)],[119])).
+
+fof(121,plain,(
+    ! [X1] :
+      ( lion_lies(X1)
+      | ~ wednesday(X1) ) ),
+    inference(split_conjunct,[status(thm)],[120])).
+
+fof(122,plain,(
+    ! [X1] :
+      ( ~ thursday(X1)
+      | ~ lion_lies(X1) ) ),
+    inference(fof_nnf,[status(thm)],[48])).
+
+fof(123,plain,(
+    ! [X2] :
+      ( ~ thursday(X2)
+      | ~ lion_lies(X2) ) ),
+    inference(variable_rename,[status(thm)],[122])).
+
+fof(124,plain,(
+    ! [X1] :
+      ( ~ lion_lies(X1)
+      | ~ thursday(X1) ) ),
+    inference(split_conjunct,[status(thm)],[123])).
+
+fof(140,plain,(
+    ! [X1] :
+      ( ~ wednesday(X1)
+      | ~ unicorn_lies(X1) ) ),
+    inference(fof_nnf,[status(thm)],[54])).
+
+fof(141,plain,(
+    ! [X2] :
+      ( ~ wednesday(X2)
+      | ~ unicorn_lies(X2) ) ),
+    inference(variable_rename,[status(thm)],[140])).
+
+fof(142,plain,(
+    ! [X1] :
+      ( ~ unicorn_lies(X1)
+      | ~ wednesday(X1) ) ),
+    inference(split_conjunct,[status(thm)],[141])).
+
+fof(143,plain,(
+    ! [X1] :
+      ( ~ thursday(X1)
+      | unicorn_lies(X1) ) ),
+    inference(fof_nnf,[status(thm)],[32])).
+
+fof(144,plain,(
+    ! [X2] :
+      ( ~ thursday(X2)
+      | unicorn_lies(X2) ) ),
+    inference(variable_rename,[status(thm)],[143])).
+
+fof(145,plain,(
+    ! [X1] :
+      ( unicorn_lies(X1)
+      | ~ thursday(X1) ) ),
+    inference(split_conjunct,[status(thm)],[144])).
+
+fof(155,plain,(
+    ! [X1] :
+      ( ~ lion_lies(X1)
+      | day(X1) ) ),
+    inference(fof_nnf,[status(thm)],[36])).
+
+fof(156,plain,(
+    ! [X2] :
+      ( ~ lion_lies(X2)
+      | day(X2) ) ),
+    inference(variable_rename,[status(thm)],[155])).
+
+fof(157,plain,(
+    ! [X1] :
+      ( day(X1)
+      | ~ lion_lies(X1) ) ),
+    inference(split_conjunct,[status(thm)],[156])).
+
+fof(158,plain,(
+    ! [X1] :
+      ( ~ unicorn_lies(X1)
+      | day(X1) ) ),
+    inference(fof_nnf,[status(thm)],[37])).
+
+fof(159,plain,(
+    ! [X2] :
+      ( ~ unicorn_lies(X2)
+      | day(X2) ) ),
+    inference(variable_rename,[status(thm)],[158])).
+
+fof(160,plain,(
+    ! [X1] :
+      ( day(X1)
+      | ~ unicorn_lies(X1) ) ),
+    inference(split_conjunct,[status(thm)],[159])).
+
+fof(169,plain,(
+    ! [X1] :
+      ( ~ day(X1)
+      | ! [X2] :
+          ( ~ day(X2)
+          | lion_lies(X1)
+          | lies_on_one_of(a_lion,X1,X2)
+          | ~ lion_lies(X2) ) ) ),
+    inference(fof_nnf,[status(thm)],[58])).
+
+fof(170,plain,(
+    ! [X3] :
+      ( ~ day(X3)
+      | ! [X4] :
+          ( ~ day(X4)
+          | lion_lies(X3)
+          | lies_on_one_of(a_lion,X3,X4)
+          | ~ lion_lies(X4) ) ) ),
+    inference(variable_rename,[status(thm)],[169])).
+
+fof(171,plain,(
+    ! [X3,X4] :
+      ( ~ day(X3)
+      | ~ day(X4)
+      | lion_lies(X3)
+      | lies_on_one_of(a_lion,X3,X4)
+      | ~ lion_lies(X4) ) ),
+    inference(shift_quantors,[status(thm)],[170])).
+
+fof(172,plain,(
+    ! [X2,X1] :
+      ( lies_on_one_of(a_lion,X2,X1)
+      | lion_lies(X2)
+      | ~ lion_lies(X1)
+      | ~ day(X1)
+      | ~ day(X2) ) ),
+    inference(split_conjunct,[status(thm)],[171])).
+
+fof(189,plain,(
+    ! [X1] :
+      ( ~ day(X1)
+      | ! [X2] :
+          ( ~ day(X2)
+          | ~ unicorn_lies(X1)
+          | lies_on_one_of(a_unicorn,X1,X2)
+          | unicorn_lies(X2) ) ) ),
+    inference(fof_nnf,[status(thm)],[63])).
+
+fof(190,plain,(
+    ! [X3] :
+      ( ~ day(X3)
+      | ! [X4] :
+          ( ~ day(X4)
+          | ~ unicorn_lies(X3)
+          | lies_on_one_of(a_unicorn,X3,X4)
+          | unicorn_lies(X4) ) ) ),
+    inference(variable_rename,[status(thm)],[189])).
+
+fof(191,plain,(
+    ! [X3,X4] :
+      ( ~ day(X3)
+      | ~ day(X4)
+      | ~ unicorn_lies(X3)
+      | lies_on_one_of(a_unicorn,X3,X4)
+      | unicorn_lies(X4) ) ),
+    inference(shift_quantors,[status(thm)],[190])).
+
+fof(192,plain,(
+    ! [X1,X2] :
+      ( unicorn_lies(X1)
+      | lies_on_one_of(a_unicorn,X2,X1)
+      | ~ unicorn_lies(X2)
+      | ~ day(X1)
+      | ~ day(X2) ) ),
+    inference(split_conjunct,[status(thm)],[191])).
+
+fof(193,negated_conjecture,(
+    ! [X1] :
+      ( ~ day(X1)
+      | ~ lies_on_one_of(a_lion,X1,yesterday(X1))
+      | ~ lies_on_one_of(a_unicorn,X1,yesterday(X1)) ) ),
+    inference(fof_nnf,[status(thm)],[47])).
+
+fof(194,negated_conjecture,(
+    ! [X2] :
+      ( ~ day(X2)
+      | ~ lies_on_one_of(a_lion,X2,yesterday(X2))
+      | ~ lies_on_one_of(a_unicorn,X2,yesterday(X2)) ) ),
+    inference(variable_rename,[status(thm)],[193])).
+
+fof(195,negated_conjecture,(
+    ! [X1] :
+      ( ~ lies_on_one_of(a_unicorn,X1,yesterday(X1))
+      | ~ lies_on_one_of(a_lion,X1,yesterday(X1))
+      | ~ day(X1) ) ),
+    inference(split_conjunct,[status(thm)],[194])).
+
+fof(196,plain,(
+    ! [X2,X1] :
+      ( lies_on_one_of(a_lion,X2,X1)
+      | lion_lies(X2)
+      | ~ lion_lies(X1)
+      | ~ day(X2) ) ),
+    inference(csr,[status(thm)],[172,157])).
+
+fof(199,plain,(
+    ! [X2,X1] :
+      ( lies_on_one_of(a_unicorn,X2,X1)
+      | unicorn_lies(X1)
+      | ~ unicorn_lies(X2)
+      | ~ day(X1) ) ),
+    inference(csr,[status(thm)],[192,160])).
+
+fof(214,plain,(
+    unicorn_lies(a_thursday) ),
+    inference(spm,[status(thm)],[145,67,theory(equality)])).
+
+fof(224,plain,(
+    ! [X1] :
+      ( lion_lies(yesterday(X1))
+      | ~ thursday(X1) ) ),
+    inference(spm,[status(thm)],[121,103,theory(equality)])).
+
+fof(227,plain,(
+    ! [X1] :
+      ( ~ unicorn_lies(yesterday(X1))
+      | ~ thursday(X1) ) ),
+    inference(spm,[status(thm)],[142,103,theory(equality)])).
+
+fof(229,plain,(
+    ~ lion_lies(a_thursday) ),
+    inference(spm,[status(thm)],[124,67,theory(equality)])).
+
+fof(251,negated_conjecture,(
+    ! [X1] :
+      ( unicorn_lies(yesterday(X1))
+      | ~ lies_on_one_of(a_lion,X1,yesterday(X1))
+      | ~ day(X1)
+      | ~ unicorn_lies(X1)
+      | ~ day(yesterday(X1)) ) ),
+    inference(spm,[status(thm)],[195,199,theory(equality)])).
+
+fof(263,plain,(
+    ~ unicorn_lies(yesterday(a_thursday)) ),
+    inference(spm,[status(thm)],[227,67,theory(equality)])).
+
+fof(297,plain,(
+    lion_lies(yesterday(a_thursday)) ),
+    inference(spm,[status(thm)],[224,67,theory(equality)])).
+
+fof(307,negated_conjecture,(
+    ! [X1] :
+      ( unicorn_lies(yesterday(X1))
+      | ~ lies_on_one_of(a_lion,X1,yesterday(X1))
+      | ~ unicorn_lies(X1)
+      | ~ day(yesterday(X1)) ) ),
+    inference(csr,[status(thm)],[251,160])).
+
+fof(308,negated_conjecture,(
+    ! [X1] :
+      ( unicorn_lies(yesterday(X1))
+      | lion_lies(X1)
+      | ~ unicorn_lies(X1)
+      | ~ day(yesterday(X1))
+      | ~ lion_lies(yesterday(X1))
+      | ~ day(X1) ) ),
+    inference(spm,[status(thm)],[307,196,theory(equality)])).
+
+fof(361,negated_conjecture,(
+    ! [X1] :
+      ( unicorn_lies(yesterday(X1))
+      | lion_lies(X1)
+      | ~ unicorn_lies(X1)
+      | ~ lion_lies(yesterday(X1))
+      | ~ day(yesterday(X1)) ) ),
+    inference(csr,[status(thm)],[308,160])).
+
+fof(362,negated_conjecture,(
+    ! [X1] :
+      ( unicorn_lies(yesterday(X1))
+      | lion_lies(X1)
+      | ~ unicorn_lies(X1)
+      | ~ lion_lies(yesterday(X1)) ) ),
+    inference(csr,[status(thm)],[361,157])).
+
+fof(365,negated_conjecture,
+    ( lion_lies(a_thursday)
+    | ~ unicorn_lies(a_thursday)
+    | ~ lion_lies(yesterday(a_thursday)) ),
+    inference(spm,[status(thm)],[263,362,theory(equality)])).
+
+fof(371,negated_conjecture,
+    ( lion_lies(a_thursday)
+    | $false
+    | ~ lion_lies(yesterday(a_thursday)) ),
+    inference(rw,[status(thm)],[365,214,theory(equality)])).
+
+fof(372,negated_conjecture,
+    ( lion_lies(a_thursday)
+    | $false
+    | $false ),
+    inference(rw,[status(thm)],[371,297,theory(equality)])).
+
+fof(373,negated_conjecture,(
+    lion_lies(a_thursday) ),
+    inference(cn,[status(thm)],[372,theory(equality)])).
+
+fof(374,negated_conjecture,(
+    $false ),
+    inference(sr,[status(thm)],[373,229,theory(equality)])).
+
+fof(375,negated_conjecture,(
+    $false ),
+    374,
+    [proof]).
