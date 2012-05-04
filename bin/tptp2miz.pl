@@ -228,8 +228,6 @@ if ($opt_style ne 'tptp') {
     my @dependencies = split ($LF, $dependencies_str);
     my $dependencies_token_string = ',' . join (',', @dependencies) . ',';
 
-    warn 'Dependencies token string:', $LF, $dependencies_token_string;
-
     my $sort_tstp_stylesheet = "${TSTP_STYLESHEET_HOME}/sort-tstp.xsl";
     my $sorted_tptp_xml_in_db = "${db}/problem.xml.sorted";
     my $xsltproc_sort_status = system ("xsltproc --stringparam ordering '${dependencies_token_string}' ${sort_tstp_stylesheet} ${tptp_xml_in_db} > ${sorted_tptp_xml_in_db}");
