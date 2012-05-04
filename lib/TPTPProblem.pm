@@ -7,7 +7,7 @@ use Moose;
 use Pod::Find qw(pod_where);
 use Pod::Usage;
 use Data::Dumper;
-use Carp qw(croak carp);
+use Carp qw(croak carp confess);
 use File::Temp qw(tempfile);
 use Readonly;
 use Regexp::DefaultFlags;
@@ -44,6 +44,10 @@ sub is_valid_tptp_file {
     my $tptp4x_exit_code = $tptp4x_harness->result (0);
 
     return ($tptp4x_exit_code == 0 ? 1 : 0);
+}
+
+sub to_miz {
+    confess error_message ('We do not yet support transforming arbitrary TPTP problems to Mizar texts.  Sorry!', $LF, 'Please complain loudly to the maintainers.');
 }
 
 1;
