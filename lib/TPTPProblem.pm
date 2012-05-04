@@ -50,6 +50,7 @@ sub is_valid_tptp_file {
 }
 
 sub to_miz {
+    my $self = shift;
     confess error_message ('We do not yet support transforming arbitrary TPTP problems to Mizar texts.  Sorry!', $LF, 'Please complain loudly to the maintainers.');
 }
 
