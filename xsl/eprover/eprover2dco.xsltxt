@@ -1,5 +1,5 @@
 stylesheet "1.0";
-
+include "../utils/strings.xsl";
 output method="xml" encoding="utf-8" indent="yes";
 output omit-xml-declaration="no";
 
@@ -9,16 +9,6 @@ output omit-xml-declaration="no";
 
 // The name of the article .dco that we will create
 #article = { ""; }
-
-//////////////////////////////////////////////////////////////////////
-// Utilities
-//////////////////////////////////////////////////////////////////////
-
-$lcletters = { "abcdefghijklmnopqrstuvwxyz"; }
-$ucletters = { "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; }
-
-tpl lc (#s) { `translate($s, $ucletters, $lcletters)`; }
-tpl uc (#s) { `translate($s, $lcletters, $ucletters)`; }
 
 tpl [/] {
   choose {
