@@ -75,9 +75,8 @@ Acknowledgements
 
 Josef Urban provided the initial inspiration and discussion about this
 package.  He has some similar ideas for generating Mizar texts from
-non-Mizar derivations: see his
-[ott2miz] [ott2miz-home] for some code to
-translate Otter proofs to Mizar texts.
+non-Mizar derivations: see his [ott2miz] [ott2miz-home] for some code
+to translate Otter proofs to Mizar texts.
 
 [ott2miz-home]: https://github.com/JUrban/ott2miz "ott2miz"
 [vampire-homepage]: http://www.vprover.org "The Vampire theorem prover"
