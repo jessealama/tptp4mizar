@@ -45,6 +45,7 @@ Readonly my @TPTP_PROGRAMS => (
 
 # Stylesheets
 Readonly my $STYLESHEET_HOME => "$RealBin/../xsl";
+Readonly my $TSTP_STYLESHEET_HOME => "${STYLESHEET_HOME}/tstp";
 Readonly my @STYLESHEETS => (
     'eprover2evl.xsl',
     'eprover2dco.xsl',
@@ -167,15 +168,19 @@ if ($verbose) {
     print 'Sanity Check: The given TPTP file is valid according to TPTP4X.', "\n";
 }
 
-# All the needed stylesheets exist
-my @extensions = ('dco', 'dno', 'voc', 'miz');
-foreach my $stylesheet (@STYLESHEETS) {
-    my $stylesheet_path = "${STYLESHEET_HOME}/${stylesheet}";
-    if (! is_readable_file ($stylesheet_path)) {
-	error_message ('The required stylsheet ', $stylesheet, ' could not be found in the directory', "\n", "\n", '  ', $STYLESHEET_HOME, "\n", "\n", 'where we expect to find it (or it does exist but is unreadable).');
-	exit 1;
-    }
-}
+# # All the needed stylesheets exist
+#
+#
+# We need to put this check elsewhere.
+#
+# my @extensions = ('dco', 'dno', 'voc', 'miz');
+# foreach my $stylesheet (@STYLESHEETS) {
+#     my $stylesheet_path = "${STYLESHEET_HOME}/${stylesheet}";
+#     if (! is_readable_file ($stylesheet_path)) {
+# 	error_message ('The required stylsheet ', $stylesheet, ' could not be found in the directory', "\n", "\n", '  ', $STYLESHEET_HOME, "\n", "\n", 'where we expect to find it (or it does exist but is unreadable).');
+# 	exit 1;
+#     }
+# }
 
 # We need to check that the TPTP theory does not have a predicate
 # symbol used as a function symbol, and that arities are distinct for
@@ -208,7 +213,7 @@ if ($tptp4X_exit_code != 0) {
 
 # Sort
 my $dependencies_str = undef;
-my $dependencies_stylesheet = "${STYLESHEET_HOME}/tstp-dependencies.xsl";
+my $dependencies_stylesheet = "${TSTP_STYLESHEET_HOME}/tstp-dependencies.xsl";
 my @xsltproc_deps_call = ('xsltproc', $dependencies_stylesheet, $tptp_xml_in_db);
 my @tsort_call = ('tsort');
 my $sort_harness = harness (\@xsltproc_deps_call,
@@ -223,7 +228,7 @@ my $dependencies_token_string = ',' . join (',', @dependencies) . ',';
 
 warn 'Dependencies token string:', $LF, $dependencies_token_string;
 
-my $sort_tstp_stylesheet = "${STYLESHEET_HOME}/sort-tstp.xsl";
+my $sort_tstp_stylesheet = "${TSTP_STYLESHEET_HOME}/sort-tstp.xsl";
 my $sorted_tptp_xml_in_db = "${db}/problem.xml.sorted";
 my $xsltproc_sort_status = system ("xsltproc --stringparam ordering '${dependencies_token_string}' ${sort_tstp_stylesheet} ${tptp_xml_in_db} > ${sorted_tptp_xml_in_db}");
 my $xsltproc_sort_exit_code = $xsltproc_sort_status >> 8;
