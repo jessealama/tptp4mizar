@@ -1,0 +1,107 @@
+stylesheet "1.0";
+
+output method="xml" encoding="utf-8" indent="yes";
+output omit-xml-declaration="no";
+
+//////////////////////////////////////////////////////////////////////
+// Stylesheet parameters
+//////////////////////////////////////////////////////////////////////
+
+// The name of the article .dco that we will create
+#article = { ""; }
+
+//////////////////////////////////////////////////////////////////////
+// Utilities
+//////////////////////////////////////////////////////////////////////
+
+$lcletters = { "abcdefghijklmnopqrstuvwxyz"; }
+$ucletters = { "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; }
+
+tpl lc (#s) { `translate($s, $ucletters, $lcletters)`; }
+tpl uc (#s) { `translate($s, $lcletters, $ucletters)`; }
+
+tpl [/] {
+  choose {
+    when [$article = ""] {
+      msg terminate="yes" "Error: a value for the article stylesheet parameter was not supplied (or the empty string was supplied).";
+    }
+    when [not(tstp)] {
+      msg terminate="yes" "Error: this does not appear to be a TSTP XML document, because it lacks a 'tstp' root element.";
+    }
+    when [tstp[2]] {
+      msg terminate="yes" "Error: this does not appear to be a TSTP XML document, because it has multiple 'tstp' root elements.";
+    }
+    otherwise {
+      apply [tstp];
+    }
+  }
+}
+
+tpl [tstp] {
+  $num-predicates = `count(descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)])`;
+  $num-functions = `count(descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)])`;
+  $article-uc = uc (#s = `$article`);
+  <Constructors {
+    <Signature {
+      <ArticleID {
+        @"name" = "HIDDEN";
+      }
+    }
+    <ConstrCounts {
+      if [$num-predicates > 0] {
+        <ConstrCount {
+          @kind = "R";
+          @nr = `$num-predicates`;
+        }
+      }
+      if [$num-functions > 0] {
+        <ConstrCount {
+          @kind = "K";
+          @nr = `$num-functions`;
+        }
+      }
+    }
+    for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
+      <Constructor {
+        @kind = "K";
+        @nr = `position()`;
+        @aid = `$article-uc`;
+        @relnr = `position()`;
+        @spelling = `@name`;
+        <ArgTypes {
+          for-each [*] {
+            <Typ {
+              @kind = "M";
+              @nr = "1";
+              <Cluster;
+            }
+          }
+        }
+        <Typ {
+          @kind = "M";
+          @nr = "1";
+          <Cluster;
+        }
+      }
+    }
+    for-each [descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)]] {
+      <Constructor {
+        @kind = "R";
+        @nr = `position()`;
+        @aid = `$article-uc`;
+        @relnr = `2 + position()`;
+        @spelling = `@name`;
+        <ArgTypes {
+          for-each [*] {
+            <Typ {
+              @kind = "M";
+              @nr = "1";
+              <Cluster;
+            }
+          }
+        }
+      }
+    }
+
+  }
+}
