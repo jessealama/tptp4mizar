@@ -327,6 +327,14 @@ generated directory under the name C<article.miz>.
 
 L<Jesse Alama|jesse.alama@gmail.com>
 
+=head1 ACKNOWLEDGEMENTS
+
+Josef Urban provided the initial inspiration and discussion about this
+package.  He has some similar ideas for generating Mizar texts from
+non-Mizar derivations: see his
+L<ott2miz|https://github.com/JUrban/ott2miz> for some code to
+translate Otter proofs to Mizar texts.
+
 =head1 BUGS AND LIMITATIONS
 
 It is known that this program does not always generate Mizar texts that are
