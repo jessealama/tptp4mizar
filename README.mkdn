@@ -29,6 +29,11 @@ multiple steps can be combined into a single step, or some spurious
 justifications can be eliminated, unused parts of the reasoning can be
 deleted, etc.
 
+Unfortunately `tptp2miz.pl` has a number of dependencies.  It is a
+Perl program that depends on a number of external Perl packages, and
+it requires several other programs to run correctly.  See the
+documentation for more details.
+
 What is Mizar?  What is TPTP?  TSTP?
 ----------
 
@@ -57,6 +62,12 @@ For TSTP derivations emitted by Vampire and E, though, our aim is to
 ensure that the generated Mizar text is acceptable to Mizar.  It does
 work in many cases, but there are places where steps in proofs by E or
 Vampire can outstrip Mizar.
+
+Plans
+----------
+
+A web-based frontend to this package is planned.  That seems to be the
+right way to deal with all the dependencies that this package has.
 
 
 Acknowledgements
