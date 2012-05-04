@@ -5,3 +5,6 @@ XSLTXT = ../xsltxt.jar
 	$(JAVA) -jar $(XSLTXT) toXSL $*.xsltxt $*.xsl || rm $*.xsl;
 
 all: tptp-formulas.xsl
+
+clean:
+	rm -f *.xsl

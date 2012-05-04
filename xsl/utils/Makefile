@@ -5,3 +5,6 @@ XSLTXT = ../xsltxt.jar
 	$(JAVA) -jar $(XSLTXT) toXSL $*.xsltxt $*.xsl || rm $*.xsl;
 
 all: strings.xsl token-strings.xsl
+
+clean:
+	rm -f *.xsl

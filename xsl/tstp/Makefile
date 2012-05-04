@@ -5,3 +5,6 @@ XSLTXT = ../xsltxt.jar
 	$(JAVA) -jar $(XSLTXT) toXSL $*.xsltxt $*.xsl || rm $*.xsl;
 
 all: sort-tstp.xsl tstp-dependencies.xsl tstp2wsx.xsl
+
+clean:
+	rm -f *.xsl
