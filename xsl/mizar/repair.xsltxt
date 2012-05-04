@@ -1,0 +1,381 @@
+stylesheet "1.0";
+include "../utils/token-strings.xsl";
+output method="xml" indent="yes";
+
+//////////////////////////////////////////////////////////////////////
+// Stylesheet parameters
+//////////////////////////////////////////////////////////////////////
+
+// A token string listing the errors that should be repaired.  The
+// tokens of the token string should look like
+//
+// <line-number>:<column-number>:<error-number>
+#errors = { ""; }
+
+//////////////////////////////////////////////////////////////////////
+// Keys
+//////////////////////////////////////////////////////////////////////
+
+key "formulas" [Item[Proposition/Label[@spelling]]] `Proposition/Label[@spelling]/@spelling`;
+
+//////////////////////////////////////////////////////////////////////
+// Utilities
+//////////////////////////////////////////////////////////////////////
+
+tpl [*] mode="trace" {
+  msg "We are about to terminate the XSLT processor.  Here's where we are:";
+  apply [.] mode="trace-recursive";
+}
+
+tpl [*] mode="trace-recursive" {
+  $n = `name (.)`;
+  $position = `count (preceding-sibling::*[name() = $n]) + 1`;
+  if [parent::*] {
+    apply [..] mode="trace-recursive";
+  }
+  `$n`; "["; `$position`; "]"; "\n";
+}
+
+tpl [*] (#message) mode="die" {
+  apply [.] mode="trace";
+  msg terminate="yes" $message;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+tpl all-errors-present-in-text (#errs) {
+  $empty = token-string-is-empty (#token-string = $errs);
+  if [$empty = "1"] {
+    "1";
+  } else {
+    $head = token-string-head (#token-string = $errs);
+    $tail = token-string-tail (#token-string = $errs);
+    $error-line = error-line (#token = $head);
+    $error-col = error-column (#token = $head);
+    if [descendant::*[@line = $error-line and @col = $error-col]] {
+      all-errors-present-in-text (#errs = $tail);
+    } else {
+      "0";
+    }
+  }
+}
+
+tpl [/] {
+  if [Text-Proper] {
+    if [$errors = ""] {
+      <problems {
+        apply [Text-Proper] (#errs = ",,");
+      }
+    } else {
+      $ok = is-valid-token-string (#string = $errors);
+      if [$ok = "1"] {
+        $all-known = all-errors-present-in-text (#errs = $errors);
+        if [$all-known = "1"] {
+          <problems {
+            apply [Text-Proper] (#errs = $errors);
+          }
+        } else {
+          msg terminate="yes" "Error: at least one error could not be found in the text.";
+        }
+      } else {
+        msg terminate="yes" "Error: the value for the errors stylesheet parameter is not a valid token string.";
+      }
+    }
+  } else {
+    msg terminate="yes" "Error: the required Text-Proper document element is missing.";
+  }
+}
+
+tpl token-is-valid (#token) {
+  "1";
+}
+
+tpl error-line (#token) {
+  `substring-before ($token, ":")`;
+}
+
+tpl error-column (#token) {
+  $after-first-colon = `substring-after ($token, ":")`;
+  `substring-before ($after-first-colon, ":")`;
+}
+
+tpl error-code (#token) {
+  $after-first-colon = `substring-after ($token, ":")`;
+  `substring-after ($after-first-colon, ":")`;
+}
+
+tpl handled-error-code (#error-code) {
+  if [$error-code = "4"] {
+    "1";
+  } else {
+    "0";
+  }
+}
+
+tpl some-error-in-same-justification (#errs, #line, #column) {
+  $empty = token-string-is-empty (#token-string = $errs);
+  if [$empty = "1"] {
+    "0";
+  } else {
+    $head = token-string-head (#token-string = $errs);
+    $tail = token-string-tail (#token-string = $errs);
+    $next-error-line = error-line (#token = $head);
+    $next-error-col = error-column (#token = $head);
+    for-each [ancestor::Text-Proper] {
+      for-each [descendant::*[@line = $next-error-line and @col = $next-error-col]] {
+        for-each [ancestor::Straightforward-Justification] {
+          if [descendant::*[@line = $line and @col = $column]] {
+            "1";
+          } else {
+            some-error-in-same-justification (#errs = $tail,
+                                              #line = $line,
+                                              #col = $col);
+          }
+        }
+      }
+    }
+  }
+}
+
+tpl [Text-Proper] (#errs) {
+  $empty = token-string-is-empty (#token-string = $errs);
+  if [$empty = "0"] {
+    $head = token-string-head (#token-string = $errs);
+    $tail = token-string-tail (#token-string = $errs);
+    $error-code = error-code (#token = $head);
+
+    $handled = handled-error-code (#error-code = $error-code);
+    if [$handled = "0"] {
+      $message = `concat ("Error: we do not handle error code ", $error-code)`;
+      apply [.] (#message = $message) mode="die";
+    }
+
+    $error-line = error-line (#token = $head);
+    $error-col = error-column (#token = $head);
+    $handled-later = some-error-in-same-justification (#errs = $tail,
+                                                       #line = $error-line,
+                                                       #col = $error-col);
+    if [$handled-later = "1"] {
+      apply [.] (#errs = $tail);
+    } else {
+      <tptp {
+        if [not(descendant::*[@line = $error-line and @col = $error-col])] {
+          $message = `concat ("Error: there is no node at line ", $error-line, " and column ", $error-col, ".")`;
+          apply [.] (#message = $message) mode="die";
+        }
+
+        for-each [descendant::Straightforward-Justification[@line = $error-line and @col = $error-col]] {
+
+          // Gather the premises
+          for-each [*[@spelling]] {
+            $n = `@spelling`;
+            if [key ("formulas", $n)] {
+              for-each [key ("formulas", $n)] {
+                apply [.] mode="axiom";
+              }
+            } else {
+              $message = `concat ("Error: we failed to look up the formula with the name '", $n, "'.  We are currently handling the error token '", $head, "'.")`;
+              apply [.] (#message = $message) mode="die";
+            }
+          }
+
+          for-each [ancestor::Item[@kind = "Regular-Statement" and @shape = "Compact-Statement"]] {
+            apply [.] mode="conjecture";
+          }
+        }
+      }
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// Rendering fromulas
+//////////////////////////////////////////////////////////////////////
+
+tpl [*] mode="axiom" {
+  $n = `name (.)`;
+  $message = `concat("Error: we have arrived at an unhandled ", $n, " node in axiom mode.")`;
+  apply [.] (#message = $message) mode="die";
+}
+
+tpl [*] mode="conjecture" {
+  $n = `name (.)`;
+  $message = `concat("Error: we have arrived at an unhandled ", $n, " node in conjecture mode.")`;
+  apply [.] (#message = $message) mode="die";
+}
+
+tpl [Item[@kind = "Regular-Statement" and @shape = "Compact-Statement"]] mode="axiom" {
+  apply [Proposition] mode="axiom";
+}
+
+tpl [Proposition[Label[@spelling]]] mode="axiom" {
+  <formula {
+    for-each [Label[@spelling]] {
+      @"name" = `@spelling`;
+    }
+    @status = "axiom";
+    apply [*[position() = last()]] mode="mizar-to-tptp";
+  }
+}
+
+tpl [Item[@kind = "Regular-Statement" and @shape = "Compact-Statement" and Proposition]] mode="conjecture" {
+  apply [Proposition] mode="conjecture";
+}
+
+tpl [Proposition[Label[@spelling]]] mode="conjecture" {
+  <formula {
+    for-each [Label[@spelling]] {
+      @"name" = `@spelling`;
+    }
+    @status = "conjecture";
+    apply [*[position() = last()]] mode="mizar-to-tptp";
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// Rendering formulas proper
+//////////////////////////////////////////////////////////////////////
+
+tpl [*] mode="mizar-to-tptp" {
+  $n = `name (.)`;
+  $message = `concat("Error: we have arrived at an unhandled ", $n, " node in mizar-to-tptp mode.")`;
+  apply [.] (#message = $message) mode="die";
+}
+
+tpl [Disjunctive-Formula] mode="mizar-to-tptp" {
+  <disjunction {
+    apply [*[1]] mode="mizar-to-tptp";
+    apply [*[2]] mode="mizar-to-tptp";
+  }
+}
+
+tpl [Predicative-Formula[@spelling and Arguments]] mode="mizar-to-tptp" {
+  <predicate {
+    @"name" = `@spelling`;
+    for-each [Arguments] {
+      apply [*] mode="mizar-to-tptp";
+    }
+  }
+}
+
+tpl starts-with-capital-letter (#string) {
+  if [$string = ""] {
+    "0";
+  } else {
+    $c = `substring ($string, 1, 1)`;
+    choose {
+      when [$c = "A"] {
+        "1";
+      }
+      when [$c = "B"] {
+        "1";
+      }
+      when [$c = "C"] {
+        "1";
+      }
+      when [$c = "D"] {
+        "1";
+      }
+      when [$c = "E"] {
+        "1";
+      }
+      when [$c = "F"] {
+        "1";
+      }
+      when [$c = "G"] {
+        "1";
+      }
+      when [$c = "H"] {
+        "1";
+      }
+      when [$c = "I"] {
+        "1";
+      }
+      when [$c = "J"] {
+        "1";
+      }
+      when [$c = "K"] {
+        "1";
+      }
+      when [$c = "L"] {
+        "1";
+      }
+      when [$c = "M"] {
+        "1";
+      }
+      when [$c = "N"] {
+        "1";
+      }
+      when [$c = "O"] {
+        "1";
+      }
+      when [$c = "P"] {
+        "1";
+      }
+      when [$c = "Q"] {
+        "1";
+      }
+      when [$c = "R"] {
+        "1";
+      }
+      when [$c = "S"] {
+        "1";
+      }
+      when [$c = "T"] {
+        "1";
+      }
+      when [$c = "U"] {
+        "1";
+      }
+      when [$c = "V"] {
+        "1";
+      }
+      when [$c = "W"] {
+        "1";
+      }
+      when [$c = "X"] {
+        "1";
+      }
+      when [$c = "Y"] {
+        "1";
+      }
+      when [$c = "Z"] {
+        "1";
+      }
+      otherwise {
+        "0";
+      }
+    }
+  }
+}
+
+tpl [Simple-Term[@spelling]] mode="mizar-to-tptp" {
+  $n = `@spelling`;
+  $looks-like-variable = starts-with-capital-letter (#string = $n);
+  if [$looks-like-variable = "1"] {
+    <variable {
+      @"name" = $n;
+    }
+  } else {
+    <function {
+      @"name" = $n;
+    }
+  }
+}
+
+tpl [Negated-Formula] mode="mizar-to-tptp" {
+  <negation {
+    apply [*[1]] mode="mizar-to-tptp";
+  }
+}
+
+tpl [Infix-Term[@spelling]] mode="mizar-to-tptp" {
+  <function {
+    @"name" = `@spelling`;
+    for-each [Arguments[2]] {
+      apply [*] mode="mizar-to-tptp";
+    }
+  }
+}
