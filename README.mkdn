@@ -54,7 +54,9 @@ that are Mizar-verifiable.  We are working to provide greater
 coverage.  In the case of generic TPTP problems and TSTP derivations,
 we can make no promise that the generated text is Mizar-verifiable.
 For TSTP derivations emitted by Vampire and E, though, our aim is to
-ensure that the generated Mizar text is acceptable to Mizar.
+ensure that the generated Mizar text is acceptable to Mizar.  It does
+work in many cases, but there are places where steps in proofs by E or
+Vampire can outstrip Mizar.
 
 
 Acknowledgements
