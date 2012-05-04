@@ -387,6 +387,8 @@ This package uses the following programs:
 
 =item xsltproc
 
+=item xsltxt
+
 =back
 
 =head1 SEE ALSO
