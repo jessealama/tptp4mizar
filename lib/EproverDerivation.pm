@@ -19,6 +19,8 @@ use Utils qw(error_message);
 extends 'TSTPDerivation';
 
 Readonly my $STYLESHEET_HOME => "$RealBin/../xsl";
+Readonly my $EPROVER_STYLESHEET_HOME => "${STYLESHEET_HOME}/eprover";
+Readonly my $MIZAR_STYLESHEET_HOME => "${STYLESHEET_HOME}/mizar";
 
 my %directory_for_extension = (
     'voc' => 'dict',
@@ -71,7 +73,7 @@ sub to_miz {
 	    push (@xsltproc_call, '--stringparam', 'shape', 'flat');
 	}
 
-	push (@xsltproc_call, "${STYLESHEET_HOME}/eprover2${extension}.xsl");
+	push (@xsltproc_call, "${EPROVER_STYLESHEET_HOME}/eprover2${extension}.xsl");
 	push (@xsltproc_call, $path);
 
 	my $xsltproc_err = $EMPTY_STRING;
@@ -92,7 +94,7 @@ sub to_miz {
     # skolem functions
     my @skolem_extensions = ('the');
     foreach my $extension (@skolem_extensions) {
-	my $stylesheet = "${STYLESHEET_HOME}/eprover2${extension}.xsl";
+	my $stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2${extension}.xsl";
 	my $skolem_path = "${directory}/prel/skolem.${extension}";
 	my $xsltproc_status = system ("xsltproc --stringparam article 'article' --stringparam prel-directory '${prel_subdir_full}' $stylesheet ${path} > $skolem_path");
     my $xsltproc_exit_code = $xsltproc_status >> 8;
@@ -101,7 +103,7 @@ sub to_miz {
 	}
     }
 
-    my $pp_stylesheet = "${STYLESHEET_HOME}/pp.xsl";
+    my $pp_stylesheet = "${MIZAR_STYLESHEET_HOME}/pp.xsl";
     my $wsx_path = "${directory}/text/article.wsx";
     my $miz_path = "${directory}/text/article.miz";
     my $xsltproc_status = system ("xsltproc $pp_stylesheet $wsx_path > $miz_path");
