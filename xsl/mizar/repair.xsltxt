@@ -217,6 +217,7 @@ tpl [Proposition[Label[@spelling]]] mode="axiom" {
       @"name" = `@spelling`;
     }
     @status = "axiom";
+    @syntax = "formula";
     apply [*[position() = last()]] mode="mizar-to-tptp";
   }
 }
