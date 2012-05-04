@@ -253,13 +253,13 @@ __END__
 
 =pod
 
-=head1 TSTP2MIZ
+=head1 TPTP2MIZ
 
-tstp2miz - Transform a TSTP derivation into a Mizar article
+tptp2miz - Transform a TSTP derivation into a Mizar article
 
 =head1 SYNOPSIS
 
-tstp2miz.pl [options] [tptp-file]
+tptp2miz.pl [options] [tptp-file]
 
 =head1 OPTIONS
 
@@ -279,16 +279,137 @@ Say what we're doing.
 
 =item B<--db=DIRECTORY>
 
-By default, results will be saved in a directory whose name is derived
-from the name of the supplied Mizar article (stripping the '.miz'
-extension, if present).  This option permits saving work to some other
-directory.  It is an error if the supplied directory already exists.
+By default, results will be saved in a directory whose name is derived from
+the name of the supplied TPTP/TSTP file.  This option permits saving work to
+some other directory.  It is an error if the supplied directory already
+exists.
+
+=item B<--style=TSTP-STYLE>
+
+Use this option to indicate what kind of TPTP problem/TSTP solution one has.
+There are four supported options:
+
+=over 8
+
+=item tptp
+
+=item tstp
+
+=item eprover
+
+=item vampire
+
+=back
+
+By default, C<tstp> is used.
+
+=item B<--nested>
+
+Indicate that some high-level grouping should be done among the steps in the
+given derivation (if indeed it is a derivation; this option makes sense only
+when C<--style> is not C<tptp>).
 
 =back
 
 =head1 DESCRIPTION
 
-B<tstp2miz.pl> will transform the supplied TPTP file into a
-corresponding Mizar article.
+B<tptp2miz.pl> will transform the supplied TPTP problem/TSTP derivation file
+into a corresponding Mizar article.  It creates a new directory in which the
+generated Mizar text ("article") and needed auxiliary files are stored.  The
+generated Mizar file will be found under the C<text> subdirectory of the
+generated directory under the name C<article.miz>.
+
+=head1 AUTHOR
+
+L<Jesse Alama|jesse.alama@gmail.com>
+
+=head1 BUGS AND LIMITATIONS
+
+It is known that this program does not always generate Mizar texts that are
+Mizar-verifiable.  We are working to provide greater coverage.  In the case
+of generic TPTP problems and TSTP derivations, we can make no promise that
+the generated text is Mizar-verifiable.  For TSTP derivations emitted by
+Vampire and E, though, our aim is to ensure that the generated Mizar text is
+acceptable to Mizar.
+
+Please submit bugs/issues to the tptp4mizar issue tracker:
+
+=over 8
+
+L<https://github.com/jessealama/tptp4mizar/issues>
+
+=back
+
+=head1 DEPENDENCIES
+
+Unfortunately this program has a number of dependencies.  It is planned to
+provide a web frontend to all this, so that the dependency problem is
+eliminated.  But for now, we depend on this:
+
+=head2 Perl dependencies
+
+This program requires several Perl modules.  See CPAN or your package system
+for:
+
+=over 8
+
+=item File::Copy
+
+=item File::Basename
+
+=item Getopt::Long
+
+=item Pod::Usage
+
+=item IPC::Run
+
+=item IPC::Cmd
+
+=item Readonly
+
+=item Regexp::DefaultFlags
+
+=item Term::ANSIColor
+
+=item FindBin
+
+=back
+
+=head2 Non-Perl dependencies
+
+This package uses the following programs:
+
+=over 8
+
+=item tptp4X
+
+=item GetSymbols
+
+=item xsltproc
+
+=back
+
+=head1 SEE ALSO
+
+=over 8
+
+=item L<The TPTP Homepage|http://www.tptp.org>
+
+=item L<The E Theorem Prover|http://www.eprover.org>
+
+=item L<The Vampire Theorem Prover|http://www.vprover.org>
+
+=back
+
+=head1 LICENSE
+
+Copyright (c) 2012 Jesse Alama (jesse.alama@gmail.com).  All rights
+reserved.
+
+This module is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself. See L<perlartistic>.  This
+program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
 
 =cut
