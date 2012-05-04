@@ -211,30 +211,35 @@ if ($tptp4X_exit_code != 0) {
     say {*STDERR} error_message ('tptp4X did not terminate cleanly when XMLizing', $SP, $tptp_file_in_db);
 }
 
-# Sort
-my $dependencies_str = undef;
-my $dependencies_stylesheet = "${TSTP_STYLESHEET_HOME}/tstp-dependencies.xsl";
-my @xsltproc_deps_call = ('xsltproc', $dependencies_stylesheet, $tptp_xml_in_db);
-my @tsort_call = ('tsort');
-my $sort_harness = harness (\@xsltproc_deps_call,
-			   '|',
-			   \@tsort_call,
-			   '>', \$dependencies_str);
-$sort_harness->start ();
-$sort_harness->finish ();
+if ($opt_style ne 'tptp') {
 
-my @dependencies = split ($LF, $dependencies_str);
-my $dependencies_token_string = ',' . join (',', @dependencies) . ',';
+    # Sort
+    my $dependencies_str = undef;
+    my $dependencies_stylesheet = "${TSTP_STYLESHEET_HOME}/tstp-dependencies.xsl";
+    my @xsltproc_deps_call = ('xsltproc', $dependencies_stylesheet, $tptp_xml_in_db);
+    my @tsort_call = ('tsort');
+    my $sort_harness = harness (\@xsltproc_deps_call,
+				'|',
+				\@tsort_call,
+				'>', \$dependencies_str);
+    $sort_harness->start ();
+    $sort_harness->finish ();
 
-warn 'Dependencies token string:', $LF, $dependencies_token_string;
+    my @dependencies = split ($LF, $dependencies_str);
+    my $dependencies_token_string = ',' . join (',', @dependencies) . ',';
 
-my $sort_tstp_stylesheet = "${TSTP_STYLESHEET_HOME}/sort-tstp.xsl";
-my $sorted_tptp_xml_in_db = "${db}/problem.xml.sorted";
-my $xsltproc_sort_status = system ("xsltproc --stringparam ordering '${dependencies_token_string}' ${sort_tstp_stylesheet} ${tptp_xml_in_db} > ${sorted_tptp_xml_in_db}");
-my $xsltproc_sort_exit_code = $xsltproc_sort_status >> 8;
-if ($xsltproc_sort_exit_code != 0) {
-    say {*STDERR} error_message ('xsltproc did not exit cleanly sorting', $SP, $tptp_xml_in_db);
-    exit 1;
+    warn 'Dependencies token string:', $LF, $dependencies_token_string;
+
+    my $sort_tstp_stylesheet = "${TSTP_STYLESHEET_HOME}/sort-tstp.xsl";
+    my $sorted_tptp_xml_in_db = "${db}/problem.xml.sorted";
+    my $xsltproc_sort_status = system ("xsltproc --stringparam ordering '${dependencies_token_string}' ${sort_tstp_stylesheet} ${tptp_xml_in_db} > ${sorted_tptp_xml_in_db}");
+    my $xsltproc_sort_exit_code = $xsltproc_sort_status >> 8;
+    if ($xsltproc_sort_exit_code != 0) {
+	say {*STDERR} error_message ('xsltproc did not exit cleanly sorting', $SP, $tptp_xml_in_db);
+	exit 1;
+    }
+    move ($sorted_tptp_xml_in_db, $tptp_xml_in_db)
+	or die error_message ('Unable to overwrite', $SP, $tptp_xml_in_db, $SP, 'by', $SP, $sorted_tptp_xml_in_db);
 }
 
 my $tptp_dirname = dirname ($tptp_file);
@@ -243,13 +248,13 @@ my $tptp_dirname = dirname ($tptp_file);
 
 my $derivation = undef;
 if ($opt_style eq 'eprover') {
-    $derivation = EproverDerivation->new (path => $sorted_tptp_xml_in_db);
+    $derivation = EproverDerivation->new (path => $tptp_xml_in_db);
 } elsif ($opt_style eq 'vampire') {
-    $derivation = VampireDerivation->new (path => $sorted_tptp_xml_in_db);
+    $derivation = VampireDerivation->new (path => $tptp_xml_in_db);
 } elsif ($opt_style eq 'tstp') {
-    $derivation = TSTPDerivation->new (path => $sorted_tptp_xml_in_db);
+    $derivation = TSTPDerivation->new (path => $tptp_xml_in_db);
 } elsif ($opt_style eq 'tptp') {
-    $derivation = TPTPProblem->new (path => $sorted_tptp_xml_in_db);
+    $derivation = TPTPProblem->new (path => $tptp_xml_in_db);
 } else {
     print {*STDERR} error_message ('Unknown derivation style \'', $opt_style, '\'.');
     exit 1;
