@@ -40,6 +40,10 @@ has 'path' => (
     reader => 'get_path',
 );
 
+sub to_miz {
+    confess error_message ('We do not yet support transforming arbitrary TSTP solutions to Mizar texts.  Sorry!', $LF, 'Please complain loudly to the maintainers.');
+}
+
 1;
 __END__
 
