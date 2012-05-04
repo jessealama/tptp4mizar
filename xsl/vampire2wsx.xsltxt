@@ -3,6 +3,12 @@ include "tstp2wsx.xsl";
 output method="xml" indent="yes";
 
 //////////////////////////////////////////////////////////////////////
+// Keys
+//////////////////////////////////////////////////////////////////////
+
+key "splits" [formula[@name and source/non-logical-data[@name = "introduced"]/non-logical-data[@name = "backtracking_splitting_component"]]] `@name`;
+
+//////////////////////////////////////////////////////////////////////
 // Templates
 //////////////////////////////////////////////////////////////////////
 
@@ -162,23 +168,27 @@ tpl [formula[@name]] mode="lemma" {
           for-each [non-logical-data[position() = last()]] {
             for-each [non-logical-data[@name]] {
               $n = `@name`;
-              <Local-Reference {
-                if [key ("axiom", $n)] {
+              choose {
+                when [key ("axiom", $n)] {
                   for-each [key ("axiom", $n)] {
                     for-each [source] {
                       for-each [non-logical-data[@name = "file"]] {
                         for-each [non-logical-data[position() = last()]] {
                           $safe-name = capitalize-after-underscore (#string = `@name`);
                           $padded = pad-axiom (#string = $safe-name);
-                          @spelling = $padded;
+                          <Local-Reference { @spelling = $padded; }
                         }
                       }
                     }
                   }
-                } else {
+                }
+                when [key ("splits", $n)] {
+                  // don't do anything: these are handled as private predicates
+                }
+                otherwise {
                   $safe-name = capitalize-after-underscore (#string = `@name`);
                   $step-name = `concat ("Step", $safe-name)`;
-                  @spelling = $step-name;
+                  <Local-Reference { @spelling = $step-name; }
                 }
               }
             }
