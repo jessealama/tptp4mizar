@@ -1,5 +1,5 @@
 stylesheet "1.0";
-include "tstp2wsx.xsl";
+include "../tstp/tstp2wsx.xsl";
 output method="xml" indent="yes";
 
 //////////////////////////////////////////////////////////////////////
