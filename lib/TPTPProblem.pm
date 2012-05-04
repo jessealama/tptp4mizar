@@ -18,8 +18,8 @@ use IPC::Run qw(harness);
 use base qw(Exporter);
 our @EXPORT_OK = qw(is_valid_tptp_file);
 
-use Strings qw($EMPTY_STRING);
-
+Readonly my $LF => "\N{LF}";
+Readonly my $EMPTY_STRING => q{};
 Readonly my $TPTP4X => 'tptp4X';
 
 has 'raw_text' => (
