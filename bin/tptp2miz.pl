@@ -6,7 +6,7 @@ use strict;
 require v5.10.0;		# for the 'say' feature
 use feature 'say';
 
-use File::Copy qw(copy);
+use File::Copy qw(copy move);
 use File::Basename qw(basename dirname);
 use Getopt::Long;
 use Pod::Usage;
