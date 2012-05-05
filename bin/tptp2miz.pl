@@ -246,6 +246,12 @@ if ($opt_style ne 'tptp') {
 	or die error_message ('Unable to overwrite', $SP, $tptp_xml_in_db, $SP, 'by', $SP, $sorted_tptp_xml_in_db);
 }
 
+# Normalize names
+my $normalize_step_names_stylesheet = "${TSTP_STYLESHEET_HOME}/normalize-step-names.xsl";
+apply_stylesheet ($normalize_step_names_stylesheet,
+		  $tptp_xml_in_db,
+		  $tptp_xml_in_db);
+
 my $tptp_dirname = dirname ($tptp_file);
 
 # XMLize the TPTP file and save it under a temporary file
