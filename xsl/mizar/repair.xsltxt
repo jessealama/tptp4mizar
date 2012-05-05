@@ -284,6 +284,36 @@ tpl [Disjunctive-Formula] mode="mizar-to-tptp" {
   }
 }
 
+tpl [Conditional-Formula] mode="mizar-to-tptp" {
+  <implication {
+    apply [*[1]] mode="mizar-to-tptp";
+    apply [*[2]] mode="mizar-to-tptp";
+  }
+}
+
+tpl [Existential-Quantifier-Formula[Implicitly-Qualified-Segment]] mode="mizar-to-tptp" {
+  <quantifier {
+    @type = "existential";
+    for-each [Implicitly-Qualified-Segment] {
+      apply [Variable] mode="mizar-to-tptp";
+    }
+    apply [*[position() = last()]] mode="mizar-to-tptp";
+  }
+}
+
+tpl [Negated-Formula] mode="mizar-to-tptp" {
+  <negation {
+    apply [*[1]] mode="mizar-to-tptp";
+  }
+}
+
+tpl [Conjunctive-Formula] mode="mizar-to-tptp" {
+  <conjunction {
+    apply [*[1]] mode="mizar-to-tptp";
+    apply [*[2]] mode="mizar-to-tptp";
+  }
+}
+
 tpl [Predicative-Formula[@spelling and Arguments]] mode="mizar-to-tptp" {
   <predicate {
     @"name" = strip-prefix (#string = `@spelling`);
@@ -398,9 +428,9 @@ tpl [Simple-Term[@spelling]] mode="mizar-to-tptp" {
   }
 }
 
-tpl [Negated-Formula] mode="mizar-to-tptp" {
-  <negation {
-    apply [*[1]] mode="mizar-to-tptp";
+tpl [Variable[@spelling]] mode="mizar-to-tptp" {
+  <variable {
+    @"name" = `@spelling`;
   }
 }
 
