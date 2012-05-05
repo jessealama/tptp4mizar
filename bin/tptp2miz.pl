@@ -53,6 +53,7 @@ Readonly my $TSTP_STYLESHEET_HOME => "${STYLESHEET_HOME}/tstp";
 Readonly my $TPTP_STYLESHEET_HOME => "${STYLESHEET_HOME}/tptp";
 Readonly my $MIZAR_STYLESHEET_HOME => "${STYLESHEET_HOME}/mizar";
 Readonly my $EPROVER_STYLESHEET_HOME => "${STYLESHEET_HOME}/eprover";
+Readonly my $VAMPIRE_STYLESHEET_HOME => "${STYLESHEET_HOME}/vampire";
 
 # Strings
 Readonly my $LF => "\N{LF}";
@@ -190,11 +191,13 @@ if ($tptp4X_exit_code != 0) {
     say {*STDERR} error_message ('tptp4X did not terminate cleanly when XMLizing', $SP, $tptp_file_in_db);
 }
 
+my $sort_tstp_stylesheet = "${TSTP_STYLESHEET_HOME}/sort-tstp.xsl";
+my $dependencies_stylesheet = "${TSTP_STYLESHEET_HOME}/tstp-dependencies.xsl";
+
 if ($opt_style ne 'tptp') {
 
     # Sort
     my $dependencies_str = undef;
-    my $dependencies_stylesheet = "${TSTP_STYLESHEET_HOME}/tstp-dependencies.xsl";
     my @xsltproc_deps_call = ('xsltproc', $dependencies_stylesheet, $tptp_xml_in_db);
     my @tsort_call = ('tsort');
     my $sort_harness = harness (\@xsltproc_deps_call,
@@ -207,7 +210,6 @@ if ($opt_style ne 'tptp') {
     my @dependencies = split ($LF, $dependencies_str);
     my $dependencies_token_string = ',' . join (',', @dependencies) . ',';
 
-    my $sort_tstp_stylesheet = "${TSTP_STYLESHEET_HOME}/sort-tstp.xsl";
     my $sorted_tptp_xml_in_db = "${db}/problem.xml.sorted";
     my $xsltproc_sort_status = system ("xsltproc --stringparam ordering '${dependencies_token_string}' ${sort_tstp_stylesheet} ${tptp_xml_in_db} > ${sorted_tptp_xml_in_db}");
     my $xsltproc_sort_exit_code = $xsltproc_sort_status >> 8;
@@ -284,7 +286,7 @@ $errs =~ s /\N{LF}/,/g;
 
 my $err_token_string = ',' . $errs;
 
-warn 'error token string: ', $err_token_string;
+# warn 'error token string: ', $err_token_string;
 
 my $repair_stylesheet = "${MIZAR_STYLESHEET_HOME}/repair.xsl";
 
@@ -407,11 +409,56 @@ foreach my $problem (@problems) {
 	die error_message ('We failed to generate a plain text TPTP representation for', $SP, $problem_name);
     }
 
+    # Sort
+    my $dependencies_str = undef;
+    my @xsltproc_deps_call = ('xsltproc', $dependencies_stylesheet, $solution_path);
+    my @tsort_call = ('tsort');
+    my $sort_harness = harness (\@xsltproc_deps_call,
+				'|',
+				\@tsort_call,
+				'>', \$dependencies_str);
+    $sort_harness->start ();
+    $sort_harness->finish ();
+
+    my @dependencies = split ($LF, $dependencies_str);
+    my $dependencies_token_string = ',' . join (',', @dependencies) . ',';
+
+    apply_stylesheet ($sort_tstp_stylesheet,
+		      $solution_path,
+		      $solution_path,
+		      { 'ordering' => $dependencies_token_string });
+
     apply_stylesheet ($eprover_normalize_step_names_stylesheet,
 		      $solution_path,
 		      $solution_path);
 
 }
+
+# Repair the proofs
+my $repair_vampire_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/repair-vampire.xsl";
+my @solution_xmls = glob "${repair_dir}/*.p.proof.xml";
+
+my @solution_tokens = map { basename ($_, '.p.proof.xml') . ':' . File::Spec->rel2abs ($_) } @solution_xmls;
+
+my $solution_token_string = ',' . join (',', @solution_tokens) . ',';
+
+warn 'solution token string is ', $solution_token_string;
+
+my $repaired_wsx = 'text/repaired.wsx';
+
+apply_stylesheet ($repair_vampire_stylesheet,
+		  'problem.xml',
+		  $repaired_wsx,
+		  { 'repairs' => $solution_token_string });
+
+# Generate the .miz for the repaired .wsx
+my $repaired_miz = 'text/repaired.miz';
+my $pp_stylesheet = "${MIZAR_STYLESHEET_HOME}/pp.xsl";
+apply_stylesheet ($pp_stylesheet,
+		  $repaired_wsx,
+		  $repaired_miz,
+		  { 'evl' => 'text/article.evl' });
+
 
 __END__
 
