@@ -22,6 +22,10 @@ key "formulas" [formula[@name]] `@name`;
 key "predicates" [predicate[@name]] `@name`;
 key "functions" [function[@name]] `@name`;
 
+//////////////////////////////////////////////////////////////////////
+// Utilities
+//////////////////////////////////////////////////////////////////////
+
 tpl [*] mode="trace" {
   msg "We are about to terminate the XSLT processor.  Here's where we are:";
   apply [.] mode="trace-recursive";
