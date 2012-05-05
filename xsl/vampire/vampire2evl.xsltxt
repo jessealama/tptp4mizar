@@ -1,4 +1,5 @@
 stylesheet "1.0";
+include "../utils/strings.xsl";
 output method="xml" indent="yes";
 
 //////////////////////////////////////////////////////////////////////
@@ -8,14 +9,8 @@ output method="xml" indent="yes";
 #article = { ""; }
 
 //////////////////////////////////////////////////////////////////////
-// Utilities
+// Templates
 //////////////////////////////////////////////////////////////////////
-
-$lcletters = { "abcdefghijklmnopqrstuvwxyz"; }
-$ucletters = { "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; }
-
-tpl lc (#s) { `translate($s, $ucletters, $lcletters)`; }
-tpl uc (#s) { `translate($s, $lcletters, $ucletters)`; }
 
 // If we don't handle something explicitly, we don't handle it at all.
 tpl [*] {
