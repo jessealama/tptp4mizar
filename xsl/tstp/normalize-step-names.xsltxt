@@ -1,0 +1,104 @@
+stylesheet "1.0";
+output method="xml" indent="yes";
+
+//////////////////////////////////////////////////////////////////////
+// Keys
+//////////////////////////////////////////////////////////////////////
+
+key "formulas" [formula[@name]] `@name`;
+
+//////////////////////////////////////////////////////////////////////
+// Utilities
+//////////////////////////////////////////////////////////////////////
+
+tpl [*] mode="trace" {
+  $n = `name (.)`;
+  $position = `count (preceding-sibling::*[name() = $n]) + 1`;
+  if [parent::*] {
+    apply [..] mode="trace";
+  }
+  $step = `concat ($n, "[", $position, "]")`;
+  msg $step;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+tpl [*] mode="copy" {
+  $n = `name (.)`;
+  <$n {
+    for-each [@*] { copy-of `.`; }
+    apply [*] mode="copy";
+  }
+}
+
+// If we don't handle something explicitly, we don't handle it at all.
+tpl [*] {
+  $n = `name (.)`;
+  $message = `concat ("Error: we have arrived at an unhandled ", $n, " node.")`;
+  apply [.] mode="trace";
+  msg terminate="yes" $message;
+}
+
+tpl [/] {
+  if [tstp] {
+    apply [tstp];
+  } else {
+    msg terminate="yes" "Error: the required tstp document element is missing.";
+  }
+}
+
+tpl [tstp] {
+  <tstp {
+    for-each [@*] { copy-of `.`; }
+    apply [formula];
+  }
+}
+
+tpl [formula[not(source)]] {
+  msg terminate="yes" "Error: we encountered a formula without a source.  Is this stylesheet being applied to a TPTP derivation?";
+}
+
+tpl [formula[source]] {
+  $pos = `count (preceding-sibling::formula) + 1`;
+  <formula {
+    for-each [@*] { copy-of `.`; }
+    @"name" = `concat ("step", $pos)`;
+    apply [*[1]] mode="copy";
+    <source {
+      for-each [source] {
+        <non-logical-data {
+          for-each [non-logical-data] {
+            for-each [@*] { copy-of `.`; }
+            for-each [non-logical-data[position() < last()]] {
+              apply [.] mode="copy";
+            }
+            for-each [non-logical-data[position() = last()]] {
+              if [*] {
+                <non-logical-data {
+                  for-each [*[@name]] {
+                    $n = `@name`;
+                    if [key ("formulas", $n)] {
+                      for-each [key ("formulas", $n)] {
+                        <non-logical-data {
+                          $other-position = `count (preceding-sibling::formula) + 1`;
+                          @"name" = `concat ("step", $other-position)`;
+                        }
+                      }
+                    } else {
+                      $message = `concat ("Error: unknown formula '", $n, "'.")`;
+                      msg terminate="yes" $message;
+                    }
+                  }
+                }
+              } else {
+                apply [.] mode="copy";
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
