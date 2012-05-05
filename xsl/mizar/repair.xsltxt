@@ -45,6 +45,20 @@ tpl [*] (#message) mode="die" {
 // Templates
 //////////////////////////////////////////////////////////////////////
 
+tpl strip-prefix (#string) {
+  choose {
+    when [starts-with ($string, "Step")] {
+      `substring-after ($string, "Step")`;
+    }
+    when [starts-with ($string, "Axiom")] {
+      `substring-after ($string, "Axiom")`;
+    }
+    otherwise {
+      `$string`;
+    }
+  }
+}
+
 tpl all-errors-present-in-text (#errs) {
   $empty = token-string-is-empty (#token-string = $errs);
   if [$empty = "1"] {
