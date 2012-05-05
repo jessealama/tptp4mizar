@@ -1,0 +1,103 @@
+stylesheet "1.0";
+output method="text";
+
+//////////////////////////////////////////////////////////////////////
+// Utilities
+//////////////////////////////////////////////////////////////////////
+
+tpl [*] mode="trace" {
+  msg "We are about to terminate the XSLT processor.  Here's where we are:";
+  apply [.] mode="trace-recursive";
+}
+
+tpl [*] mode="trace-recursive" {
+  $n = `name (.)`;
+  $position = `count (preceding-sibling::*[name() = $n]) + 1`;
+  if [parent::*] {
+    apply [..] mode="trace-recursive";
+  }
+  `$n`; "["; `$position`; "]"; "\n";
+}
+
+tpl [*] (#message) mode="die" {
+  apply [.] mode="trace";
+  msg terminate="yes" $message;
+}
+
+tpl list (#separ, #elems) {
+  for-each [$elems] {
+    apply[.];
+    if [not(position()=last())] {
+      copy-of $separ;
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+// If we don't handle something explicitly, we don't handle it at all.
+tpl [*] {
+  $n = `name (.)`;
+  $message = `concat ("Error: we have arrived at an unhandled ", $n, " node.")`;
+  apply [.] (#message = $message) mode="die";
+}
+
+tpl [/] {
+  if [tstp] {
+    apply [tstp];
+  } else {
+    msg terminate="yes" "Error: the required tstp document element is missing.";
+  }
+}
+
+tpl [tstp] {
+  for-each [formula] {
+    apply [.]; "\n";
+  }
+}
+
+tpl [formula[@syntax = "formula" and @status and @name]] {
+  "fof("; `@name`; ","; `@status`; ","; apply [*[1]]; ")"; ".";
+}
+
+tpl [formula[@syntax = "clause" and @status and @name]] {
+  "cnf("; `@name`; ","; `@status`; ","; apply [*[1]]; ")"; ".";
+}
+
+//////////////////////////////////////////////////////////////////////
+// Formulas proper
+//////////////////////////////////////////////////////////////////////
+
+tpl [disjunction] {
+ "( "; apply [*[1]]; " | "; apply [*[2]]; " )";
+}
+
+tpl [predicate[@name]] {
+  if [*] {
+    `@name`; "("; list (#separ = ",", #elems = `*`); ")";
+  } else {
+    `@name`;
+  }
+}
+
+tpl [negation] {
+  "~ "; apply [*[1]];
+}
+
+//////////////////////////////////////////////////////////////////////
+// Terms
+//////////////////////////////////////////////////////////////////////
+
+tpl [function[@name]] {
+  if [*] {
+    `@name`; "("; list (#separ = ",", #elems = `*`); ")";
+  } else {
+    `@name`;
+  }
+}
+
+tpl [variable[@name]] {
+  `@name`;
+}
