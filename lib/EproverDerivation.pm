@@ -13,11 +13,11 @@ use File::Spec;
 use File::Temp qw(tempfile);
 use IPC::Run qw(harness);
 
-use Strings qw($EMPTY_STRING);
 use Utils qw(error_message);
 
 extends 'TSTPDerivation';
 
+Readonly my $EMPTY_STRING => q{};
 Readonly my $STYLESHEET_HOME => "$RealBin/../xsl";
 Readonly my $EPROVER_STYLESHEET_HOME => "${STYLESHEET_HOME}/eprover";
 Readonly my $MIZAR_STYLESHEET_HOME => "${STYLESHEET_HOME}/mizar";
