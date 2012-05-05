@@ -136,16 +136,16 @@ tpl [formula[@name]] mode="axiom" {
     <Proposition {
       <Label {
           for-each [source] {
-          for-each [non-logical-data[@name = "file"]] {
-            for-each [non-logical-data[position() = last()]] {
-              $safe-name = capitalize-after-underscore (#string = `@name`);
-              $padded = pad-axiom (#string = $safe-name);
-              @spelling = $padded;
+            for-each [non-logical-data[@name = "file"]] {
+              for-each [non-logical-data[position() = last()]] {
+                $safe-name = capitalize-after-underscore (#string = `@name`);
+                $padded = pad-axiom (#string = $safe-name);
+                @spelling = $padded;
+              }
             }
           }
         }
-      }
-        apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]] mode="strip-universal-prefix";
     }
     <Straightforward-Justification {
       <Theorem-Reference {
