@@ -53,16 +53,6 @@ Readonly my $TSTP_STYLESHEET_HOME => "${STYLESHEET_HOME}/tstp";
 Readonly my $TPTP_STYLESHEET_HOME => "${STYLESHEET_HOME}/tptp";
 Readonly my $MIZAR_STYLESHEET_HOME => "${STYLESHEET_HOME}/mizar";
 Readonly my $EPROVER_STYLESHEET_HOME => "${STYLESHEET_HOME}/eprover";
-Readonly my @STYLESHEETS => (
-    'eprover2evl.xsl',
-    'eprover2dco.xsl',
-    'eprover2dno.xsl',
-    'eprover2voc.xsl',
-    'pp.xsl',
-    'eprover-safe-skolemizations.xsl',
-    'clean-eprover.xsl',
-    'eprover2the.xsl',
-);
 
 # Strings
 Readonly my $LF => "\N{LF}";
@@ -174,24 +164,6 @@ if (! is_valid_tptp_file ($tptp_file)) {
 if ($verbose) {
     print 'Sanity Check: The given TPTP file is valid according to TPTP4X.', "\n";
 }
-
-# # All the needed stylesheets exist
-#
-#
-# We need to put this check elsewhere.
-#
-# my @extensions = ('dco', 'dno', 'voc', 'miz');
-# foreach my $stylesheet (@STYLESHEETS) {
-#     my $stylesheet_path = "${STYLESHEET_HOME}/${stylesheet}";
-#     if (! is_readable_file ($stylesheet_path)) {
-# 	error_message ('The required stylsheet ', $stylesheet, ' could not be found in the directory', "\n", "\n", '  ', $STYLESHEET_HOME, "\n", "\n", 'where we expect to find it (or it does exist but is unreadable).');
-# 	exit 1;
-#     }
-# }
-
-# We need to check that the TPTP theory does not have a predicate
-# symbol used as a function symbol, and that arities are distinct for
-# different symbols
 
 if (! defined $db) {
     $db = "${tptp_sans_extension}-mizar";
