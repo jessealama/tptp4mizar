@@ -196,16 +196,21 @@ tpl [Text-Proper] (#errs) {
           // Gather the premises
           for-each [*[@spelling]] {
             $n = `@spelling`;
-            if [key ("formulas", $n)] {
-              for-each [key ("formulas", $n)] {
-                apply [.] mode="axiom";
+            choose {
+              when [$n = "SKOLEM"] {
+                // ignore; not sure how to deal with this now
               }
-            } else {
-              $message = `concat ("Error: we failed to look up the formula with the name '", $n, "'.  We are currently handling the error token '", $head, "'.")`;
-              apply [.] (#message = $message) mode="die";
+              when [key ("formulas", $n)] {
+                for-each [key ("formulas", $n)] {
+                  apply [.] mode="axiom";
+                }
+              }
+              otherwise {
+                $message = `concat ("Error: we failed to look up the formula with the name '", $n, "'.  We are currently handling the error token '", $head, "'.")`;
+                apply [.] (#message = $message) mode="die";
+              }
             }
           }
-
           for-each [ancestor::Item[@kind = "Regular-Statement" and @shape = "Compact-Statement"]] {
             apply [.] mode="conjecture";
           }
