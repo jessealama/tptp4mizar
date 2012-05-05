@@ -52,6 +52,7 @@ Readonly my $STYLESHEET_HOME => "$RealBin/../xsl";
 Readonly my $TSTP_STYLESHEET_HOME => "${STYLESHEET_HOME}/tstp";
 Readonly my $TPTP_STYLESHEET_HOME => "${STYLESHEET_HOME}/tptp";
 Readonly my $MIZAR_STYLESHEET_HOME => "${STYLESHEET_HOME}/mizar";
+Readonly my $EPROVER_STYLESHEET_HOME => "${STYLESHEET_HOME}/eprover";
 Readonly my @STYLESHEETS => (
     'eprover2evl.xsl',
     'eprover2dco.xsl',
@@ -420,6 +421,8 @@ foreach my $problem (@problems) {
 }
 
 # Normalize each of the generated proofs
+my $eprover_normalize_step_names_stylesheet
+    = "${EPROVER_STYLESHEET_HOME}/normalize-step-names.xsl";
 foreach my $problem (@problems) {
     my $problem_name = $problem->exists ('@name') ? $problem->findvalue ('@name') : undef;
     if (! defined $problem_name) {
@@ -432,7 +435,7 @@ foreach my $problem (@problems) {
 	die error_message ('We failed to generate a plain text TPTP representation for', $SP, $problem_name);
     }
 
-    apply_stylesheet ($normalize_step_names_stylesheet,
+    apply_stylesheet ($eprover_normalize_step_names_stylesheet,
 		      $solution_path,
 		      $solution_path);
 
