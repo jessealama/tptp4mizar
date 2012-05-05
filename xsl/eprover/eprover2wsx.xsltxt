@@ -138,14 +138,7 @@ tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-
                       <Link;
                       <Local-Reference {
                         for-each [$dependent-formula] {
-                          $dependent-formula-name = `@name`;
-                          if [@status = "axiom"] {
-                            $safe-name = capitalize-after-underscore (#string = $dependent-formula-name);
-                            $padded = pad-axiom (#string = $safe-name);
-                            @spelling = $padded;
-                          } else {
-                            @spelling = `concat ("Step", $dependent-formula-name)`;
-                          }
+                          @spelling = `@name`;
                         }
                       }
                     }
@@ -181,25 +174,8 @@ tpl [formula[@name and not(source/non-logical-data[@name = "inference"]/non-logi
         for-each [non-logical-data[@name = "inference"]] {
           for-each [non-logical-data[position() = last()]] {
             for-each [number[@name]] {
-              $n = `@name`;
               <Local-Reference {
-                if [key ("axiom", $n)] {
-                  for-each [key ("axiom", $n)] {
-                    for-each [source] {
-                      for-each [non-logical-data[@name = "file"]] {
-                        for-each [non-logical-data[position() = last()]] {
-                          $safe-name = capitalize-after-underscore (#string = `@name`);
-                          $padded = pad-axiom (#string = $safe-name);
-                          @spelling = $padded;
-                        }
-                      }
-                    }
-                  }
-                } else {
-                  $safe-name = capitalize-after-underscore (#string = `@name`);
-                  $step-name = `concat ("Step", $safe-name)`;
-                  @spelling = $step-name;
-                }
+                @spelling = `@name`;
               }
             }
           }
