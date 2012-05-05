@@ -74,6 +74,14 @@ tpl [disjunction] {
  "( "; apply [*[1]]; " | "; apply [*[2]]; " )";
 }
 
+tpl [conjunction] {
+ "( "; apply [*[1]]; " & "; apply [*[2]]; " )";
+}
+
+tpl [implication] {
+ "( "; apply [*[1]]; " => "; apply [*[2]]; " )";
+}
+
 tpl [predicate[@name]] {
   if [*] {
     `@name`; "("; list (#separ = ",", #elems = `*`); ")";
@@ -84,6 +92,18 @@ tpl [predicate[@name]] {
 
 tpl [negation] {
   "~ "; apply [*[1]];
+}
+
+tpl [quantifier[@type = "universal"]] {
+  "( ! ";
+  "[";list (#separ = ",", #elems = `variable`); "]";
+  " : "; apply [*[position() = last()]]; ")";
+}
+
+tpl [quantifier[@type = "existential"]] {
+  "( ! ";
+  "[";list (#separ = ",", #elems = `variable`); "]";
+  " : "; apply [*[position() = last()]]; ")";
 }
 
 //////////////////////////////////////////////////////////////////////
