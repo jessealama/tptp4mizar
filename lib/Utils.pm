@@ -8,6 +8,8 @@ use Regexp::DefaultFlags;
 use Term::ANSIColor qw(colored);
 use Readonly;
 use charnames qw(:full);
+use IPC::Run qw(harness);
+use IPC::Cmd qw(can_run);
 
 Readonly my $EMPTY_STRING => q{};
 Readonly my $SP => q{ };
@@ -22,7 +24,9 @@ our @EXPORT_OK = qw(error_message
 		    warning_message
 		    strip_extension
 		    is_readable_file
-		    is_valid_xml_file);
+		    is_valid_xml_file
+		    slurp
+		    run_mizar_tool);
 
 sub error_message {
     return message_with_colored_prefix ('Error', $ERROR_COLOR, @_);
@@ -73,6 +77,49 @@ sub is_valid_xml_file {
 
     return $xmllint_exit_code == 0 ? 1 : 0;
 
+}
+
+sub run_mizar_tool {
+    my $tool = shift;
+    my $article = shift;
+
+    if (! can_run ($tool)) {
+	die error_message ($tool, $SP, 'is not executable.');
+    }
+
+    my $tool_out = $EMPTY_STRING;
+    my $tool_err = $EMPTY_STRING;
+    my @tool_call = ($tool, '-q', '-l', $article);
+    my $tool_harness = harness (\@tool_call,
+				'>', \$tool_out,
+				'2>', \$tool_err);
+
+    $tool_harness->start ();
+    $tool_harness->finish ();
+
+    my $exit_code = ($tool_harness->results ())[0];
+
+    return $exit_code == 0 ? 1 : 0;
+
+}
+
+sub slurp {
+    my $path_or_fh = shift;
+
+    open (my $fh, '<', $path_or_fh)
+	or die 'Error: unable to open the file (or filehandle) ', $path_or_fh, '.';
+
+    my $contents;
+    { local $/; $contents = <$fh>; }
+
+    close $fh
+	or die 'Error: unable to close the file (or filehandle) ', $path_or_fh, '.';
+
+    if (wantarray) {
+	return split ($LF, $contents);
+    } else {
+	return $contents;
+    }
 }
 
 1;
