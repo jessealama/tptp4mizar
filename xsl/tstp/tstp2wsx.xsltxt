@@ -135,16 +135,8 @@ tpl [formula[@name]] mode="axiom" {
     @shape = "Compact-Statement";
     <Proposition {
       <Label {
-          for-each [source] {
-            for-each [non-logical-data[@name = "file"]] {
-              for-each [non-logical-data[position() = last()]] {
-                $safe-name = capitalize-after-underscore (#string = `@name`);
-                $padded = pad-axiom (#string = $safe-name);
-                @spelling = $padded;
-              }
-            }
-          }
-        }
+        @spelling = `@name`;
+      }
       apply [*[1]] mode="strip-universal-prefix";
     }
     <Straightforward-Justification {
@@ -178,8 +170,7 @@ tpl [formula] mode="reiterate" {
         @spelling = $padded;
       } else {
         <Local-Reference {
-          $n = `@name`;
-          @spelling = `concat ("Step", $n)`;
+          @spelling = `@name`;
         }
       }
     }
@@ -192,9 +183,7 @@ tpl [formula[@name and source/non-logical-data[@name = "inference"]]] mode="lemm
     @shape = "Compact-Statement";
     <Proposition {
       <Label {
-        $safe-name = capitalize-after-underscore (#string = `@name`);
-        $step-name = `concat ("Step", $safe-name)`;
-        @spelling = $step-name;
+        @spelling = `@name`;
       }
       apply [*[1]] mode="strip-universal-prefix";
     }
@@ -219,8 +208,8 @@ tpl [formula[@name and source/non-logical-data[@name = "inference"]]] mode="lemm
                   }
                 } else {
                   $safe-name = capitalize-after-underscore (#string = `@name`);
-                  $step-name = `concat ("Step", $safe-name)`;
-                  @spelling = $step-name;
+                  // $step-name = `concat ("Step", $safe-name)`;
+                  @spelling = $safe-name;
                 }
               }
             }
@@ -288,8 +277,8 @@ tpl [formula[@name and not(@name = "")]] mode="no-justification" {
   <Proposition {
     <Label {
       $safe-name = capitalize-after-underscore (#string = `@name`);
-      $step-name = `concat ("Step", $safe-name)`;
-      @spelling = $step-name;
+      // $step-name = `concat ("Step", $safe-name)`;
+      @spelling = $safe-name;
     }
     apply [*[1]];
   }
@@ -329,8 +318,8 @@ tpl [formula[@name and not(@name = "")]] mode="conclusion" {
                   }
                 } else {
                   $safe-name = capitalize-after-underscore (#string = $n);
-                  $step-name = `concat ("Step", $safe-name)`;
-                  @spelling = $step-name;
+                  // $step-name = `concat ("Step", $safe-name)`;
+                  @spelling = $safe-name;
                 }
               }
             }
@@ -355,8 +344,8 @@ tpl [formula[@name and not(@name = "")]] mode="conclusion" {
                       }
                     } else {
                       $safe-name = capitalize-after-underscore (#string = $n);
-                      $step-name = `concat ("Step", $safe-name)`;
-                      @spelling = $step-name;
+                      // $step-name = `concat ("Step", $safe-name)`;
+                      @spelling = $safe-name;
                     }
                   }
                 }
@@ -388,8 +377,8 @@ tpl [formula[@name and not(@name = "")]] mode="full" {
     <Proposition {
       <Label {
         $safe-name = capitalize-after-underscore (#string = `@name`);
-        $step-name = `concat ("Step", $safe-name)`;
-        @spelling = $step-name;
+        // $step-name = `concat ("Step", $safe-name)`;
+        @spelling = $safe-name;
       }
       apply [*[1]] mode="strip-universal-prefix";
     }
@@ -414,8 +403,8 @@ tpl [formula[@name and not(@name = "")]] mode="full" {
                   }
                 } else {
                   $safe-name = capitalize-after-underscore (#string = $n);
-                  $step-name = `concat ("Step", $safe-name)`;
-                  @spelling = $step-name;
+                  // $step-name = `concat ("Step", $safe-name)`;
+                  @spelling = $safe-name;
                 }
               }
             }
@@ -440,8 +429,8 @@ tpl [formula[@name and not(@name = "")]] mode="full" {
                       }
                     } else {
                       $safe-name = capitalize-after-underscore (#string = $n);
-                      $step-name = `concat ("Step", $safe-name)`;
-                      @spelling = $step-name;
+                      // $step-name = `concat ("Step", $safe-name)`;
+                      @spelling = $safe-name;
                     }
                   }
                 }
