@@ -164,14 +164,8 @@ tpl [formula] mode="reiterate" {
       apply [*[1]] mode="strip-universal-prefix";
     }
     <Straightforward-Justification {
-      if [@status = "axiom"] {
-        $safe-name = capitalize-after-underscore (#string = `@name`);
-        $padded = pad-axiom (#string = $safe-name);
-        @spelling = $padded;
-      } else {
-        <Local-Reference {
-          @spelling = `@name`;
-        }
+      <Local-Reference {
+        @spelling = `@name`;
       }
     }
   }
@@ -191,26 +185,9 @@ tpl [formula[@name and source/non-logical-data[@name = "inference"]]] mode="lemm
       for-each [source] {
         for-each [non-logical-data[@name = "inference"]] {
           for-each [non-logical-data[position() = last()]] {
-            for-each [number[@name]] {
-              $n = `@name`;
+            for-each [*[@name]] {
               <Local-Reference {
-                if [key ("axiom", $n)] {
-                  for-each [key ("axiom", $n)] {
-                    for-each [source] {
-                      for-each [non-logical-data[@name = "file"]] {
-                        for-each [non-logical-data[position() = last()]] {
-                          $safe-name = capitalize-after-underscore (#string = `@name`);
-                          $padded = pad-axiom (#string = $safe-name);
-                          @spelling = $padded;
-                        }
-                      }
-                    }
-                  }
-                } else {
-                  $safe-name = capitalize-after-underscore (#string = `@name`);
-                  // $step-name = `concat ("Step", $safe-name)`;
-                  @spelling = $safe-name;
-                }
+                @spelling = `@name`;
               }
             }
           }
@@ -276,9 +253,7 @@ tpl [formula] mode="conjecture" {
 tpl [formula[@name and not(@name = "")]] mode="no-justification" {
   <Proposition {
     <Label {
-      $safe-name = capitalize-after-underscore (#string = `@name`);
-      // $step-name = `concat ("Step", $safe-name)`;
-      @spelling = $safe-name;
+      @spelling = `@name`;
     }
     apply [*[1]];
   }
@@ -300,53 +275,12 @@ tpl [formula[@name and not(@name = "")]] mode="conclusion" {
     <Straightforward-Justification {
       for-each [source] {
         choose {
-          when [number[@name]] {
-            for-each [number[@name]] {
-              $n = `@name`;
-              <Local-Reference {
-                if [key ("axiom", $n)] {
-                  for-each [key ("axiom", $n)] {
-                    for-each [source] {
-                      for-each [non-logical-data[@name = "file"]] {
-                        for-each [non-logical-data[position() = last()]] {
-                          $safe-name = capitalize-after-underscore (#string = `@name`);
-                          $padded = pad-axiom (#string = $safe-name);
-                          @spelling = $padded;
-                        }
-                      }
-                    }
-                  }
-                } else {
-                  $safe-name = capitalize-after-underscore (#string = $n);
-                  // $step-name = `concat ("Step", $safe-name)`;
-                  @spelling = $safe-name;
-                }
-              }
-            }
-          }
           when [non-logical-data[@name = "inference"]] {
             for-each [non-logical-data[@name = "inference"]] {
               for-each [non-logical-data[position() = last()]] {
-                for-each [number[@name]] {
+                for-each [*[@name]] {
                   <Local-Reference {
-                    $n = `@name`;
-                    if [key ("axiom", $n)] {
-                      for-each [key ("axiom", $n)] {
-                        for-each [source] {
-                          for-each [non-logical-data[@name = "file"]] {
-                            for-each [non-logical-data[position() = last()]] {
-                              $safe-name = capitalize-after-underscore (#string = `@name`);
-                              $padded = pad-axiom (#string = $safe-name);
-                              @spelling = $padded;
-                            }
-                          }
-                        }
-                      }
-                    } else {
-                      $safe-name = capitalize-after-underscore (#string = $n);
-                      // $step-name = `concat ("Step", $safe-name)`;
-                      @spelling = $safe-name;
-                    }
+                    @spelling = `@name`;
                   }
                 }
               }
@@ -376,62 +310,19 @@ tpl [formula[@name and not(@name = "")]] mode="full" {
     @shape = "Compact-Statement";
     <Proposition {
       <Label {
-        $safe-name = capitalize-after-underscore (#string = `@name`);
-        // $step-name = `concat ("Step", $safe-name)`;
-        @spelling = $safe-name;
+        @spelling = `@name`;
       }
       apply [*[1]] mode="strip-universal-prefix";
     }
     <Straightforward-Justification {
       for-each [source] {
         choose {
-          when [number[@name]] {
-            for-each [number[@name]] {
-              $n = `@name`;
-              <Local-Reference {
-                if [key ("axiom", $n)] {
-                  for-each [key ("axiom", $n)] {
-                    for-each [source] {
-                      for-each [non-logical-data[@name = "file"]] {
-                        for-each [non-logical-data[position() = last()]] {
-                          $safe-name = capitalize-after-underscore (#string = `@name`);
-                          $padded = pad-axiom (#string = $safe-name);
-                          @spelling = $padded;
-                        }
-                      }
-                    }
-                  }
-                } else {
-                  $safe-name = capitalize-after-underscore (#string = $n);
-                  // $step-name = `concat ("Step", $safe-name)`;
-                  @spelling = $safe-name;
-                }
-              }
-            }
-          }
           when [non-logical-data[@name = "inference"]] {
             for-each [non-logical-data[@name = "inference"]] {
               for-each [non-logical-data[position() = last()]] {
-                for-each [number[@name]] {
+                for-each [*[@name]] {
                   <Local-Reference {
-                    $n = `@name`;
-                    if [key ("axiom", $n)] {
-                      for-each [key ("axiom", $n)] {
-                        for-each [source] {
-                          for-each [non-logical-data[@name = "file"]] {
-                            for-each [non-logical-data[position() = last()]] {
-                              $safe-name = capitalize-after-underscore (#string = `@name`);
-                              $padded = pad-axiom (#string = $safe-name);
-                              @spelling = $padded;
-                            }
-                          }
-                        }
-                      }
-                    } else {
-                      $safe-name = capitalize-after-underscore (#string = $n);
-                      // $step-name = `concat ("Step", $safe-name)`;
-                      @spelling = $safe-name;
-                    }
+                    @spelling = `@name`;
                   }
                 }
               }
