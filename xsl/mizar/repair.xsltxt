@@ -174,13 +174,24 @@ tpl [Text-Proper] (#errs) {
     if [$handled-later = "1"] {
       apply [.] (#errs = $tail);
     } else {
+      if [not(descendant::*[@line = $error-line and @col = $error-col])] {
+        $message = `concat ("Error: there is no node at line ", $error-line, " and column ", $error-col, ".")`;
+        apply [.] (#message = $message) mode="die";
+      }
+
       <tstp {
-        if [not(descendant::*[@line = $error-line and @col = $error-col])] {
-          $message = `concat ("Error: there is no node at line ", $error-line, " and column ", $error-col, ".")`;
-          apply [.] (#message = $message) mode="die";
-        }
 
         for-each [descendant::Straightforward-Justification[@line = $error-line and @col = $error-col]] {
+
+          // Get the name of the problem
+          if [not(ancestor::Item[@kind = "Regular-Statement" and @shape = "Compact-Statement" and Proposition/Label[@spelling]])] {
+            apply [.] (#message = "Error: we cannot make a problem without a name.") mode="die";
+          }
+          for-each [ancestor::Item[@kind = "Regular-Statement" and @shape = "Compact-Statement" and Proposition/Label[@spelling]]] {
+            for-each [Proposition/Label[@spelling]] {
+              @"name" = strip-prefix (#string = `@spelling`);
+            }
+          }
 
           // Gather the premises
           for-each [*[@spelling]] {
@@ -228,7 +239,7 @@ tpl [Item[@kind = "Regular-Statement" and @shape = "Compact-Statement"]] mode="a
 tpl [Proposition[Label[@spelling]]] mode="axiom" {
   <formula {
     for-each [Label[@spelling]] {
-      @"name" = `@spelling`;
+      @"name" = strip-prefix (#string = `@spelling`);
     }
     @status = "axiom";
     @syntax = "clause";
@@ -243,7 +254,7 @@ tpl [Item[@kind = "Regular-Statement" and @shape = "Compact-Statement" and Propo
 tpl [Proposition[Label[@spelling]]] mode="conjecture" {
   <formula {
     for-each [Label[@spelling]] {
-      @"name" = `@spelling`;
+      @"name" = strip-prefix (#string = `@spelling`);
     }
     @status = "conjecture";
     apply [*[position() = last()]] mode="mizar-to-tptp";
@@ -269,7 +280,7 @@ tpl [Disjunctive-Formula] mode="mizar-to-tptp" {
 
 tpl [Predicative-Formula[@spelling and Arguments]] mode="mizar-to-tptp" {
   <predicate {
-    @"name" = `@spelling`;
+    @"name" = strip-prefix (#string = `@spelling`);
     for-each [Arguments] {
       apply [*] mode="mizar-to-tptp";
     }
