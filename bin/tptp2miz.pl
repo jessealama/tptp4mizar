@@ -19,6 +19,8 @@ use charnames qw(:full);
 use Regexp::DefaultFlags;
 use Term::ANSIColor qw(colored);
 use FindBin qw($RealBin);
+use Data::Dumper;
+use XML::LibXML;
 
 # Our packages
 use lib "$RealBin/../lib";
@@ -26,11 +28,13 @@ use Utils qw(is_readable_file
 	     is_valid_xml_file
 	     strip_extension
 	     warning_message
-	     error_message);
-use Colors;
+	     error_message
+	     slurp
+	     run_mizar_tool);
 use TPTPProblem qw(is_valid_tptp_file);
 use EproverDerivation;
 use VampireDerivation;
+use Xsltproc qw(apply_stylesheet);
 
 # Colors
 Readonly my $STYLE_COLOR => 'blue';
@@ -46,6 +50,8 @@ Readonly my @TPTP_PROGRAMS => (
 # Stylesheets
 Readonly my $STYLESHEET_HOME => "$RealBin/../xsl";
 Readonly my $TSTP_STYLESHEET_HOME => "${STYLESHEET_HOME}/tstp";
+Readonly my $TPTP_STYLESHEET_HOME => "${STYLESHEET_HOME}/tptp";
+Readonly my $MIZAR_STYLESHEET_HOME => "${STYLESHEET_HOME}/mizar";
 Readonly my @STYLESHEETS => (
     'eprover2evl.xsl',
     'eprover2dco.xsl',
@@ -260,6 +266,151 @@ if ($opt_style eq 'eprover') {
 
 $derivation->to_miz ($db,
 		     { 'shape' => $opt_nested ? 'nested' : 'flat' });
+
+# Repair the text, if there are any errors
+chdir $db
+    or die error_message ('Cannot change directory to ', $db);
+my $article_in_db = 'text/article.miz';
+my $makeenv_ok = run_mizar_tool ('makeenv', $article_in_db);
+
+if (! $makeenv_ok) {
+    die error_message ('makeenv did not terminate cleanly working with', $SP, $article_in_db);
+}
+
+my $wsmparser_ok = run_mizar_tool ('wsmparser', $article_in_db);
+
+if (! $wsmparser_ok) {
+    die error_message ('wsmparser did not terminate cleanly working with', $SP, $article_in_db);
+}
+
+my $article_wsx = 'text/article.wsx';
+
+my $verifier_ok = run_mizar_tool ('verifier', $article_in_db);
+
+if ($verifier_ok) {
+    exit 0;
+}
+
+my $article_err = 'text/article.err';
+
+if (! is_readable_file ($article_err)) {
+    die error_message ('The .err file', $SP, $article_err, $SP, 'does not exist, or is unreadable.');
+}
+
+# Make a token string out of the errors
+my $errs = slurp ($article_err);
+$errs =~ s /\N{SPACE}/:/g;
+$errs =~ s /\N{LF}/,/g;
+
+my $err_token_string = ',' . $errs;
+
+warn 'error token string: ', $err_token_string;
+
+my $repair_stylesheet = "${MIZAR_STYLESHEET_HOME}/repair.xsl";
+
+# Warning: we are inside $db at this point
+my $repair_dir = 'repair';
+mkdir $repair_dir
+    or die error_message ('Cannot make the repair directory: ', $!);
+
+my $repair_problems = "${repair_dir}/problems.xml";
+apply_stylesheet (
+    $repair_stylesheet,
+    $article_wsx,
+    $repair_problems,
+    {
+	'errors' => $err_token_string,
+    }
+);
+
+# Extract the problems
+my $xml_parser = XML::LibXML->new ();
+my $problems_doc = $xml_parser->parse_file ($repair_problems);
+
+(my $problems_root) = $problems_doc->findnodes ('problems');
+
+my $num_problems = $problems_root->findvalue ('count (*)');
+
+my @problems = $problems_root->findnodes ('*');
+
+foreach my $problem (@problems) {
+    my $problem_name = $problem->exists ('@name') ? $problem->findvalue ('@name') : undef;
+    if (! defined $problem_name) {
+	die error_message ('We found a problem without a name.');
+    }
+
+    my $problem_path = "${repair_dir}/${problem_name}.p.xml";
+
+    my $node_string = $problem->toString ();
+
+    open (my $problem_fh, '>', $problem_path)
+	or die error_message ('Cannot open an output filehandle for', $SP, $problem_path, ':', $SP, $!);
+    say {$problem_fh} '<?xml version="1.0" ?>';
+    say {$problem_fh} $node_string;
+    close $problem_fh
+	or die error_message ('Unable to close the output filehandle for', $SP, $problem_path);
+}
+
+# Render the problems as plain text TPTP files
+my $render_tptp_stylesheet = "${TPTP_STYLESHEET_HOME}/render-tptp.xsl";
+foreach my $problem (@problems) {
+    my $problem_name = $problem->exists ('@name') ? $problem->findvalue ('@name') : undef;
+    if (! defined $problem_name) {
+	die error_message ('We found a problem without a name.');
+    }
+
+    my $problem_xml_path = "${repair_dir}/${problem_name}.p.xml";
+    my $problem_path = "${repair_dir}/${problem_name}.p";
+    my $problem_tmp_path = "${repair_dir}/${problem_name}.p.tmp";
+
+    if (! is_readable_file ($problem_xml_path)) {
+	die error_message ('We failed to generate the XML TPTP representation for', $SP, $problem_name);
+    }
+
+    apply_stylesheet ($render_tptp_stylesheet,
+		      $problem_xml_path,
+		      $problem_tmp_path);
+
+    # fofify
+    my $fofify_status = system ("tptp4X -tfofify ${problem_tmp_path} > ${problem_path}");
+    my $fofify_exit_code = $fofify_status >> 8;
+    if ($fofify_exit_code != 0) {
+	die error_message ('tptp4X did not exit cleanly fofifying ', $problem_tmp_path);
+    }
+
+    unlink $problem_tmp_path;
+
+}
+
+# Solve each of the problems with E
+foreach my $problem (@problems) {
+    my $problem_name = $problem->exists ('@name') ? $problem->findvalue ('@name') : undef;
+    if (! defined $problem_name) {
+	die error_message ('We found a problem without a name.');
+    }
+
+    my $problem_path = "${repair_dir}/${problem_name}.p";
+    my $solution_path = "${repair_dir}/${problem_name}.p.proof.xml";
+
+    if (! is_readable_file ($problem_path)) {
+	die error_message ('We failed to generate a plain text TPTP representation for', $SP, $problem_name);
+    }
+
+    my @eprove_call = ('eprove', $problem_path);
+    my @epclextract_call = ('epclextract', '--tstp-out');
+    my @tptp4X_call = ('tptp4X', '-tfofify', '-fxml', '--');
+
+    my $eprover_harness = harness (\@eprove_call,
+				   '|',
+				   \@epclextract_call,
+				   '|',
+				   \@tptp4X_call,
+				   '>', $solution_path);
+
+    $eprover_harness->start ();
+    $eprover_harness->finish ();
+
+}
 
 __END__
 
