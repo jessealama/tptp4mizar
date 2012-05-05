@@ -257,6 +257,7 @@ tpl [Proposition[Label[@spelling]]] mode="conjecture" {
       @"name" = strip-prefix (#string = `@spelling`);
     }
     @status = "conjecture";
+    @syntax = "clause";
     apply [*[position() = last()]] mode="mizar-to-tptp";
   }
 }
