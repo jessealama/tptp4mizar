@@ -157,8 +157,8 @@ tpl [formula[@name]] mode="lemma" {
     <Proposition {
       <Label {
         $safe-name = capitalize-after-underscore (#string = `@name`);
-        $step-name = `concat ("Step", $safe-name)`;
-        @spelling = $step-name;
+        // $step-name = `concat ("Step", $safe-name)`;
+        @spelling = $safe-name;
       }
       apply [*[1]] mode="strip-universal-prefix";
     }
@@ -187,8 +187,8 @@ tpl [formula[@name]] mode="lemma" {
                 }
                 otherwise {
                   $safe-name = capitalize-after-underscore (#string = `@name`);
-                  $step-name = `concat ("Step", $safe-name)`;
-                  <Local-Reference { @spelling = $step-name; }
+                  // $step-name = `concat ("Step", $safe-name)`;
+                  <Local-Reference { @spelling = $safe-name; }
                 }
               }
             }
@@ -249,8 +249,8 @@ tpl [formula[@name and not(@name = "")]] mode="conclusion" {
                       }
                     } else {
                       $safe-name = capitalize-after-underscore (#string = $n);
-                      $step-name = `concat ("Step", $safe-name)`;
-                      @spelling = $step-name;
+                      // $step-name = `concat ("Step", $safe-name)`;
+                      @spelling = $safe-name;
                     }
                   }
                 }
