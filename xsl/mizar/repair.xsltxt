@@ -160,7 +160,7 @@ tpl [Text-Proper] (#errs) {
     if [$handled-later = "1"] {
       apply [.] (#errs = $tail);
     } else {
-      <tptp {
+      <tstp {
         if [not(descendant::*[@line = $error-line and @col = $error-col])] {
           $message = `concat ("Error: there is no node at line ", $error-line, " and column ", $error-col, ".")`;
           apply [.] (#message = $message) mode="die";
