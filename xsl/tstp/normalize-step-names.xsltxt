@@ -5,7 +5,8 @@ output method="xml" indent="yes";
 // Keys
 //////////////////////////////////////////////////////////////////////
 
-key "formulas" [formula[@name]] `@name`;
+key "non-axioms" [formula[@name and not(@status = "axiom")]] `@name`;
+key "axioms" [formula[@name and @status = "axiom"]] `@name`;
 
 //////////////////////////////////////////////////////////////////////
 // Utilities
@@ -60,40 +61,63 @@ tpl [formula[not(source)]] {
   msg terminate="yes" "Error: we encountered a formula without a source.  Is this stylesheet being applied to a TPTP derivation?";
 }
 
-tpl [formula[source]] {
-  $pos = `count (preceding-sibling::formula) + 1`;
+tpl [formula[@status = "axiom" and source]] {
+  $pos = `count (preceding-sibling::formula[@status = "axiom"]) + 1`;
+  <formula {
+    for-each [@*] { copy-of `.`; }
+    @"name" = `concat ("ax", $pos)`;
+    apply [*[1]] mode="copy";
+    apply [source];
+  }
+}
+
+tpl [formula[not(@status = "axiom") and source]] {
+  $pos = `count (preceding-sibling::formula[not(@status = "axiom")]) + 1`;
   <formula {
     for-each [@*] { copy-of `.`; }
     @"name" = `concat ("step", $pos)`;
     apply [*[1]] mode="copy";
-    <source {
-      for-each [source] {
-        <non-logical-data {
-          for-each [non-logical-data] {
-            for-each [@*] { copy-of `.`; }
-            for-each [non-logical-data[position() < last()]] {
-              apply [.] mode="copy";
-            }
-            for-each [non-logical-data[position() = last()]] {
-              if [*] {
-                <non-logical-data {
-                  for-each [*[@name]] {
-                    $n = `@name`;
-                    if [key ("formulas", $n)] {
-                      for-each [key ("formulas", $n)] {
-                        <non-logical-data {
-                          $other-position = `count (preceding-sibling::formula) + 1`;
-                          @"name" = `concat ("step", $other-position)`;
-                        }
-                      }
-                    } else {
-                      $message = `concat ("Error: unknown formula '", $n, "'.")`;
-                      msg terminate="yes" $message;
+    apply [source];
+  }
+}
+
+tpl [source[ancestor::formula[@status = "axiom"]]] {
+  <source;
+}
+
+tpl [source[ancestor::formula[not(@status = "axiom")]]] {
+  <source {
+    <non-logical-data {
+      for-each [non-logical-data] {
+        for-each [@*] { copy-of `.`; }
+        for-each [non-logical-data[position() < last()]] {
+          apply [.] mode="copy";
+        }
+        for-each [non-logical-data[position() = last()]] {
+          <non-logical-data {
+            for-each [*[@name]] {
+              $n = `@name`;
+              choose {
+                when [key ("axioms", $n)] {
+                  for-each [key ("axioms", $n)] {
+                    <non-logical-data {
+                      $other-position = `count (preceding-sibling::formula[@status = "axiom"]) + 1`;
+                      @"name" = `concat ("ax", $other-position)`;
                     }
                   }
                 }
-              } else {
-                apply [.] mode="copy";
+                when [key ("non-axioms", $n)] {
+                  for-each [key ("non-axioms", $n)] {
+                    <non-logical-data {
+                      $other-position = `count (preceding-sibling::formula[not(@status = "axiom")]) + 1`;
+                      @"name" = `concat ("step", $other-position)`;
+                    }
+                  }
+                }
+                otherwise {
+                  $message = `concat ("Error: unknown formula '", $n, "'.")`;
+                  msg terminate="yes" $message;
+                }
               }
             }
           }
