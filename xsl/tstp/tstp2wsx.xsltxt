@@ -151,7 +151,7 @@ tpl [formula[@name]] mode="axiom" {
       <Theorem-Reference {
         $article-uc = uc (#s = $article);
         @spelling = $article-uc;
-	@"number" = `count (preceding::formula[@status = "axiom"]) + 1`;
+        @"number" = `count (preceding::formula[@status = "axiom"]) + 1`;
       }
     }
   }
