@@ -138,3 +138,10 @@ tpl [defined-predicate[@name = "true"]] {
 tpl [defined-predicate[@name = "false"]] {
   <Contradiction;
 }
+
+tpl [defined-predicate[@name and not(@name = "true") and not(@name = "false")]] {
+  <Private-Predicate-Formula {
+    @spelling = `@name`;
+    apply [*];
+  }
+}
