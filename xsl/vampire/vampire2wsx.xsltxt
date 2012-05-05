@@ -145,8 +145,7 @@ tpl [tstp[formula[@status = "negated_conjecture"]]] {
         apply [.] mode="nested";
       }
       otherwise {
-        $message = `concat ("Error: unknown shape '", $shape, "'.")`;
-        msg terminate="yes" $message;
+        apply [.] mode="flat";
       }
     }
   }
