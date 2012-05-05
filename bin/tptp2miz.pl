@@ -294,6 +294,7 @@ my $article_wsx = 'text/article.wsx';
 my $verifier_ok = run_mizar_tool ('verifier', $article_in_db);
 
 if ($verifier_ok) {
+    # all good: every step is OK according to mizar
     exit 0;
 }
 
@@ -415,6 +416,25 @@ foreach my $problem (@problems) {
 
     $eprover_harness->start ();
     $eprover_harness->finish ();
+
+}
+
+# Normalize each of the generated proofs
+foreach my $problem (@problems) {
+    my $problem_name = $problem->exists ('@name') ? $problem->findvalue ('@name') : undef;
+    if (! defined $problem_name) {
+	die error_message ('We found a problem without a name.');
+    }
+
+    my $solution_path = "${repair_dir}/${problem_name}.p.proof.xml";
+
+    if (! is_readable_file ($solution_path)) {
+	die error_message ('We failed to generate a plain text TPTP representation for', $SP, $problem_name);
+    }
+
+    apply_stylesheet ($normalize_step_names_stylesheet,
+		      $solution_path,
+		      $solution_path);
 
 }
 
