@@ -82,7 +82,11 @@ tpl [formula[not(@status = "axiom") and source]] {
 }
 
 tpl [source[ancestor::formula[@status = "axiom"]]] {
-  <source;
+  <source {
+    for-each [non-logical-data[@name = "file"]] {
+      apply [.] mode="copy";
+    }
+  }
 }
 
 tpl [source[ancestor::formula[not(@status = "axiom")]]] {
