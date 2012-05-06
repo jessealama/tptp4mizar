@@ -100,8 +100,8 @@
     (format nil "[~a,~a]" (render-term variable) (render-term term))))
 
 (defun render-instantiation (instantiation)
-  (format nil "[~a]" (comma-separated-list (mapcar #'render-assignment
-						   instantiation))))
+  (comma-separated-list (mapcar #'render-assignment
+				instantiation)))
 
 (defun render-disjunction-reference (reference)
   (format nil "[~a]" (comma-separated-list reference)))
