@@ -16,6 +16,14 @@ tpl [*] {
   }
 }
 
+tpl [*] mode="copy" {
+  $n = `name (.)`;
+  <$n {
+    for-each [@*] { copy-of `.`; }
+    apply [*] mode="copy";
+  }
+}
+
 tpl [/] {
   if [tstp] {
     <tstp {
@@ -57,5 +65,19 @@ tpl [formula] mode="make-axiom" {
     for-each [@*] { copy-of `.`; }
     @status = "axiom";
     apply [*[1]];
+  }
+}
+
+tpl [function] {
+  $n = `@name`;
+  if [starts-with ($n, "esk")] {
+    <function {
+      $after-esk-prefix = `substring-after ($n, "esk")`;
+      $skolem-number = `substring-before ($after-esk-prefix, "_")`;
+      @"name" = `concat ("skolem", $skolem-number)`;
+      apply [*];
+    }
+  } else {
+    apply [.] mode="copy";
   }
 }
