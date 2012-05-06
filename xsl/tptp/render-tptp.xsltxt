@@ -82,7 +82,11 @@ tpl [implication] {
  "( "; apply [*[1]]; " => "; apply [*[2]]; " )";
 }
 
-tpl [predicate[@name]] {
+tpl [predicate[@name = "="]] {
+  "("; apply [*[1]]; " = "; apply [*[2]]; ")";
+}
+
+tpl [predicate[@name and not(@name = "=")]] {
   if [*] {
     `@name`; "("; list (#separ = ",", #elems = `*`); ")";
   } else {
