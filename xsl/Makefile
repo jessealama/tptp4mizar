@@ -5,6 +5,7 @@ all:
 	make -C tstp
 	make -C utils
 	make -C vampire
+	make -C ivy
 
 clean:
 	make -C eprover clean
@@ -13,3 +14,4 @@ clean:
 	make -C tstp clean
 	make -C utils clean
 	make -C vampire clean
+	make -C ivy clean
