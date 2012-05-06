@@ -174,3 +174,6 @@
 
 (defmethod ivy2tstp ((ivy-thing string))
   (ivy2tstp (read-from-string ivy-thing)))
+
+(defun print-ivy2tstp (ivy-thing)
+  (format t "~a" (ivy2tstp ivy-thing)))
