@@ -105,7 +105,7 @@ tpl [quantifier[@type = "universal"]] {
 }
 
 tpl [quantifier[@type = "existential"]] {
-  "( ! ";
+  "( ? ";
   "[";list (#separ = ",", #elems = `variable`); "]";
   " : "; apply [*[position() = last()]]; ")";
 }
