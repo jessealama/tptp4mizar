@@ -8,6 +8,24 @@ output method="xml" indent="yes";
 // are passed through verbatim.
 
 //////////////////////////////////////////////////////////////////////
+// Stylesheet parameters
+//////////////////////////////////////////////////////////////////////
+
+// If '1', print only the formulas that are conclusions of
+// skolemization steps or which eventually do get skolemized.  The
+// result can be regarded as a kind of "preprocessing" part,
+// consisting of the transformation of formulas that eventually get
+// skolemized.
+//
+// If not '1', we print only the formulas that do not eventually get
+// skolemized.
+#only-skolemized-part = { ""; }
+
+// If '1', output the "extra" parts of a TPTP formula (its source and
+// useful-info parts)
+#tstp = { "0"; }
+
+//////////////////////////////////////////////////////////////////////
 // Keys
 //////////////////////////////////////////////////////////////////////
 
@@ -114,24 +132,42 @@ tpl skolemized-eventually (#formula-name, #candidates) {
 }
 
 tpl [tstp] {
-  for-each [formula] {
-    $skolemized-eventually = skolemized-eventually (#formula-name = `@name`,
-    			     			    #candidates = `ancestor::tstp/formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]`);
-    choose {
-      when [@status = "axiom" and $skolemized-eventually = "1"] {
-        // ignore
+  if [$only-skolemized-part = "1"] {
+    for-each [formula] {
+      $skolemized-eventually = skolemized-eventually (#formula-name = `@name`,
+      			     			    #candidates = `ancestor::tstp/formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]`);
+      choose {
+        when [$skolemized-eventually = "1"] {
+          apply [.];
+        }
+        when [source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]] {
+          apply [.];
+        }
+        otherwise {
+          // ignore
+        }
       }
-      when [@status = "axiom" and $skolemized-eventually = "0"] {
-        apply [.];
-      }
-      when [source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]] {
-        apply [.] mode="make-axiom";
-      }
-      when [@status = "conjecture"] {
-        apply [.];
-      }
-      otherwise {
-        // ignore
+    }
+  } else {
+    for-each [formula] {
+      $skolemized-eventually = skolemized-eventually (#formula-name = `@name`,
+      			     			    #candidates = `ancestor::tstp/formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]`);
+      choose {
+        when [@status = "axiom" and $skolemized-eventually = "1"] {
+          // ignore
+        }
+        when [@status = "axiom" and $skolemized-eventually = "0"] {
+          apply [.];
+        }
+        when [source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]] {
+          apply [.] mode="make-axiom";
+        }
+        when [@status = "conjecture"] {
+          apply [.];
+        }
+        otherwise {
+          // ignore
+        }
       }
     }
   }
@@ -140,7 +176,11 @@ tpl [tstp] {
 tpl [formula] {
   <formula {
     for-each [@*] { copy-of `.`; }
-    apply [*[1]];
+    if [$tstp = "1"] {
+      apply [*];
+    } else {
+      apply [*[1]];
+    }
   }
 }
 
@@ -148,7 +188,11 @@ tpl [formula] mode="make-axiom" {
   <formula {
     for-each [@*] { copy-of `.`; }
     @status = "axiom";
-    apply [*[1]];
+    if [$tstp = "1"] {
+      apply [*];
+    } else {
+      apply [*[1]];
+    }
   }
 }
 
