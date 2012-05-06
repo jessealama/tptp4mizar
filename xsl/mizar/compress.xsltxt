@@ -140,7 +140,7 @@ tpl consider-recommendation (#recommendation) {
     }
     otherwise {
       $message = `concat ("Warning: Unable to make sense of the recommendation '", $recommendation, "'.")`;
-      msg $message;
+      msg terminate="yes" $message;
       apply [.] mode="copy";
     }
   }
