@@ -9,6 +9,7 @@ use feature 'say';
 use charnames qw(:full);
 use Regexp::DefaultFlags;
 use Readonly;
+use Data::Dumper;
 use Pod::Usage;
 use Getopt::Long;
 use File::Temp qw(tempdir tempfile);
