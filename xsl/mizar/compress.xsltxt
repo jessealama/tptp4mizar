@@ -381,15 +381,15 @@ tpl [Item[Proposition]] {
   $current-col = `@col`; // for inacc
   $within = within-inacc-block (#line = $current-line, #col = $current-col);
   if [$within = "1"] {
-    // keep skipping
-    msg "Skipping an item inside an inacc block";
-  } else {
-    <Item {
-      for-each [$item] {
-        for-each [@*] { copy-of `.`; }
-        apply [*];
-      }
+    if [following-sibling::Item] {
+      // keep skipping
+      msg "Skipping an item inside an inacc block";
+    } else {
+      msg "Although this item is in an inaccessible block, it is the final item of the current block.  Refusing to delete it.";
+      apply [.] mode="copy";
     }
+  } else {
+    apply [.] mode="copy";
   }
 }
 
