@@ -102,6 +102,9 @@ tpl [non-logical-data[not(@name) and not(non-logical-data or number)]] {
 
 tpl [source] {
   choose {
+    when [non-logical-data and number] {
+      "["; list (#separ = ",", #elems = `non-logical-data | number`); "]";
+    }
     when [non-logical-data] {
       apply [non-logical-data];
     }
