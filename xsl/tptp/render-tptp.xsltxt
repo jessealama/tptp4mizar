@@ -59,11 +59,63 @@ tpl [tstp] {
 }
 
 tpl [formula[@syntax = "formula" and @status and @name]] {
-  "fof("; `@name`; ","; `@status`; ","; apply [*[1]]; ")"; ".";
+  "fof(";
+    `@name`; ",";
+    `@status`; ",";
+    apply [*[1]];
+    if [*[2]] {
+      ","; list (#separ = ",", #elems = `*[position() > 1]`);
+    }
+    ")"; ".";
 }
 
 tpl [formula[@syntax = "clause" and @status and @name]] {
-  "cnf("; `@name`; ","; `@status`; ","; apply [*[1]]; ")"; ".";
+  "cnf(";
+    `@name`; ",";
+    `@status`; ",";
+    apply [*[1]];
+    if [*[2]] {
+      ","; list (#separ = ",", #elems = `*[position() > 1]`);
+    }
+    ")"; ".";
+}
+
+tpl [number[@name]] {
+  `@name`;
+}
+
+tpl [non-logical-data[@name and (non-logical-data or number)]] {
+  `@name`; "("; list (#separ = ",", #elems = `non-logical-data | number`); ")";
+}
+
+tpl [non-logical-data[@name and not(non-logical-data or number)]] {
+  `@name`;
+}
+
+tpl [non-logical-data[not(@name) and (non-logical-data or number)]] {
+  "["; list (#separ = ",", #elems = `non-logical-data | number`); "]";
+}
+
+tpl [non-logical-data[not(@name) and not(non-logical-data or number)]] {
+  "";
+}
+
+tpl [source] {
+  choose {
+    when [non-logical-data] {
+      apply [non-logical-data];
+    }
+    when [number] {
+      apply [number];
+    }
+    otherwise {
+      "";
+    }
+  }
+}
+
+tpl [useful-info] {
+  msg terminate="yes" "Error: sorry, we don't the useful-data part of TPTP formulas yet.";
 }
 
 //////////////////////////////////////////////////////////////////////
