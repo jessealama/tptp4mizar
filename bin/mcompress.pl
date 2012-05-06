@@ -109,6 +109,20 @@ sub process_commandline {
 	);
     }
 
+    if ($opt_help) {
+	pod2usage(
+	    -exitstatus => 0,
+	    -verbose => 2,
+	);
+    }
+
+    if ($opt_man) {
+	pod2usage(
+	    -exitstatus => 0,
+	    -verbose => 2,
+	);
+    }
+
     if (scalar @ARGV != 1) {
 	pod2usage (
 	    -exitval => 2,
@@ -333,11 +347,31 @@ copy ($article, $fresh_article)
 run_mizar_tool ('accom', $fresh_article);
 run_mizar_tool ('wsmparser', $fresh_article);
 
+my %applied_recommendations = ();
+
 my $compression_recommendations = recommend_compressions ($fresh_article);
+
+if ($opt_debug) {
+    say 'Recommendations: ', $compression_recommendations;
+}
 
 while ($compression_recommendations ne ',,') {
     apply_recommendations ($fresh_article, $compression_recommendations);
+    $applied_recommendations{$compression_recommendations} = 0;
     $compression_recommendations = recommend_compressions ($fresh_article);
+
+    if ($opt_debug) {
+	say 'Recommendations: ', $compression_recommendations;
+    }
+
+    if (defined $applied_recommendations{$compression_recommendations}) {
+	if ($opt_debug) {
+	    say 'We have seen this recommendation before; terminating...';
+	}
+	run_mizar_tool ('wsmparser', $fresh_article);
+	exit 0;
+    }
+
     run_mizar_tool ('wsmparser', $fresh_article);
 }
 
