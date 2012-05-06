@@ -1,0 +1,3 @@
+stylesheet "1.0";
+include "../tstp/tstp2wsx.xsl";
+output method="xml" indent="yes";
