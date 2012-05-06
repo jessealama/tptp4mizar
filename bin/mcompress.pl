@@ -91,9 +91,17 @@ sub message_with_colored_prefix {
     return;
 }
 
+my $opt_man = 0;
+my $opt_help = 0;
+my $opt_debug = 0;
+
 sub process_commandline {
     my $commandline_ok
-	= GetOptions ();
+	= GetOptions (
+	    'help' => \$opt_help,
+	    'man' => \$opt_man,
+	    'debug' => \$opt_debug,
+	);
 
     if (! $commandline_ok) {
 	pod2usage (
