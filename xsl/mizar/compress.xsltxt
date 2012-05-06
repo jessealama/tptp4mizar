@@ -73,12 +73,19 @@ tpl fragile-recommendation-applied-to-any (#candidates) {
     $candidate = `$candidates[1]`;
     $candidate-line = `$candidate/@line`;
     $candidate-col = `$candidate/@col`;
-    $token = `concat (",", $candidate-line, ":", $candidate-col, ":", "604", ",")`;
-    if [contains ($recommendations, $token)] {
-      "1";
-    } else {
-      $remaining-candidates = `$candidates[position() > 1]`;
-      fragile-recommendation-applied-to-any (#candidates = $remaining-candidates);
+    $token-1 = `concat (",", $candidate-line, ":", $candidate-col, ":", "604", ",")`;
+    $token-2 = `concat (",", $candidate-line, ":", $candidate-col, ":", "602", ",")`;
+    choose {
+      when [contains ($recommendations, $token-1)] {
+        "1";
+      }
+      when [contains ($recommendations, $token-2)] {
+        "1";
+      }
+      otherwise {
+        $remaining-candidates = `$candidates[position() > 1]`;
+        fragile-recommendation-applied-to-any (#candidates = $remaining-candidates);
+      }
     }
   } else {
     "0";
@@ -115,7 +122,7 @@ tpl consider-recommendation (#recommendation, #ignore-inacc) {
             for-each [key ("labelled-formulas", $formula-name)] {
               if [Straightforward-Justification] {
                 for-each [Straightforward-Justification] {
-                  apply [.] (#ignore-inacc = $ignore-inacc);
+                  apply [*] (#ignore-inacc = $ignore-inacc);
                 }
               } else {
                 apply [.] (#message = "Error: we expected to find a Straightforward-Justification child of the current item, but there is none.") mode="die";
@@ -139,8 +146,18 @@ tpl consider-recommendation (#recommendation, #ignore-inacc) {
       msg "Done ignoring formulas.";
     }
     when [$recommendation = "602"] {  // irrelevant reference
-      msg "Ignoring irrelevant reference.";
-      // ignore
+      $recommendation-already-applied = fragile-recommendation-applied-to-any (#candidates = `preceding-sibling::Local-Reference`);
+      if [$recommendation-already-applied = "1"] {
+        msg "We have already accepted a recommendation for the current list of references; not rewriting...";
+        $n = `name (.)`;
+        <$n {
+          for-each [@*] { copy-of `.`; }
+          apply [*] (#ignore-inacc = $ignore-inacc);
+        }
+      } else {
+        msg "Ignoring irrelevant reference.";
+        // ignore
+      }
     }
     otherwise {
       $message = `concat ("Warning: Unable to make sense of the recommendation '", $recommendation, "'.")`;
@@ -464,4 +481,16 @@ tpl [Local-Reference[@line and @col]] (#ignore-inacc) {
       apply [*] (#ignore-inacc = $ignore-inacc);
     }
   }
+}
+
+tpl [Item[@kind = "Conclusion"]] (#ignore-inacc) {
+  // Do not delete conclusions
+  <Item {
+    for-each [@*] { copy-of `.`; }
+    apply [*] (#ignore-inacc = "1");
+  }
+}
+
+tpl [Inference-Error] {
+  apply [.] (#message = "There was an inference error somewhere.") mode="die";
 }
