@@ -19,6 +19,7 @@ use IPC::Cmd qw(can_run);
 use File::Copy qw(copy);
 use File::Basename qw(basename dirname);
 use Term::ANSIColor qw(colored);
+use List::MoreUtils qw(any);
 use FindBin qw($RealBin);
 
 # Strings
@@ -154,14 +155,33 @@ sub slurp {
     close $fh
         or die error_message ('Unable to close the file (or filehandle) ', $path_or_fh,$FS);
 
-    return $contents;
+    if (wantarray) {
+	return split ("\N{LF}", $contents);
+    } else {
+	return $contents;
+    }
 }
 
 sub sensible_err_file {
-    my $article = shift;
+    my $article_err = shift;
 
-    my $article_basename = basename ($article, '.miz');
-    my $article_err = "${article_basename}.err";
+    if (-e $article_err) {
+
+	my @err_lines = slurp ($article_err);
+
+	if ($opt_debug) {
+	    warn 'Error lines:', "\N{LF}", join ("\N{LF}", @err_lines);
+	}
+
+	if (any { $_ =~ /\N{SPACE} 4 \z/ } @err_lines) {
+	    return 0;
+	} else {
+	    return 1;
+	}
+    } else {
+	return 1;
+    }
+
 }
 
 sub run_mizar_tool {
@@ -210,7 +230,7 @@ sub is_compressible {
 	} elsif (-z $article_err) {
 	    next;
 	} else {
-	    if (sensible_err_file ($article)) {
+	    if (sensible_err_file ($article_err)) {
 		$compressible = 1;
 		last;
 	    } else {
@@ -260,6 +280,10 @@ sub recommend_compressions {
     my $article_basename = basename ($article, '.miz');
     my $article_err = "${article_dirname}/${article_basename}.err";
 
+    if (-e $article_err) {
+	unlink $article_err; # ensure that we start from scratch
+    }
+
     my %recommendations = ();
 
     foreach my $program (@ENHANCERS) {
@@ -271,7 +295,7 @@ sub recommend_compressions {
 	} elsif (-z $article_err) {
 	    next;
 	} else {
-	    if (sensible_err_file ($article)) {
+	    if (sensible_err_file ($article_err)) {
 		my $err_contents = slurp ($article_err);
 		my @err_lines = split ("\N{LF}", $err_contents);
 		foreach my $err_line (@err_lines) {
@@ -340,6 +364,9 @@ my $article_dirname = dirname ($article);
 my $article_basename = basename ($article, '.miz');
 
 my $fresh_article = "${article_dirname}/compress.miz";
+my $fresh_article_wsx = "${article_dirname}/compress.wsx";
+my $fresh_article_old = "${article_dirname}/compress.miz.old";
+my $fresh_article_wsx_old = "${article_dirname}/compress.wsx.old";
 
 copy ($article, $fresh_article)
     or die 'Failed to make a copy of ', $article, ': ', $!;
@@ -355,21 +382,21 @@ if ($opt_debug) {
     say 'Recommendations: ', $compression_recommendations;
 }
 
-while ($compression_recommendations ne ',,') {
+while ($compression_recommendations ne ',,'
+	   && ! defined $applied_recommendations{$compression_recommendations}) {
+
+    # Save our work
+    if (-e $fresh_article_wsx) {
+	copy ($fresh_article_wsx, $fresh_article_wsx_old);
+    }
+    copy ($fresh_article, $fresh_article_old);
+
     apply_recommendations ($fresh_article, $compression_recommendations);
     $applied_recommendations{$compression_recommendations} = 0;
     $compression_recommendations = recommend_compressions ($fresh_article);
 
     if ($opt_debug) {
 	say 'Recommendations: ', $compression_recommendations;
-    }
-
-    if (defined $applied_recommendations{$compression_recommendations}) {
-	if ($opt_debug) {
-	    say 'We have seen this recommendation before; terminating...';
-	}
-	run_mizar_tool ('wsmparser', $fresh_article);
-	exit 0;
     }
 
     run_mizar_tool ('wsmparser', $fresh_article);
