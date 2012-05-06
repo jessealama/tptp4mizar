@@ -1,3 +1,108 @@
 stylesheet "1.0";
-include "../tstp/tstp2wsx.xsl";
+include "../tptp/tptp2wsx.xsl";
 output method="xml" indent="yes";
+
+tpl [/] {
+  choose {
+    when [$article = ""] {
+      msg terminate="yes" "Error: the empty string is not an acceptable value for the article stylesheet parameter.";
+    }
+    when [string-length ($article) > 8] {
+      msg terminate="yes" "Error: the value of the article stylesheet parameter is too long (it must be at most 8 characters).";
+    }
+    when [contains ($article, " ")] {
+      msg terminate="yes" "Error: the value of the article stylesheet parameter contains whitespace.";
+    }
+    // We don't care about the shape stylesheet parameter
+    when [tstp] {
+      apply [tstp];
+    }
+    otherwise {
+      msg terminate="yes" "Error: the required tstp document element is missing.";
+    }
+  }
+}
+
+tpl [tstp] {
+  $aid-uc = uc (#s = $article);
+  <Text-Proper {
+    @articleid = $aid-uc;
+    <Item { @kind = "Section-Pragma"; }
+    reserve-variables ();
+    <Item {
+      @kind = "Regular-Statement";
+      @shape = "Diffuse-Statement";
+      <Block {
+        @kind = "Now-Reasoning";
+        for-each [formula[source/non-logical-data[@name = "input"]]] {
+          apply [.] mode="assumption";
+        }
+        for-each [formula[position() < last() and not(source/non-logical-data[@name = "input"])]] {
+          apply [.] mode="lemma";
+        }
+        for-each [formula[position() = last()]] {
+          apply [.] mode="conclusion";
+        }
+      }
+    }
+  }
+}
+
+tpl [formula[@name]] mode="assumption" {
+  $n = `@name`;
+  <Item {
+    @kind = "Assumption";
+    <Single-Assumption {
+      <Proposition {
+        <Label {
+          @spelling = $n;
+        }
+        apply [*[1]] mode="strip-universal-prefix";
+      }
+    }
+  }
+}
+
+tpl [source] {
+  <Straightforward-Justification {
+    for-each [non-logical-data] {
+      for-each [non-logical-data[position() = last()]] {
+        for-each [non-logical-data[@name]] {
+          <Local-Reference {
+            @spelling = `@name`;
+          }
+        }
+      }
+    }
+  }
+}
+
+tpl [formula[@name]] mode="lemma" {
+  $n = `@name`;
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Compact-Statement";
+    <Proposition {
+      <Label {
+        @spelling = $n;
+      }
+      apply [*[1]] mode="strip-universal-prefix";
+    }
+    apply [source];
+  }
+}
+
+tpl [formula[@name]] mode="conclusion" {
+  $n = `@name`;
+  <Item {
+    @kind = "Conclusion";
+    @shape = "Compact-Statement";
+    <Proposition {
+      <Label {
+        @spelling = $n;
+      }
+      apply [*[1]] mode="strip-universal-prefix";
+    }
+    apply [source];
+  }
+}
