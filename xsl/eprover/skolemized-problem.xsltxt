@@ -7,6 +7,16 @@ output method="xml" indent="yes";
 // premises of skolemization steps.  Axioms that are never skolemized
 // are passed through verbatim.
 
+//////////////////////////////////////////////////////////////////////
+// Keys
+//////////////////////////////////////////////////////////////////////
+
+key "formulas" [formula] `@name`;
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
 // By default, copy
 tpl [*] {
   $n = `name (.)`;
@@ -34,11 +44,85 @@ tpl [/] {
   }
 }
 
+tpl exists-path-from-any-to (#candidates, #to) {
+  if [$candidates] {
+    $candidate = `$candidates[1]`;
+    if [key ("formulas", $candidate)] {
+      for-each [key ("formulas", $candidate)] {
+        if [@name = $to] {
+          "1";
+        } else {
+          for-each [source] {
+            choose {
+              when [non-logical-data[@name = "file"]] {
+                exists-path-from-any-to (#candidates = `$candidates[position() > 1]`,
+					 #to = $to);
+              }
+              when [non-logical-data[@name = "inference"]] {
+                for-each [non-logical-data[@name = "inference"]] {
+                  for-each [non-logical-data[position() = last()]] {
+                    $path = exists-path-from-any-to (#candidates = `number[@name]/@name`,
+    		    	    			     #to = $to);
+                    if [$path = "1"] {
+                      "1";
+                    } else {
+                      exists-path-from-any-to (#candidates = `$candidates[position() > 1]`,
+					       #to = $to);
+                    }
+                  }
+                }
+              }
+              otherwise {
+                exists-path-from-any-to (#candidates = `$candidates[position() > 1]`,
+					 #to = $to);
+              }
+            }
+          }
+        }
+      }
+    } else {
+      $message = `concat ("Error: we failed to find the formula called '", $candidate, "'.")`;
+      msg terminate="yes" $message;
+    }
+  } else {
+    "0";
+  }
+}
+
+tpl skolemized-eventually (#formula-name, #candidates) {
+  if [$candidates] {
+    $candidate = `$candidates[1]`;
+    for-each [$candidate] {
+      for-each [source] {
+        for-each [non-logical-data] {
+          for-each [non-logical-data[position() = last()]] {
+            $path = exists-path-from-any-to (#candidates = `number[@name]/@name`,
+                                             #to = $formula-name);
+            if [$path = "1"] {
+              "1";
+            } else {
+              skolemized-eventually (#formula-name = $formula-name,
+	      			     #candidates = `$candidates[position() > 1]`);
+            }
+          }
+        }
+      }
+    }
+  } else {
+    "0";
+  }
+}
+
 tpl [tstp] {
   for-each [formula] {
+    $skolemized-eventually = skolemized-eventually (#formula-name = `@name`,
+    			     			    #candidates = `ancestor::tstp/formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]`);
     choose {
-      when [@status = "axiom" and not(@name = ancestor::tstp/formula/source[@name = "inference"]/non-logical-data[@name = "skolemize"]/non-logical-data[position() = last()]/number[@name]/@name)] {
-        apply [.] mode="make-axiom";
+      when [@status = "axiom" and $skolemized-eventually = "1"] {
+        // ignore
+      }
+      when [@status = "axiom" and $skolemized-eventually = "0"] {
+        apply [.];
       }
       when [source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]] {
         apply [.] mode="make-axiom";
