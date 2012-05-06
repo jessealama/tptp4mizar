@@ -48,8 +48,8 @@ Readonly my $ERROR_COLOR => 'red';
 Readonly my $WARNING_COLOR => 'yellow';
 
 # Stylesheets
-Readonly my $COMPRESS_STYLESHEET => "$RealBin/../xsl/compress.xsl";
-Readonly my $PP_STYLESHEET => "$RealBin/../xsl/pp.xsl";
+Readonly my $COMPRESS_STYLESHEET => "$RealBin/../xsl/mizar/compress.xsl";
+Readonly my $PP_STYLESHEET => "$RealBin/../xsl/mizar/pp.xsl";
 
 sub is_readable_file {
     my $file = shift;
