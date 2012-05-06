@@ -34,6 +34,7 @@ use Utils qw(is_readable_file
 use TPTPProblem qw(is_valid_tptp_file);
 use EproverDerivation;
 use VampireDerivation;
+use IvyDerivation;
 use Xsltproc qw(apply_stylesheet);
 
 # Colors
@@ -66,6 +67,7 @@ Readonly my %STYLES => (
     'vampire' => 0,
     'eprover' => 0,
     'tstp' => 0,
+    'ivy' => 0,
 );
 
 sub summarize_styles {
@@ -240,6 +242,8 @@ if ($opt_style eq 'eprover') {
     $derivation = TSTPDerivation->new (path => $tptp_xml_in_db);
 } elsif ($opt_style eq 'tptp') {
     $derivation = TPTPProblem->new (path => $tptp_xml_in_db);
+} elsif ($opt_style eq 'ivy') {
+    $derivation = IvyDerivation->new (path => $tptp_xml_in_db);
 } else {
     print {*STDERR} error_message ('Unknown derivation style \'', $opt_style, '\'.');
     exit 1;
