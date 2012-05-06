@@ -248,9 +248,9 @@ sub cmp_line_col {
     my $line_col_a = shift;
     my $line_col_b = shift;
 
-    if ($line_col_a =~ /\A (\d+) [:] (\d+) \z/) {
+    if ($line_col_a =~ /\A (\d+) [:] (\d+) /) {
 	(my $line_a, my $col_a) = ($1, $2);
-	if ($line_col_b =~ /\A (\d+) [:] (\d+) \z/) {
+	if ($line_col_b =~ /\A (\d+) [:] (\d+) /) {
 	    (my $line_b, my $col_b) = ($1, $2);
 	    if ($line_a < $line_b) {
 		return -1;
@@ -318,17 +318,46 @@ sub recommend_compressions {
     my @recommendations = keys %recommendations;
     my @sorted_recommendations = sort { cmp_line_col ($a, $b) } @recommendations;
 
-    foreach my $rec (@sorted_recommendations) {
-	$recommendation .= ',' . $rec . ':' . $recommendations{$rec};
+    @sorted_recommendations
+	= map { $_ . ':' . $recommendations{$_}} @sorted_recommendations;
+
+    warn '@sorted_recommendations is', "\N{LF}", Dumper (@sorted_recommendations);
+
+    # Ensure that nothing intervenes within an inacc block
+    my %recommendations_to_keep = ();
+    foreach my $i (0 .. scalar @sorted_recommendations - 1) {
+	my $recommendation = $sorted_recommendations[$i];
+	if ($recommendation =~ / [:] 610 \z/) {
+	    if ($i < scalar @sorted_recommendations - 1) {
+		my $next_recommendation = $sorted_recommendations[$i + 1];
+		if ($next_recommendation =~ / [:] 611 \z/) {
+		    $recommendations_to_keep{$recommendation} = 0;
+		} else {
+		    if ($opt_debug) {
+			warn 'The 610 recommendation ', $recommendation, ' is not immediately followed by a closing 611 recommendation.  Ignoring it...';
+		    }
+		}
+	    }
+	} elsif ($recommendation =~ / [:] 611 \z/) {
+	    if ($i > 0) {
+		my $previous_recommendation = $sorted_recommendations[$i - 1];
+		if ($previous_recommendation =~ / [:] 610 \z/) {
+		    $recommendations_to_keep{$recommendation} = 0;
+		} else {
+		    if ($opt_debug) {
+			warn 'The 611 recommendation ', $recommendation, ' is not immediately preceded by an opening 610 recommendation.  Ignoring it...';
+		    }
+		}
+	    }
+	} else {
+	    $recommendations_to_keep{$recommendation} = 0;
+	}
     }
 
-    if ($recommendation eq $EMPTY_STRING) {
-	$recommendation = ',,';
-    } else {
-	$recommendation .= ',';
-    }
+    @sorted_recommendations
+	= sort { cmp_line_col ($a, $b) } keys %recommendations_to_keep;
 
-    return $recommendation;
+    return ',' . join (',', @sorted_recommendations) . ',';
 
 }
 
