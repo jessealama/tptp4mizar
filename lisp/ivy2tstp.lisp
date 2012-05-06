@@ -60,8 +60,14 @@
 
 (defgeneric render-formula (ivy-formula))
 
+(defun lowercase (str)
+  (format nil "~(~a~)" str))
+
 (defmethod render-formula ((ivy-formula symbol))
-  (format nil "~(~a~)" ivy-formula))
+  (let ((name (symbol-name ivy-formula)))
+    (if (string= (lowercase name) "false")
+	"$false"
+	(format nil "~(~a~)" ivy-formula))))
 
 (defmethod render-formula :around ((ivy-formula list))
   (if (null ivy-formula)
