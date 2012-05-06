@@ -434,22 +434,108 @@ foreach my $problem (@problems) {
 
 }
 
+# Shift the skolem functions
+my $prefix_skolem_stylesheet = "${EPROVER_STYLESHEET_HOME}/prefix-skolems.xsl";
+foreach my $problem (@problems) {
+    my $problem_name = $problem->exists ('@name') ? $problem->findvalue ('@name') : undef;
+    if (! defined $problem_name) {
+	die error_message ('We found a problem without a name.');
+    }
+
+    my $solution_path = "${repair_dir}/${problem_name}.p.proof.xml";
+
+    apply_stylesheet ($prefix_skolem_stylesheet,
+		      $solution_path,
+		      $solution_path,
+		  {
+		      'prefix' => $problem_name,
+		  });
+
+}
+
 # Repair the proofs
-my $repair_vampire_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/repair-vampire.xsl";
 my @solution_xmls = glob "${repair_dir}/*.p.proof.xml";
 
-my @solution_tokens = map { basename ($_, '.p.proof.xml') . ':' . File::Spec->rel2abs ($_) } @solution_xmls;
+my @step_solution_tokens = map { basename ($_, '.p.proof.xml') . ':' . File::Spec->rel2abs ($_) } @solution_xmls;
+my @solution_tokens = map { File::Spec->rel2abs ($_) } @solution_xmls;
+my @solution_names = map { basename ($_, '.p.proof.xml') } @solution_xmls;
 
+my $step_solution_token_string = ',' . join (',', @step_solution_tokens) . ',';
+my $solutions_token_string = ',' . join (',', @solution_names) . ',';
+
+# Generate the environment for the repaired article
 my $solution_token_string = ',' . join (',', @solution_tokens) . ',';
 
-warn 'solution token string is ', $solution_token_string;
+my $vampire_to_wsx_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/vampire2wsx.xsl";
+my $repair_vampire_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/repair-vampire.xsl";
+my $vampire_to_voc_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/vampire2voc.xsl";
+my $vampire_to_dco_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/vampire2dco.xsl";
+my $vampire_to_dno_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/vampire2dno.xsl";
+my $vampire_to_the_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/vampire2the.xsl";
+foreach my $problem (@problems) {
+    my $problem_name = $problem->findvalue ('@name');
+    my $solution_path = "${repair_dir}/${problem_name}.p.proof.xml";
+    my $solution_voc = "dict/${problem_name}.voc";
+    my $solution_dco = "prel/${problem_name}.dco";
+    my $solution_dno = "prel/${problem_name}.dno";
+    my $solution_the = "prel/${problem_name}.the";
+
+    apply_stylesheet ($vampire_to_voc_stylesheet,
+		      $solution_path,
+		      $solution_voc,
+		      {
+			  'only-skolems' => '1',
+		      }
+		  );
+
+    apply_stylesheet ($vampire_to_dco_stylesheet,
+		      $solution_path,
+		      $solution_dco,
+		      {
+			  'only-skolems' => '1',
+			  'article' => $problem_name,
+		      }
+		  );
+
+    apply_stylesheet ($vampire_to_dno_stylesheet,
+		      $solution_path,
+		      $solution_dno,
+		      {
+			  'only-skolems' => '1',
+			  'article' => $problem_name,
+		      }
+		  );
+
+    apply_stylesheet ($vampire_to_the_stylesheet,
+		      $solution_path,
+		      $solution_the,
+		      {
+			  'prel-directory' => File::Spec->rel2abs ('prel'),
+			  'article' => 'ARTICLE',
+		      }
+		  );
+
+}
+
+# Let's try the evl
+my $vampire_to_evl_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/vampire2evl.xsl";
+apply_stylesheet ($vampire_to_evl_stylesheet,
+		  'problem.xml',
+		  'text/repaired.evl',
+		  {
+		      'external-proofs' => $solutions_token_string,
+		      'article' => 'ARTICLE',
+		  });
 
 my $repaired_wsx = 'text/repaired.wsx';
 
 apply_stylesheet ($repair_vampire_stylesheet,
 		  'problem.xml',
 		  $repaired_wsx,
-		  { 'repairs' => $solution_token_string });
+		  {
+		      'repairs' => $step_solution_token_string,
+		      'article' => 'ARTICLE',
+		  });
 
 # Generate the .miz for the repaired .wsx
 my $repaired_miz = 'text/repaired.miz';
@@ -457,7 +543,7 @@ my $pp_stylesheet = "${MIZAR_STYLESHEET_HOME}/pp.xsl";
 apply_stylesheet ($pp_stylesheet,
 		  $repaired_wsx,
 		  $repaired_miz,
-		  { 'evl' => 'text/article.evl' });
+		  { 'evl' => File::Spec->rel2abs ('text/repaired.evl') });
 
 
 __END__

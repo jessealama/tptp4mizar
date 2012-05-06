@@ -85,40 +85,6 @@ tpl [tstp] {
   }
 }
 
-tpl [formula[@name]] {
-  $n = `@name`;
-  $pseudo-token = `concat (",", $n, ":")`;
-  if [contains ($repairs, $pseudo-token)] {
-    msg terminate="yes" "found you you fucker";
-    $after-pseudo-token = `substring-after ($repairs, $pseudo-token)`;
-    $proof-path = `substring-before ($after-pseudo-token, ",")`;
-    <Item {
-      @kind = "Regular-Statement";
-      @shape = "Compact-Statement";
-      <Proposition {
-        <Label {
-          @spelling = $n;
-        }
-        apply [*[1]];
-      }
-      <Block {
-        @kind = "Proof";
-        for-each [document ($proof-path, /)] {
-          if [tstp] {
-            apply [.] (#step = $n) mode="imported-eprover-proof";
-          } else {
-            $message = `concat ("Error: the XML document ", $proof-path, " is missing the needed tstp root element.")`;
-            apply [.] (#message = $message) mode="die";
-          }
-        }
-      }
-    }
-  } else {
-    msg terminate="yes" "No way jose";
-    apply [.] mode="copy";
-  }
-}
-
 tpl [*] (#step) mode="imported-eprover-proof" {
   msg terminate="yes" "Error: unhandled node in imported-eprover-proof mode.";
 }
@@ -134,7 +100,7 @@ tpl [formula[@name]] (#step) mode="imported-eprover-axiom" {
     @shape = "Compact-Statement";
     <Proposition {
       <Label {
-        @spelling = `@name`;
+        @spelling = `concat ($step, $n)`;
       }
       apply [*[1]] mode="strip-universal-prefix";
     }
@@ -162,7 +128,7 @@ tpl [non-logical-data[@name = "inference"]] (#step) mode="imported-eprover-lemma
 
       } else {
         <Local-Reference {
-          @spelling = `concat ($n, $step)`;
+          @spelling = `concat ($step, $n)`;
         }
       }
     }
@@ -170,24 +136,26 @@ tpl [non-logical-data[@name = "inference"]] (#step) mode="imported-eprover-lemma
 }
 
 tpl [source] (#step) mode="imported-eprover-lemma" {
+  $step-uc = uc (#s = $step);
   for-each [non-logical-data[@name = "inference"]] {
     apply [.] (#step = $step) mode="imported-eprover-lemma";
-    if [non-logical-data[@name = "skolemisation"]] {
+    if [non-logical-data[@name = "skolemize"]] {
       <Definition-Reference {
-        @spelling = "SKOLEM";
-        @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemisation"]]) + 1`;
+        @spelling = $step-uc;
+        @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]) + 1`;
       }
     }
   }
 }
 
 tpl [formula[@name]] (#step) mode="imported-eprover-lemma" {
+  $n = `@name`;
   <Item {
     @kind = "Regular-Statement";
     @shape = "Compact-Statement";
     <Proposition {
       <Label {
-        @spelling = `@name`;
+        @spelling = `concat ($step, $n)`;
       }
       apply [*[1]] mode="strip-universal-prefix";
     }
@@ -208,18 +176,15 @@ tpl [tstp] (#step) mode="imported-eprover-proof" {
     @shape = "Diffuse-Statement";
     <Block {
       @kind = "Now-Reasoning";
-      for-each [formula[not(@status = "axiom")]] {
+      for-each [formula[not(@status = "axiom") and not(@status = "conjecture") and source/non-logical-data[@name = "inference"]]] {
         choose {
-          when [@status = "negated_conjecture"] {
+          when [@status = "negated_conjecture" and not(preceding-sibling::formula[@status = "negated_conjecture"])] {
             <Item {
               @kind = "Assumption";
               <Single-Assumption {
                 apply [.] mode="no-justification";
               }
             }
-          }
-          when [source/non-logical-data[@name = "introduced"]/non-logical-data[@name = "backtracking_splitting_component"]] {
-            apply [.] mode="private-predicate-definition";
           }
           when [position() = last()] {
             apply [.] (#step = $step) mode="imported-eprover-conclusion";
@@ -478,6 +443,21 @@ tpl [formula[@name and not(@name = "")]] mode="conclusion" {
     <Straightforward-Justification {
       for-each [source] {
         apply [.];
+      }
+    }
+  }
+}
+
+tpl [formula[@name and not(@name = "")]] (#step) mode="imported-eprover-conclusion" {
+  <Item {
+    @kind = "Conclusion";
+    @shape = "Compact-Statement";
+    <Proposition {
+      apply [*[1]];
+    }
+    <Straightforward-Justification {
+      for-each [source] {
+        apply [.] (#step = $step) mode="imported-eprover-lemma";
       }
     }
   }
