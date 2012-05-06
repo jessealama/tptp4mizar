@@ -1,0 +1,46 @@
+stylesheet "1.0";
+output method="xml" indent="yes";
+
+//////////////////////////////////////////////////////////////////////
+// Stylesheet parameters
+//////////////////////////////////////////////////////////////////////
+
+#prefix = { ""; }
+
+// By default, copy
+tpl [*] {
+  $n = `name (.)`;
+  <$n {
+    for-each [@*] { copy-of `.`; }
+    apply [*];
+  }
+}
+
+tpl [*] mode="copy" {
+  $n = `name (.)`;
+  <$n {
+    for-each [@*] { copy-of `.`; }
+    apply [*] mode="copy";
+  }
+}
+
+tpl [/] {
+  if [tstp] {
+    apply [tstp];
+  } else {
+    msg terminate="yes" "Error: teh required tstp document element is missing.";
+  }
+}
+
+tpl [function] {
+  $n = `@name`;
+  if [starts-with ($n, "esk")] {
+    <function {
+      for-each [@*] { copy-of `.`; }
+      @"name" = `concat ($n, "_", $prefix)`;
+      apply [*];
+    }
+  } else {
+    apply [.] mode="copy";
+  }
+}
