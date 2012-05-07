@@ -345,6 +345,28 @@ tpl [formula[source/non-logical-data[@name = "introduced"]/non-logical-data[@nam
 }
 
 tpl [tstp] mode="flat" {
+  // reserve variables
+  for-each [formula[@name]] {
+    $n = `@name`;
+    $pseudo-token = `concat (",", $n, ":")`;
+    if [contains ($clausifications, $pseudo-token)
+          and contains ($herbrand-proofs, $pseudo-token)] {
+      $after-pseudo-token-clausifications
+        = `substring-after ($clausifications, $pseudo-token)`;
+      $clausification-proof-path
+        = `substring-before ($after-pseudo-token-clausifications, ",")`;
+      $after-pseudo-token-herbrand-proofs
+        = `substring-after ($herbrand-proofs, $pseudo-token)`;
+      $herbrand-proof-path
+        = `substring-before ($after-pseudo-token-herbrand-proofs, ",")`;
+      for-each [document ($clausification-proof-path, /)] {
+        reserve-variables ();
+      }
+      for-each [document ($herbrand-proof-path, /)] {
+        reserve-variables ();
+      }
+    }
+  }
   for-each [formula[@status = "axiom"]] {
     apply [.] mode="axiom";
   }
@@ -446,42 +468,32 @@ tpl [source] {
 tpl [formula[@name]] mode="lemma" {
   $n = `@name`;
   $pseudo-token = `concat (",", $n, ":")`;
-  <Item {
-    @kind = "Regular-Statement";
-    @shape = "Compact-Statement";
-    <Proposition {
-      <Label {
-        @spelling = `@name`;
-      }
-      apply [*[1]] mode="strip-universal-prefix";
-    }
-    if [contains ($clausifications, $pseudo-token)
+  if [contains ($clausifications, $pseudo-token)
         and contains ($herbrand-proofs, $pseudo-token)] {
-      $after-pseudo-token-clausifications
-        = `substring-after ($clausifications, $pseudo-token)`;
-      $clausification-proof-path
-        = `substring-before ($after-pseudo-token-clausifications, ",")`;
-      $after-pseudo-token-herbrand-proofs
-        = `substring-after ($herbrand-proofs, $pseudo-token)`;
-      $herbrand-proof-path
-        = `substring-before ($after-pseudo-token-herbrand-proofs, ",")`;
+    $after-pseudo-token-clausifications
+      = `substring-after ($clausifications, $pseudo-token)`;
+    $clausification-proof-path
+      = `substring-before ($after-pseudo-token-clausifications, ",")`;
+    $after-pseudo-token-herbrand-proofs
+      = `substring-after ($herbrand-proofs, $pseudo-token)`;
+    $herbrand-proof-path
+      = `substring-before ($after-pseudo-token-herbrand-proofs, ",")`;
+    <Item {
+      @kind = "Regular-Statement";
+      @shape = "Compact-Statement";
+      <Proposition {
+        <Label {
+          @spelling = `@name`;
+        }
+        apply [*[1]] mode="strip-universal-prefix";
+      }
       <Block {
         @kind = "Proof";
         for-each [document ($clausification-proof-path, /)] {
-          if [tstp] {
-            apply [.] (#step = $n) mode="imported-eprover-clausification";
-          } else {
-            $message = `concat ("Error: the XML document ", $proof-path, " is missing the needed tstp root element.")`;
-            apply [.] (#message = $message) mode="die";
-          }
+          apply [.] (#step = $n) mode="imported-eprover-clausification";
         }
         for-each [document ($herbrand-proof-path, /)] {
-          if [tstp] {
-            apply [.] (#step = $n) mode="imported-ivy-refutation";
-          } else {
-            $message = `concat ("Error: the XML document ", $proof-path, " is missing the needed tstp root element.")`;
-            apply [.] (#message = $message) mode="die";
-          }
+          apply [.] (#step = $n) mode="imported-ivy-refutation";
         }
         <Item {
           @kind = "Conclusion";
@@ -504,7 +516,17 @@ tpl [formula[@name]] mode="lemma" {
           }
         }
       }
-    } else {
+    }
+  } else {
+    <Item {
+      @kind = "Regular-Statement";
+      @shape = "Compact-Statement";
+      <Proposition {
+        <Label {
+          @spelling = `@name`;
+        }
+        apply [*[1]] mode="strip-universal-prefix";
+      }
       <Straightforward-Justification {
         for-each [source] {
           apply [.];
