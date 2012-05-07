@@ -39,6 +39,9 @@ Readonly my $MIZAR_STYLESHEET_HOME => "${STYLESHEET_HOME}/mizar";
 Readonly my $EPROVER_STYLESHEET_HOME => "${STYLESHEET_HOME}/eprover";
 Readonly my $VAMPIRE_STYLESHEET_HOME => "${STYLESHEET_HOME}/vampire";
 
+# Colors
+Readonly my $STYLE_COLOR => 'blue';
+
 # Derivation styles
 Readonly my %STYLES => (
     # 'tptp' => 0,
