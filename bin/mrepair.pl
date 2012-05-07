@@ -27,6 +27,7 @@ use Utils qw(is_readable_file
 	     run_mizar_tool);
 
 # Strings
+Readonly my $EMPTY_STRING => q{};
 Readonly my $LF => "\N{LF}";
 Readonly my $SP => q{ };
 
