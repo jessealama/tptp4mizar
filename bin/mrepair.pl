@@ -346,6 +346,7 @@ foreach my $problem (@problems) {
 			  'tstp' => '1',
 			  'skolem-prefix' => $problem_name,
 		      });
+    sort_tstp_solution ($clausification_subproof_xml);
     my $clausification_subproof = "${repair_dir}/${problem_name}-clausification.p";
     apply_stylesheet ($render_tptp_stylesheet,
 		      $clausification_subproof_xml,
