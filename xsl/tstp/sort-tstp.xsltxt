@@ -23,14 +23,22 @@ tpl [*] {
 
 tpl [/] {
   if [tstp] {
-    $ordering-ok = is-valid-token-string (#token-string = $ordering);
-    if [$ordering-ok = "1"] {
+    if [$ordering = ""] {
       <tstp {
         for-each [@*] { copy-of `.`; }
-        apply [tstp] (#token-string = $ordering);
+        apply [tstp] (#token-string = ",,");
       }
     } else {
-      msg terminate="yes" "Error: the given ordering is not a valid token string.";
+      $ordering-ok = is-valid-token-string (#string = $ordering);
+      if [$ordering-ok = "1"] {
+        <tstp {
+          for-each [@*] { copy-of `.`; }
+          apply [tstp] (#token-string = $ordering);
+        }
+      } else {
+        $message = `concat ("Error: the given ordering '", $ordering, "' is not a valid token string.")`;
+        msg terminate="yes" $message;
+      }
     }
   } else {
     msg terminate="yes" "Error: the required tstp document element is missing.";
