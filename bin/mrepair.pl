@@ -37,6 +37,23 @@ Readonly my $MIZAR_STYLESHEET_HOME => "${STYLESHEET_HOME}/mizar";
 Readonly my $EPROVER_STYLESHEET_HOME => "${STYLESHEET_HOME}/eprover";
 Readonly my $VAMPIRE_STYLESHEET_HOME => "${STYLESHEET_HOME}/vampire";
 
+# Derivation styles
+Readonly my %STYLES => (
+    # 'tptp' => 0,
+    'vampire' => 0,
+    # 'eprover' => 0,
+    # 'tstp' => 0,
+    # 'ivy' => 0,
+);
+
+sub summarize_styles {
+    my $summary = $EMPTY_STRING;
+    foreach my $style (sort keys %STYLES) {
+	$summary .= '  * ' . colored ($style, $STYLE_COLOR);
+    }
+    return $summary;
+}
+
 my $sort_tstp_stylesheet = "${TSTP_STYLESHEET_HOME}/sort-tstp.xsl";
 my $dependencies_stylesheet = "${TSTP_STYLESHEET_HOME}/tstp-dependencies.xsl";
 
@@ -82,6 +99,15 @@ sub process_commandline {
     if (scalar @ARGV != 1) {
 	pod2usage (
 	    -exitval => 2,
+	);
+    }
+
+    if (! defined $STYLES{$opt_style}) {
+	my $message = 'Unknown derivation style \'' . $opt_style . '\'.  The available  styles are:' . $LF . $LF;
+	$message .= message (summarize_styles ());
+	pod2usage (
+	    -message => error_message ($message),
+	    -exitval => 1,
 	);
     }
 
