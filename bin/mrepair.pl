@@ -294,7 +294,7 @@ foreach my $problem (@problems) {
 		      $eprover_solution_path,
 		      $skolemized_xml_problem,
 		      {
-
+			  'skolem-prefix' => $problem_name,
 		      });
 
     # Sanity check: there had better not be any existential
@@ -319,6 +319,7 @@ foreach my $problem (@problems) {
 		      {
 			  'only-skolemized-part' => '1',
 			  'tstp' => '1',
+			  'skolem-prefix' => $problem_name,
 		      });
     my $clausification_subproof = "${repair_dir}/${problem_name}-clausification.p";
     apply_stylesheet ($render_tptp_stylesheet,
@@ -400,10 +401,7 @@ foreach my $problem (@problems) {
 # Shift the skolem functions
 my $prefix_skolem_stylesheet = "${EPROVER_STYLESHEET_HOME}/prefix-skolems.xsl";
 foreach my $problem (@problems) {
-    my $problem_name = $problem->exists ('@name') ? $problem->findvalue ('@name') : undef;
-    if (! defined $problem_name) {
-	die error_message ('We found a problem without a name.');
-    }
+    my $problem_name = $problem->findvalue ('@name');
 
     my $eprover_solution_path = "${repair_dir}/${problem_name}.p.eprover-proof.xml";
 
@@ -427,7 +425,7 @@ my @solution_xmls = glob "${repair_dir}/*.p.proof.xml";
 
 my @step_solution_tokens = map { basename ($_, '.p.eprover-clausification.xml') . ':' . File::Spec->rel2abs ($_) } @solution_xmls;
 my @solution_tokens = map { File::Spec->rel2abs ($_) } @solution_xmls;
-my @solution_names = map { basename ($_, '.p.proof.xml') } @solution_xmls;
+my @solution_names = map { $_->findvalue ('@name') } @problems;
 
 my $step_solution_token_string = ',' . join (',', @step_solution_tokens) . ',';
 my $solutions_token_string = ',' . join (',', @solution_names) . ',';
@@ -487,6 +485,9 @@ foreach my $problem (@problems) {
 }
 
 # Let's try the evl
+my $repaired_wsx = 'text/repaired.wsx';
+my $clausifications_token_string = ',' . join (',', map { basename ($_, '-clausification.xml') . ':' . File::Spec->rel2abs ($_) } @eprover_clausification_xmls) . ',';
+my $herbrand_proofs_token_string = ',' . join (',', map { basename ($_, '-clausified.ivy-proof.xml') . ':' . File::Spec->rel2abs ($_) } @ivy_proof_xmls) . ',';
 my $vampire_to_evl_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/vampire2evl.xsl";
 apply_stylesheet ($vampire_to_evl_stylesheet,
 		  'problem.xml',
@@ -496,10 +497,6 @@ apply_stylesheet ($vampire_to_evl_stylesheet,
 		      'article' => 'ARTICLE',
 		  });
 
-my $repaired_wsx = 'text/repaired.wsx';
-
-my $clausifications_token_string = ',' . join (',', map { basename ($_, '-clausification.xml') . ':' . File::Spec->rel2abs ($_) } @eprover_clausification_xmls) . ',';
-my $herbrand_proofs_token_string = ',' . join (',', map { basename ($_, '-clausified.ivy-proof.xml') . ':' . File::Spec->rel2abs ($_) } @ivy_proof_xmls) . ',';
 
 warn 'clausifications:', $LF, $clausifications_token_string;
 warn 'herbrand-proofs:', $LF, $herbrand_proofs_token_string;
