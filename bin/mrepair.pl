@@ -258,6 +258,8 @@ foreach my $problem (@problems) {
 }
 
 # Solve each of the problems with E
+my $skolemized_problem_stylesheet = "${EPROVER_STYLESHEET_HOME}/skolemized-problem.xsl";
+my $existential_stylesheet = "${TPTP_STYLESHEET_HOME}/existential.xsl";
 foreach my $problem (@problems) {
     my $problem_name = $problem->exists ('@name') ? $problem->findvalue ('@name') : undef;
     if (! defined $problem_name) {
@@ -265,11 +267,12 @@ foreach my $problem (@problems) {
     }
 
     my $problem_path = "${repair_dir}/${problem_name}.p";
-    my $solution_path = "${repair_dir}/${problem_name}.p.proof.xml";
 
     if (! is_readable_file ($problem_path)) {
 	die error_message ('We failed to generate a plain text TPTP representation for', $SP, $problem_name);
     }
+
+    my $eprover_solution_path = "${repair_dir}/${problem_name}.p.eprover-proof.xml";
 
     my @eprove_call = ('eprove', $problem_path);
     my @epclextract_call = ('epclextract', '--tstp-out');
@@ -280,10 +283,81 @@ foreach my $problem (@problems) {
 				   \@epclextract_call,
 				   '|',
 				   \@tptp4X_call,
-				   '>', $solution_path);
+				   '>', $eprover_solution_path);
 
     $eprover_harness->start ();
     $eprover_harness->finish ();
+
+    # Now extract a clausified problem that we will later give to prover9
+    my $skolemized_xml_problem = "${repair_dir}/${problem_name}-clausified.p.xml";
+    apply_stylesheet ($skolemized_problem_stylesheet,
+		      $eprover_solution_path,
+		      $skolemized_xml_problem,
+		      {
+
+		      });
+
+    # Sanity check: there had better not be any existential
+    # quantifiers in the TPTP problem we just created
+    my $exists_existential = eval { apply_stylesheet ($existential_stylesheet,
+						      $skolemized_xml_problem) };
+    if (! defined $exists_existential) {
+	die error_message ('There is at least one existential quantifier appearing in ', $skolemized_xml_problem, ', but to proceed there cannot be any.');
+    }
+
+    my $skolemized_problem = "${repair_dir}/${problem_name}-clausified.p";
+    apply_stylesheet ($render_tptp_stylesheet,
+		      $skolemized_xml_problem,
+		      $skolemized_problem);
+
+    # Now extract the initial part of E's proof consisting just of the
+    # clausification part
+    my $clausification_subproof_xml = "${repair_dir}/${problem_name}-clausification.xml";
+    apply_stylesheet ($skolemized_problem_stylesheet,
+		      $eprover_solution_path,
+		      $clausification_subproof_xml,
+		      {
+			  'only-skolemized-part' => '1',
+			  'tstp' => '1',
+		      });
+    my $clausification_subproof = "${repair_dir}/${problem_name}-clausification.p";
+    apply_stylesheet ($render_tptp_stylesheet,
+		      $clausification_subproof_xml,
+		      $clausification_subproof);
+
+}
+
+# Now solve each of the problems with Prover9, and get an Ivy proof object
+my $ivy_to_tstp_script = "$RealBin/ivy2tstp.pl";
+foreach my $problem (@problems) {
+    my $problem_name = $problem->findvalue ('@name');
+    my $skolemized_problem_path = "${repair_dir}/${problem_name}-clausified.p";
+    my $ivy_solution_path = "${repair_dir}/${problem_name}-clausified.ivy-proof.xml";
+    my $ivy_errs = $EMPTY_STRING;
+
+    my @tptp2X_call = ('tptp2X', '-tstdfof', '-fprover9', '-q2', '-d-', $skolemized_problem_path);
+    my @prover9_call = ('prover9');
+    my @prooftrans_expand_call = ('prooftrans', 'expand', 'renumber');
+    my @prooftrans_ivy_call = ('prooftrans', 'ivy');
+    my @ivy_to_tstp_call = ($ivy_to_tstp_script);
+    my @tptp4X_call = ('tptp4X', '-tfofify', '-fxml', '--');
+
+    my $prover9_harness = harness (\@tptp2X_call,
+				   '|',
+				   \@prover9_call,
+				   '|',
+				   \@prooftrans_expand_call,
+				   '|',
+				   \@prooftrans_ivy_call,
+				   '|',
+				   \@ivy_to_tstp_call,
+				   '|',
+				   \@tptp4X_call,
+				   '>', $ivy_solution_path,
+				   '2>', \$ivy_errs);
+
+    $prover9_harness->start ();
+    $prover9_harness->finish ();
 
 }
 
@@ -296,15 +370,11 @@ foreach my $problem (@problems) {
 	die error_message ('We found a problem without a name.');
     }
 
-    my $solution_path = "${repair_dir}/${problem_name}.p.proof.xml";
-
-    if (! is_readable_file ($solution_path)) {
-	die error_message ('We failed to generate a plain text TPTP representation for', $SP, $problem_name);
-    }
+    my $eprover_solution_path = "${repair_dir}/${problem_name}.p.eprover-proof.xml";
 
     # Sort
     my $dependencies_str = undef;
-    my @xsltproc_deps_call = ('xsltproc', $dependencies_stylesheet, $solution_path);
+    my @xsltproc_deps_call = ('xsltproc', $dependencies_stylesheet, $eprover_solution_path);
     my @tsort_call = ('tsort');
     my $sort_harness = harness (\@xsltproc_deps_call,
 				'|',
@@ -317,13 +387,13 @@ foreach my $problem (@problems) {
     my $dependencies_token_string = ',' . join (',', @dependencies) . ',';
 
     apply_stylesheet ($sort_tstp_stylesheet,
-		      $solution_path,
-		      $solution_path,
+		      $eprover_solution_path,
+		      $eprover_solution_path,
 		      { 'ordering' => $dependencies_token_string });
 
     apply_stylesheet ($eprover_normalize_step_names_stylesheet,
-		      $solution_path,
-		      $solution_path);
+		      $eprover_solution_path,
+		      $eprover_solution_path);
 
 }
 
@@ -335,11 +405,11 @@ foreach my $problem (@problems) {
 	die error_message ('We found a problem without a name.');
     }
 
-    my $solution_path = "${repair_dir}/${problem_name}.p.proof.xml";
+    my $eprover_solution_path = "${repair_dir}/${problem_name}.p.eprover-proof.xml";
 
     apply_stylesheet ($prefix_skolem_stylesheet,
-		      $solution_path,
-		      $solution_path,
+		      $eprover_solution_path,
+		      $eprover_solution_path,
 		  {
 		      'prefix' => $problem_name,
 		  });
@@ -347,9 +417,15 @@ foreach my $problem (@problems) {
 }
 
 # Repair the proofs
+my @eprover_clausification_xmls = glob "${repair_dir}/*-clausification.xml";
+my @ivy_proof_xmls = glob "${repair_dir}/*-clausified.ivy-proof.xml";
+
+warn 'eprover clausification xmls:', $LF, Dumper (@eprover_clausification_xmls);
+warn 'ivy proof xmls:', $LF, Dumper (@ivy_proof_xmls);
+
 my @solution_xmls = glob "${repair_dir}/*.p.proof.xml";
 
-my @step_solution_tokens = map { basename ($_, '.p.proof.xml') . ':' . File::Spec->rel2abs ($_) } @solution_xmls;
+my @step_solution_tokens = map { basename ($_, '.p.eprover-clausification.xml') . ':' . File::Spec->rel2abs ($_) } @solution_xmls;
 my @solution_tokens = map { File::Spec->rel2abs ($_) } @solution_xmls;
 my @solution_names = map { basename ($_, '.p.proof.xml') } @solution_xmls;
 
@@ -367,7 +443,7 @@ my $vampire_to_dno_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/vampire2dno.xsl";
 my $vampire_to_the_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/vampire2the.xsl";
 foreach my $problem (@problems) {
     my $problem_name = $problem->findvalue ('@name');
-    my $solution_path = "${repair_dir}/${problem_name}.p.proof.xml";
+    my $solution_path = "${repair_dir}/${problem_name}.p.eprover-proof.xml";
     my $solution_voc = "dict/${problem_name}.voc";
     my $solution_dco = "prel/${problem_name}.dco";
     my $solution_dno = "prel/${problem_name}.dno";
@@ -422,11 +498,18 @@ apply_stylesheet ($vampire_to_evl_stylesheet,
 
 my $repaired_wsx = 'text/repaired.wsx';
 
+my $clausifications_token_string = ',' . join (',', map { basename ($_, '-clausification.xml') . ':' . File::Spec->rel2abs ($_) } @eprover_clausification_xmls) . ',';
+my $herbrand_proofs_token_string = ',' . join (',', map { basename ($_, '-clausified.ivy-proof.xml') . ':' . File::Spec->rel2abs ($_) } @ivy_proof_xmls) . ',';
+
+warn 'clausifications:', $LF, $clausifications_token_string;
+warn 'herbrand-proofs:', $LF, $herbrand_proofs_token_string;
+
 apply_stylesheet ($repair_vampire_stylesheet,
 		  'problem.xml',
 		  $repaired_wsx,
 		  {
-		      'repairs' => $step_solution_token_string,
+		      'clausifications' => $clausifications_token_string,
+		      'herbrand-proofs' => $herbrand_proofs_token_string,
 		      'article' => 'ARTICLE',
 		  });
 
