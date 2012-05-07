@@ -196,6 +196,7 @@ if ($tptp4X_exit_code != 0) {
 my $sort_tstp_stylesheet = "${TSTP_STYLESHEET_HOME}/sort-tstp.xsl";
 my $dependencies_stylesheet = "${TSTP_STYLESHEET_HOME}/tstp-dependencies.xsl";
 
+my $sorted_tptp_xml_in_db = "${db}/problem.xml.sorted";
 if ($opt_style ne 'tptp') {
 
     # Sort
@@ -212,7 +213,6 @@ if ($opt_style ne 'tptp') {
     my @dependencies = split ($LF, $dependencies_str);
     my $dependencies_token_string = ',' . join (',', @dependencies) . ',';
 
-    my $sorted_tptp_xml_in_db = "${db}/problem.xml.sorted";
     my $xsltproc_sort_status = system ("xsltproc --stringparam ordering '${dependencies_token_string}' ${sort_tstp_stylesheet} ${tptp_xml_in_db} > ${sorted_tptp_xml_in_db}");
     my $xsltproc_sort_exit_code = $xsltproc_sort_status >> 8;
     if ($xsltproc_sort_exit_code != 0) {
