@@ -119,7 +119,7 @@ tpl [formula[@name]] (#step) mode="imported-eprover-axiom" {
     }
     <Straightforward-Justification {
       <Local-Reference {
-        @spelling = $step;
+        @spelling = `concat ($step, $n)`;
       }
     }
   }
@@ -180,42 +180,89 @@ tpl [formula[@name]] (#step) mode="imported-eprover-lemma" {
   }
 }
 
-tpl [tstp] (#step) mode="imported-eprover-proof" {
-  for-each [formula[@status = "axiom"]] {
-    apply [.] (#step = $step) mode="imported-eprover-axiom";
+tpl [tstp] (#step) mode="imported-eprover-clausification" {
+  for-each [formula[not(@status = "conjecture")]] {
+    apply [.] (#step = $step) mode="imported-eprover-lemma";
   }
+}
+
+tpl [tstp] (#step) mode="imported-ivy-refutation" {
+  $aid-uc = uc (#s = $article);
   <Item {
     @kind = "Regular-Statement";
     @shape = "Diffuse-Statement";
     <Block {
       @kind = "Now-Reasoning";
-      for-each [formula[not(@status = "axiom") and not(@status = "conjecture") and source/non-logical-data[@name = "inference"]]] {
-        choose {
-          when [@status = "negated_conjecture" and not(preceding-sibling::formula[@status = "negated_conjecture"])] {
-            <Item {
-              @kind = "Assumption";
-              <Single-Assumption {
-                apply [.] mode="no-justification";
-              }
-            }
-          }
-          when [position() = last()] {
-            apply [.] (#step = $step) mode="imported-eprover-conclusion";
-          }
-          otherwise {
-            apply [.] (#step = $step) mode="imported-eprover-lemma";
+      for-each [formula[source/non-logical-data[@name = "input"]]] {
+        apply [.] (#step = $step) mode="ivy-assumption";
+      }
+      for-each [formula[position() < last() and not(source/non-logical-data[@name = "input"])]] {
+        apply [.] (#step = $step) mode="ivy-lemma";
+      }
+      for-each [formula[position() = last()]] {
+        apply [.] (#step = $step) mode="ivy-conclusion";
+      }
+    }
+  }
+}
+
+tpl [formula[@name]] (#step) mode="ivy-assumption" {
+  $n = `@name`;
+  <Item {
+    @kind = "Assumption";
+    <Single-Assumption {
+      <Proposition {
+        <Label {
+          @spelling = `concat ($step, $n)`;
+        }
+        apply [*[1]] mode="strip-universal-prefix";
+      }
+    }
+  }
+}
+
+tpl [source] (#step) mode="ivy-source"{
+  <Straightforward-Justification {
+    for-each [non-logical-data] {
+      for-each [non-logical-data[position() = last()]] {
+        for-each [non-logical-data[@name] | number[@name]] {
+          $n = `@name`;
+          <Local-Reference {
+            @spelling = `concat ($step, $n)`;
           }
         }
       }
     }
   }
+}
+
+tpl [formula[@name]] (#step) mode="ivy-lemma" {
+  $n = `@name`;
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Compact-Statement";
+    <Proposition {
+      <Label {
+        @spelling = `concat ($step, $n)`;
+      }
+      apply [*[1]] mode="strip-universal-prefix";
+    }
+    apply [source] (#step = $step) mode="ivy-source";
+  }
+}
+
+tpl [formula[@name]] (#step) mode="ivy-conclusion" {
+  $n = `@name`;
   <Item {
     @kind = "Conclusion";
     @shape = "Compact-Statement";
-    <Thesis;
-    <Straightforward-Justification {
-      <Link;
+    <Proposition {
+      <Label {
+        @spelling = `concat ($step, $n)`;
+      }
+      apply [*[1]] mode="strip-universal-prefix";
     }
+    apply [source] (#step = $step) mode="ivy-source";
   }
 }
 
@@ -434,6 +481,26 @@ tpl [formula[@name]] mode="lemma" {
           } else {
             $message = `concat ("Error: the XML document ", $proof-path, " is missing the needed tstp root element.")`;
             apply [.] (#message = $message) mode="die";
+          }
+        }
+        <Item {
+          @kind = "Conclusion";
+          @shape = "Compact-Statement";
+          <Proposition {
+            <Thesis;
+          }
+          <Straightforward-Justification {
+            <Link;
+            for-each [document ($clausification-proof-path, /)] {
+              for-each [tstp] {
+                for-each [formula[@name and not(@name = "conjecture")]] {
+                  $local-name = `@name`;
+                  <Local-Reference {
+                    @spelling = `concat ($n, $local-name)`;
+                  }
+                }
+              }
+            }
           }
         }
       }
