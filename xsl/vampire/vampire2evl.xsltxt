@@ -44,7 +44,8 @@ tpl [/] {
         if [$valid-proofs = "1"] {
           apply [tstp] (#proofs = $external-proofs);
         } else {
-          msg terminate="yes" "Error: the value supplied for the external-proofs stylesheet parameter is not a valid token string.";
+          $message = `concat ("Error: the value '", $external-proofs, "' supplied for the external-proofs stylesheet parameter is not a valid token string.")`;
+          msg terminate="yes" $message;
         }
       }
     }
