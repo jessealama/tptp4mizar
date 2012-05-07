@@ -208,6 +208,7 @@ my $num_problems = $problems_root->findvalue ('count (*)');
 
 my @problems = $problems_root->findnodes ('*');
 
+my $render_tptp_stylesheet = "${TPTP_STYLESHEET_HOME}/render-tptp.xsl";
 foreach my $problem (@problems) {
     my $problem_name = $problem->exists ('@name') ? $problem->findvalue ('@name') : undef;
     if (! defined $problem_name) {
@@ -227,7 +228,6 @@ foreach my $problem (@problems) {
 }
 
 # Render the problems as plain text TPTP files
-my $render_tptp_stylesheet = "${TPTP_STYLESHEET_HOME}/render-tptp.xsl";
 foreach my $problem (@problems) {
     my $problem_name = $problem->exists ('@name') ? $problem->findvalue ('@name') : undef;
     if (! defined $problem_name) {
