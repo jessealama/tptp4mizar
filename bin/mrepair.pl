@@ -430,17 +430,9 @@ my @ivy_proof_xmls = glob "${repair_dir}/*-clausified.ivy-proof.xml";
 warn 'eprover clausification xmls:', $LF, Dumper (@eprover_clausification_xmls);
 warn 'ivy proof xmls:', $LF, Dumper (@ivy_proof_xmls);
 
-my @solution_xmls = glob "${repair_dir}/*.p.proof.xml";
-
-my @step_solution_tokens = map { basename ($_, '.p.eprover-clausification.xml') . ':' . File::Spec->rel2abs ($_) } @solution_xmls;
-my @solution_tokens = map { File::Spec->rel2abs ($_) } @solution_xmls;
 my @solution_names = map { $_->findvalue ('@name') } @problems;
 
-my $step_solution_token_string = ',' . join (',', @step_solution_tokens) . ',';
 my $solutions_token_string = ',' . join (',', @solution_names) . ',';
-
-# Generate the environment for the repaired article
-my $solution_token_string = ',' . join (',', @solution_tokens) . ',';
 
 my $vampire_to_wsx_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/vampire2wsx.xsl";
 my $repair_vampire_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/repair-vampire.xsl";
