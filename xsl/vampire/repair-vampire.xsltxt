@@ -7,13 +7,18 @@ output method="xml" indent="yes";
 // Stylesheet parameters
 //////////////////////////////////////////////////////////////////////
 
-// A token list whose token are comma-separated
+// Two token lists whose tokens are comma-separated
 //
-//   <step-name>:<path of XMLized E prover solution>
+//   <step-name>:<path of XMLized solution>
 //
 // The intention the step <step-name> will be proved using the
 // contents contained in the document with the indicated path.
-#repairs = { ""; }
+
+// The clausifications (from E)
+#clausifications = { ""; }
+
+// The proofs of the clausified problems (from Prover9/Ivy)
+#herbrand-proofs = { ""; }
 
 //////////////////////////////////////////////////////////////////////
 // Templates
@@ -45,19 +50,23 @@ tpl every-repair-proof-exists (#repairs) {
 
 tpl [/] {
   if [tstp] {
-    if [$repairs = ""] {
+    if [$clausifications = "" and $herbrand-proofs = "1"] {
       apply [tstp] mode="copy";
     } else {
-      $valid-token-string = is-valid-token-string (#string = $repairs);
-      if [$valid-token-string = "1"] {
-        $every-repair-proof-exists = every-repair-proof-exists (#repairs = $repairs);
-        if [$every-repair-proof-exists = "1"] {
+      $clausifications-valid = is-valid-token-string (#string = $clausifications);
+      $herbrand-proofs-valid = is-valid-token-string (#string = $herbrand-proofs);
+      if [$clausifications-valid = "1" and $herbrand-proofs-valid = "1"] {
+        $every-clausification-exists
+          = every-repair-proof-exists (#repairs = $clausifications);
+        $every-herbrand-proof-exists
+          = every-repair-proof-exists (#repairs = $herbrand-proofs);
+        if [$every-clausification-exists = "1" and $every-herbrand-proof-exists = "1"] {
           apply [tstp];
         } else {
           msg terminate="yes" "Error: at least one of the given repair proof documents does not exist (or could not be loaded)";
         }
       } else {
-        msg terminate="yes" "Error: the string given as the value of the repairs stylesheet parameter is not a valid token string.";
+        msg terminate="yes" "Error: the string given as the value of the clausifications or herbrand-proofs stylesheet parameter is not a valid token string.";
       }
     }
 
@@ -85,8 +94,12 @@ tpl [tstp] {
   }
 }
 
-tpl [*] (#step) mode="imported-eprover-proof" {
-  msg terminate="yes" "Error: unhandled node in imported-eprover-proof mode.";
+tpl [*] (#step) mode="imported-eprover-clausification" {
+  msg terminate="yes" "Error: unhandled node in imported-eprover-clausification mode.";
+}
+
+tpl [*] (#step) mode="imported-ivy-refutation" {
+  msg terminate="yes" "Error: unhandled node in imported-ivy-refutation mode.";
 }
 
 tpl [*] (#step) mode="imported-eprover-axiom" {
@@ -395,14 +408,29 @@ tpl [formula[@name]] mode="lemma" {
       }
       apply [*[1]] mode="strip-universal-prefix";
     }
-    if [contains ($repairs, $pseudo-token)] {
-      $after-pseudo-token = `substring-after ($repairs, $pseudo-token)`;
-      $proof-path = `substring-before ($after-pseudo-token, ",")`;
+    if [contains ($clausifications, $pseudo-token)
+        and contains ($herbrand-proofs, $pseudo-token)] {
+      $after-pseudo-token-clausifications
+        = `substring-after ($clausifications, $pseudo-token)`;
+      $clausification-proof-path
+        = `substring-before ($after-pseudo-token-clausifications, ",")`;
+      $after-pseudo-token-herbrand-proofs
+        = `substring-after ($herbrand-proofs, $pseudo-token)`;
+      $herbrand-proof-path
+        = `substring-before ($after-pseudo-token-herbrand-proofs, ",")`;
       <Block {
         @kind = "Proof";
-        for-each [document ($proof-path, /)] {
+        for-each [document ($clausification-proof-path, /)] {
           if [tstp] {
-            apply [.] (#step = $n) mode="imported-eprover-proof";
+            apply [.] (#step = $n) mode="imported-eprover-clausification";
+          } else {
+            $message = `concat ("Error: the XML document ", $proof-path, " is missing the needed tstp root element.")`;
+            apply [.] (#message = $message) mode="die";
+          }
+        }
+        for-each [document ($herbrand-proof-path, /)] {
+          if [tstp] {
+            apply [.] (#step = $n) mode="imported-ivy-refutation";
           } else {
             $message = `concat ("Error: the XML document ", $proof-path, " is missing the needed tstp root element.")`;
             apply [.] (#message = $message) mode="die";
