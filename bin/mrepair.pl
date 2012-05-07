@@ -62,6 +62,31 @@ sub summarize_styles {
 my $sort_tstp_stylesheet = "${TSTP_STYLESHEET_HOME}/sort-tstp.xsl";
 my $dependencies_stylesheet = "${TSTP_STYLESHEET_HOME}/tstp-dependencies.xsl";
 
+sub sort_tstp_solution {
+    my $solution = shift;
+
+    # Sort
+    my $dependencies_str = undef;
+    my @xsltproc_deps_call = ('xsltproc', $dependencies_stylesheet, $solution);
+    my @tsort_call = ('tsort');
+    my $sort_harness = harness (\@xsltproc_deps_call,
+				'|',
+				\@tsort_call,
+				'>', \$dependencies_str);
+    $sort_harness->start ();
+    $sort_harness->finish ();
+
+    my @dependencies = split ($LF, $dependencies_str);
+    my $dependencies_token_string = ',' . join (',', @dependencies) . ',';
+
+    apply_stylesheet ($sort_tstp_stylesheet,
+		      $solution,
+		      $solution,
+		      { 'ordering' => $dependencies_token_string });
+}
+
+
+
 my $opt_help = 0;
 my $opt_man = 0;
 my $opt_debug = 0;
@@ -374,23 +399,7 @@ foreach my $problem (@problems) {
     my $eprover_solution_path = "${repair_dir}/${problem_name}.p.eprover-proof.xml";
 
     # Sort
-    my $dependencies_str = undef;
-    my @xsltproc_deps_call = ('xsltproc', $dependencies_stylesheet, $eprover_solution_path);
-    my @tsort_call = ('tsort');
-    my $sort_harness = harness (\@xsltproc_deps_call,
-				'|',
-				\@tsort_call,
-				'>', \$dependencies_str);
-    $sort_harness->start ();
-    $sort_harness->finish ();
-
-    my @dependencies = split ($LF, $dependencies_str);
-    my $dependencies_token_string = ',' . join (',', @dependencies) . ',';
-
-    apply_stylesheet ($sort_tstp_stylesheet,
-		      $eprover_solution_path,
-		      $eprover_solution_path,
-		      { 'ordering' => $dependencies_token_string });
+    sort_tstp_solution ($eprover_solution_path);
 
     apply_stylesheet ($eprover_normalize_step_names_stylesheet,
 		      $eprover_solution_path,
