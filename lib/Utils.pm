@@ -7,6 +7,7 @@ use Carp qw(carp confess croak);
 use Regexp::DefaultFlags;
 use Term::ANSIColor qw(colored);
 use Readonly;
+use Data::Dumper;
 use charnames qw(:full);
 use IPC::Run qw(harness);
 use IPC::Cmd qw(can_run);
