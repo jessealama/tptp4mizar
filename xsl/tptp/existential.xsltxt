@@ -1,0 +1,20 @@
+stylesheet "1.0";
+output method="text";
+
+// Does the TPTP problem have an existential quantifier, anywhere?
+
+tpl [*] {
+  apply [*];
+}
+
+tpl [/] {
+  if [tstp] {
+    apply [tstp];
+  } else {
+    msg terminate="yes" "Error: the required tstp document element is missing.";
+  }
+}
+
+tpl [quantifier[@type = "existential"]] {
+  msg terminate="yes" "";
+}
