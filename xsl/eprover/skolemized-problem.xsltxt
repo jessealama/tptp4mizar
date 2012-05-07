@@ -25,6 +25,9 @@ output method="xml" indent="yes";
 // useful-info parts)
 #tstp = { "0"; }
 
+// Prefix to put in front of skolem functions
+#skolem-prefix = { ""; }
+
 //////////////////////////////////////////////////////////////////////
 // Keys
 //////////////////////////////////////////////////////////////////////
@@ -200,9 +203,7 @@ tpl [function] {
   $n = `@name`;
   if [starts-with ($n, "esk")] {
     <function {
-      $after-esk-prefix = `substring-after ($n, "esk")`;
-      $skolem-number = `substring-before ($after-esk-prefix, "_")`;
-      @"name" = `concat ("skolem", $skolem-number)`;
+      @"name" = `concat ($n, "_", $skolem-prefix)`;
       apply [*];
     }
   } else {
