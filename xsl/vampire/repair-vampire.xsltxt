@@ -235,7 +235,7 @@ tpl [tstp[formula[@status = "conjecture"]]] (#step, #herbrand-proof) mode="impor
               <Straightforward-Justification {
                 <Link;
                 for-each [ancestor::tstp] {
-                  for-each [formula[@name and not(@name = "conjecture")]] {
+                  for-each [formula[@name and not(@status = "conjecture") and not(source/non-logical-data[@name = "inference"]/non-logical-data[@name = "assume_negation"])]] {
                     $local-name = `@name`;
                     <Local-Reference {
                       @spelling = `concat ($step, $local-name)`;
@@ -567,6 +567,27 @@ tpl [formula[@name]] (#linked) mode="lemma" {
         for-each [document ($clausification-proof-path, /)] {
           apply [.] (#step = $n,
 	  	     #herbrand-proof = $herbrand-proof-path) mode="imported-eprover-clausification";
+        }
+        <Item {
+          @kind = "Conclusion";
+          @shape = "Compact-Statement";
+          <Proposition {
+            <Thesis;
+          }
+          <Straightforward-Justification {
+            <Link;
+            for-each [document ($clausification-proof-path, /)] {
+              if [not(tstp/formula[@status = "conjecture"])] {
+	        msg terminate="yes" "no conjecture";
+              }
+              for-each [tstp/formula[@status = "conjecture"]] {
+                $local-name = `@name`;
+                <Local-Reference {
+                  @spelling = `concat ($n, $local-name)`;
+                }
+              }
+            }
+          }
         }
       }
     }
