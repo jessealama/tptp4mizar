@@ -178,25 +178,13 @@ tpl skolemized-eventually (#formula-name, #candidates) {
 
 tpl [tstp] {
   if [$only-skolemized-part = "1"] {
-    for-each [formula] {
-      $skolemized-eventually = skolemized-eventually (#formula-name = `@name`,
-      			     			    #candidates = `ancestor::tstp/formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]`);
-      choose {
-        when [$skolemized-eventually = "1"] {
-          apply [.];
-        }
-        when [source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]] {
-          apply [.];
-        }
-        otherwise {
-          // ignore
-        }
-      }
-    }
-  } else {
     for-each [formula[@syntax = "formula"]] {
       apply [.];
     }
+    for-each [formula[@syntax = "clause" and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]] {
+      apply [.];
+    }
+  } else {
     for-each [formula[@syntax = "clause" and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]] {
       apply [.];
     }
