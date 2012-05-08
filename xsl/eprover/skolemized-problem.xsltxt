@@ -181,11 +181,23 @@ tpl [tstp] {
     for-each [formula[@syntax = "formula"]] {
       apply [.];
     }
-    for-each [formula[@syntax = "clause" and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]] {
+    for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]] {
+      apply [.];
+    }
+    for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] {
       apply [.];
     }
   } else {
-    for-each [formula[@syntax = "clause" and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]] {
+    for-each [formula[@syntax = "formula" and @status = "axiom"]] {
+      apply [.];
+    }
+    for-each [formula[@syntax = "formula" and @status = "plain"]] {
+      apply [.];
+    }
+    for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]] {
+      apply [.];
+    }
+    for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] {
       apply [.];
     }
   }
