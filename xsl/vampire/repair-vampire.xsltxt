@@ -106,25 +106,6 @@ tpl [*] (#step) mode="imported-eprover-axiom" {
   msg terminate="yes" "Error: unhandled node in imported-eprover-axiom mode.";
 }
 
-tpl [formula[@name]] (#step) mode="imported-eprover-axiom" {
-  $n = `@name`;
-  <Item {
-    @kind = "Regular-Statement";
-    @shape = "Compact-Statement";
-    <Proposition {
-      <Label {
-        @spelling = `concat ($step, $n)`;
-      }
-      apply [*[1]] mode="strip-universal-prefix";
-    }
-    <Straightforward-Justification {
-      <Local-Reference {
-        @spelling = `concat ($step, $n)`;
-      }
-    }
-  }
-}
-
 tpl [*] (#step) mode="imported-eprover-conclusion" {
   msg terminate="yes" "Error: unhandled node in imported-eprover-conclusion mode.";
 }
@@ -157,6 +138,20 @@ tpl [source] (#step) mode="imported-eprover-lemma" {
   }
 }
 
+tpl [source[not(non-logical-data[@name = "file"])]] (#step) mode="imported-eprover-axiom" {
+  apply [.] (#message = "Error: we don't know how to import an E axiom if there is no source for it.") mode="die";
+}
+
+tpl [source[non-logical-data[@name = "file"]]] (#step) mode="imported-eprover-axiom" {
+  for-each [non-logical-data[@name = "file"]] {
+    for-each [non-logical-data[position() = last()]] {
+      <Local-Reference {
+        @spelling = `@name`;
+      }
+    }
+  }
+}
+
 tpl [formula[@name]] (#step) mode="imported-eprover-lemma" {
   $n = `@name`;
   <Item {
@@ -171,6 +166,25 @@ tpl [formula[@name]] (#step) mode="imported-eprover-lemma" {
     <Straightforward-Justification {
       for-each [source] {
         apply [.] (#step = $step) mode="imported-eprover-lemma";
+      }
+    }
+  }
+}
+
+tpl [formula[@name]] (#step) mode="imported-eprover-axiom" {
+  $n = `@name`;
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Compact-Statement";
+    <Proposition {
+      <Label {
+        @spelling = `concat ($step, $n)`;
+      }
+      apply [*[1]] mode="strip-universal-prefix";
+    }
+    <Straightforward-Justification {
+      for-each [source] {
+        apply [.] (#step = $step) mode="imported-eprover-axiom";
       }
     }
   }
@@ -196,9 +210,6 @@ tpl [tstp[not(formula[@status = "conjecture"])]] (#step, #herbrand-proof) mode="
 }
 
 tpl [tstp[formula[@status = "conjecture"]]] (#step, #herbrand-proof) mode="imported-eprover-clausification" {
-  for-each [formula[not(@status = "conjecture") and not(@status = "negated_conjecture")]] {
-    apply [.] (#step = $step) mode="imported-eprover-lemma";
-  }
   for-each [formula[@status = "conjecture"]] {
     $n = `@name`;
     <Item {
@@ -212,6 +223,16 @@ tpl [tstp[formula[@status = "conjecture"]]] (#step, #herbrand-proof) mode="impor
       }
       <Block {
         @kind = "Proof";
+        for-each [parent::tstp] {
+          for-each [formula[not(@status = "conjecture")]] {
+            if [@status = "axiom"] {
+              apply [.] (#step = $step) mode="imported-eprover-axiom";
+            }
+            if [@status = "plain"] {
+              apply [.] (#step = $step) mode="imported-eprover-lemma";
+            }
+          }
+        }
         <Item {
           @kind = "Regular-Statement";
 	  @shape = "Diffuse-Statement";
@@ -220,8 +241,10 @@ tpl [tstp[formula[@status = "conjecture"]]] (#step, #herbrand-proof) mode="impor
             for-each [following-sibling::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "assume_negation"]]] {
               apply [.] (#step = $step) mode="imported-eprover-raa";
             }
-            for-each [following-sibling::formula[not(source/non-logical-data[@name = "inference"]/non-logical-data[@name = "assume_negation"])]] {
-              apply [.] (#step = $step) mode="imported-eprover-lemma";
+            for-each [parent::tstp] {
+              for-each [formula[@status = "negated_conjecture" and not(source/non-logical-data[@name = "inference"]/non-logical-data[@name = "assume_negation"])]] {
+                apply [.] (#step = $step) mode="imported-eprover-lemma";
+              }
             }
             for-each [document ($herbrand-proof, /)] {
               apply [.] (#step = $step) mode="imported-ivy-refutation";
@@ -235,7 +258,13 @@ tpl [tstp[formula[@status = "conjecture"]]] (#step, #herbrand-proof) mode="impor
               <Straightforward-Justification {
                 <Link;
                 for-each [ancestor::tstp] {
-                  for-each [formula[@name and not(@status = "conjecture") and not(source/non-logical-data[@name = "inference"]/non-logical-data[@name = "assume_negation"])]] {
+                  for-each [formula[@syntax = "clause" and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]] {
+                    $local-name = `@name`;
+                    <Local-Reference {
+                      @spelling = `concat ($step, $local-name)`;
+                    }
+                  }
+                  for-each [formula[@syntax = "formula" and (@status = "plain" or @status = "axiom")]] {
                     $local-name = `@name`;
                     <Local-Reference {
                       @spelling = `concat ($step, $local-name)`;
@@ -577,9 +606,6 @@ tpl [formula[@name]] (#linked) mode="lemma" {
           <Straightforward-Justification {
             <Link;
             for-each [document ($clausification-proof-path, /)] {
-              if [not(tstp/formula[@status = "conjecture"])] {
-	        msg terminate="yes" "no conjecture";
-              }
               for-each [tstp/formula[@status = "conjecture"]] {
                 $local-name = `@name`;
                 <Local-Reference {
