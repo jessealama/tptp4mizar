@@ -50,8 +50,7 @@ sub apply_stylesheet {
     my $xsltproc_err = '';
 
     my $xsltproc_harness = start (\@xsltproc_call,
-				  '>', \$xsltproc_out,
-				  '2>', \$xsltproc_err);
+				  '>', \$xsltproc_out);
 
     $xsltproc_harness->finish ();
     my $xsltproc_result = $xsltproc_harness->result (0);
