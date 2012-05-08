@@ -1,0 +1,227 @@
+stylesheet "1.0";
+output method="xml" indent="yes";
+
+// Given a TPTP derivation output by E, recreate the refutation
+// problem with slightly different axioms: the results of
+// skolemization are treated as axioms, not the axioms that are the
+// premises of skolemization steps.  Axioms that are never skolemized
+// are passed through verbatim.
+
+//////////////////////////////////////////////////////////////////////
+// Stylesheet parameters
+//////////////////////////////////////////////////////////////////////
+
+// If '1', print only the formulas that are conclusions of
+// skolemization steps or which eventually do get skolemized.  The
+// result can be regarded as a kind of "preprocessing" part,
+// consisting of the transformation of formulas that eventually get
+// skolemized.
+//
+// If not '1', we print only the formulas that do not eventually get
+// skolemized.
+#only-skolemized-part = { ""; }
+
+// If '1', output the "extra" parts of a TPTP formula (its source and
+// useful-info parts)
+#tstp = { "0"; }
+
+// Prefix to put in front of skolem functions
+#skolem-prefix = { ""; }
+
+//////////////////////////////////////////////////////////////////////
+// Keys
+//////////////////////////////////////////////////////////////////////
+
+key "formulas" [formula] `@name`;
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+// By default, copy
+tpl [*] {
+  $n = `name (.)`;
+  <$n {
+    for-each [@*] { copy-of `.`; }
+    apply [*];
+  }
+}
+
+tpl [*] mode="copy" {
+  $n = `name (.)`;
+  <$n {
+    for-each [@*] { copy-of `.`; }
+    apply [*] mode="copy";
+  }
+}
+
+tpl [/] {
+  if [tstp] {
+    <tstp {
+      apply [tstp];
+    }
+  } else {
+    msg terminate="yes" "Error: the required tstp document element is missing.";
+  }
+}
+
+tpl exists-path-from-any-to (#candidates, #to) {
+  if [$candidates] {
+    $candidate = `$candidates[1]`;
+    if [key ("formulas", $candidate)] {
+      for-each [key ("formulas", $candidate)] {
+        if [@name = $to] {
+          "1";
+        } else {
+          for-each [source] {
+            choose {
+              when [non-logical-data[@name = "file"]] {
+                exists-path-from-any-to (#candidates = `$candidates[position() > 1]`,
+					 #to = $to);
+              }
+              when [non-logical-data[@name = "inference"]] {
+                for-each [non-logical-data[@name = "inference"]] {
+                  for-each [non-logical-data[position() = last()]] {
+                    $path = exists-path-from-any-to (#candidates = `number[@name]/@name`,
+    		    	    			     #to = $to);
+                    if [$path = "1"] {
+                      "1";
+                    } else {
+                      exists-path-from-any-to (#candidates = `$candidates[position() > 1]`,
+					       #to = $to);
+                    }
+                  }
+                }
+              }
+              otherwise {
+                exists-path-from-any-to (#candidates = `$candidates[position() > 1]`,
+					 #to = $to);
+              }
+            }
+          }
+        }
+      }
+    } else {
+      $message = `concat ("Error: we failed to find the formula called '", $candidate, "'.")`;
+      msg terminate="yes" $message;
+    }
+  } else {
+    "0";
+  }
+}
+
+tpl skolemized-eventually (#formula-name, #candidates) {
+  if [$candidates] {
+    $candidate = `$candidates[1]`;
+    for-each [$candidate] {
+      for-each [source] {
+        for-each [non-logical-data] {
+          for-each [non-logical-data[position() = last()]] {
+            $path = exists-path-from-any-to (#candidates = `number[@name]/@name`,
+                                             #to = $formula-name);
+            if [$path = "1"] {
+              "1";
+            } else {
+              skolemized-eventually (#formula-name = $formula-name,
+	      			     #candidates = `$candidates[position() > 1]`);
+            }
+          }
+        }
+      }
+    }
+  } else {
+    "0";
+  }
+}
+
+// tpl [tstp] {
+//   if [$only-skolemized-part = "1"] {
+//     for-each [formula] {
+//       $skolemized-eventually = skolemized-eventually (#formula-name = `@name`,
+//       			     			    #candidates = `ancestor::tstp/formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]`);
+//       choose {
+//         when [$skolemized-eventually = "1"] {
+//           apply [.];
+//         }
+//         when [source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]] {
+//           apply [.];
+//         }
+//         otherwise {
+//           // ignore
+//         }
+//       }
+//     }
+//   } else {
+//     for-each [formula] {
+//       $skolemized-eventually = skolemized-eventually (#formula-name = `@name`,
+//       			     			    #candidates = `ancestor::tstp/formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]`);
+//       choose {
+//         when [@status = "axiom" and $skolemized-eventually = "1"] {
+//           // ignore
+//         }
+//         when [@status = "axiom" and $skolemized-eventually = "0"] {
+//           apply [.];
+//         }
+//         when [source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]] {
+//           apply [.] mode="make-axiom";
+//         }
+//         when [@status = "conjecture"] {
+//           apply [.];
+//         }
+//         otherwise {
+//           // ignore
+//         }
+//       }
+//     }
+//   }
+// }
+
+tpl [tstp] {
+  if [$only-skolemized-part = "1"] {
+    for-each [formula[@syntax = "formula"]] {
+      apply [.];
+    }
+    for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]] {
+      apply [.];
+    }
+    for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] {
+      apply [.];
+    }
+  } else {
+    for-each [formula[@syntax = "formula" and @status = "axiom"]] {
+      apply [.];
+    }
+    for-each [formula[@syntax = "formula" and @status = "plain"]] {
+      apply [.];
+    }
+    for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]] {
+      apply [.];
+    }
+    for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] {
+      apply [.];
+    }
+  }
+}
+
+tpl [formula] {
+  <formula {
+    for-each [@*] { copy-of `.`; }
+    if [$tstp = "1"] {
+      apply [*];
+    } else {
+      apply [*[1]];
+    }
+  }
+}
+
+tpl [formula] mode="make-axiom" {
+  <formula {
+    for-each [@*] { copy-of `.`; }
+    @status = "axiom";
+    if [$tstp = "1"] {
+      apply [*];
+    } else {
+      apply [*[1]];
+    }
+  }
+}

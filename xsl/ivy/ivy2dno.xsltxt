@@ -1,0 +1,4 @@
+stylesheet "1.0";
+include "../tptp/tptp2dno.xsl";
+output method="xml" encoding="utf-8" indent="yes";
+output omit-xml-declaration="no";

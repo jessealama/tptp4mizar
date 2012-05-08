@@ -1,0 +1,3 @@
+stylesheet "1.0";
+include "../tptp/tptp2voc.xsl";
+output method="text";

@@ -19,6 +19,8 @@ use charnames qw(:full);
 use Regexp::DefaultFlags;
 use Term::ANSIColor qw(colored);
 use FindBin qw($RealBin);
+use Data::Dumper;
+use XML::LibXML;
 
 # Our packages
 use lib "$RealBin/../lib";
@@ -26,11 +28,14 @@ use Utils qw(is_readable_file
 	     is_valid_xml_file
 	     strip_extension
 	     warning_message
-	     error_message);
-use Colors;
+	     error_message
+	     slurp
+	     run_mizar_tool);
 use TPTPProblem qw(is_valid_tptp_file);
 use EproverDerivation;
 use VampireDerivation;
+use IvyDerivation;
+use Xsltproc qw(apply_stylesheet);
 
 # Colors
 Readonly my $STYLE_COLOR => 'blue';
@@ -46,16 +51,10 @@ Readonly my @TPTP_PROGRAMS => (
 # Stylesheets
 Readonly my $STYLESHEET_HOME => "$RealBin/../xsl";
 Readonly my $TSTP_STYLESHEET_HOME => "${STYLESHEET_HOME}/tstp";
-Readonly my @STYLESHEETS => (
-    'eprover2evl.xsl',
-    'eprover2dco.xsl',
-    'eprover2dno.xsl',
-    'eprover2voc.xsl',
-    'pp.xsl',
-    'eprover-safe-skolemizations.xsl',
-    'clean-eprover.xsl',
-    'eprover2the.xsl',
-);
+Readonly my $TPTP_STYLESHEET_HOME => "${STYLESHEET_HOME}/tptp";
+Readonly my $MIZAR_STYLESHEET_HOME => "${STYLESHEET_HOME}/mizar";
+Readonly my $EPROVER_STYLESHEET_HOME => "${STYLESHEET_HOME}/eprover";
+Readonly my $VAMPIRE_STYLESHEET_HOME => "${STYLESHEET_HOME}/vampire";
 
 # Strings
 Readonly my $LF => "\N{LF}";
@@ -68,6 +67,7 @@ Readonly my %STYLES => (
     'vampire' => 0,
     'eprover' => 0,
     'tstp' => 0,
+    'ivy' => 0,
 );
 
 sub summarize_styles {
@@ -168,24 +168,6 @@ if ($verbose) {
     print 'Sanity Check: The given TPTP file is valid according to TPTP4X.', "\n";
 }
 
-# # All the needed stylesheets exist
-#
-#
-# We need to put this check elsewhere.
-#
-# my @extensions = ('dco', 'dno', 'voc', 'miz');
-# foreach my $stylesheet (@STYLESHEETS) {
-#     my $stylesheet_path = "${STYLESHEET_HOME}/${stylesheet}";
-#     if (! is_readable_file ($stylesheet_path)) {
-# 	error_message ('The required stylsheet ', $stylesheet, ' could not be found in the directory', "\n", "\n", '  ', $STYLESHEET_HOME, "\n", "\n", 'where we expect to find it (or it does exist but is unreadable).');
-# 	exit 1;
-#     }
-# }
-
-# We need to check that the TPTP theory does not have a predicate
-# symbol used as a function symbol, and that arities are distinct for
-# different symbols
-
 if (! defined $db) {
     $db = "${tptp_sans_extension}-mizar";
 }
@@ -211,11 +193,14 @@ if ($tptp4X_exit_code != 0) {
     say {*STDERR} error_message ('tptp4X did not terminate cleanly when XMLizing', $SP, $tptp_file_in_db);
 }
 
+my $sort_tstp_stylesheet = "${TSTP_STYLESHEET_HOME}/sort-tstp.xsl";
+my $dependencies_stylesheet = "${TSTP_STYLESHEET_HOME}/tstp-dependencies.xsl";
+
+my $sorted_tptp_xml_in_db = "${db}/problem.xml.sorted";
 if ($opt_style ne 'tptp') {
 
     # Sort
     my $dependencies_str = undef;
-    my $dependencies_stylesheet = "${TSTP_STYLESHEET_HOME}/tstp-dependencies.xsl";
     my @xsltproc_deps_call = ('xsltproc', $dependencies_stylesheet, $tptp_xml_in_db);
     my @tsort_call = ('tsort');
     my $sort_harness = harness (\@xsltproc_deps_call,
@@ -228,8 +213,6 @@ if ($opt_style ne 'tptp') {
     my @dependencies = split ($LF, $dependencies_str);
     my $dependencies_token_string = ',' . join (',', @dependencies) . ',';
 
-    my $sort_tstp_stylesheet = "${TSTP_STYLESHEET_HOME}/sort-tstp.xsl";
-    my $sorted_tptp_xml_in_db = "${db}/problem.xml.sorted";
     my $xsltproc_sort_status = system ("xsltproc --stringparam ordering '${dependencies_token_string}' ${sort_tstp_stylesheet} ${tptp_xml_in_db} > ${sorted_tptp_xml_in_db}");
     my $xsltproc_sort_exit_code = $xsltproc_sort_status >> 8;
     if ($xsltproc_sort_exit_code != 0) {
@@ -239,6 +222,12 @@ if ($opt_style ne 'tptp') {
     move ($sorted_tptp_xml_in_db, $tptp_xml_in_db)
 	or die error_message ('Unable to overwrite', $SP, $tptp_xml_in_db, $SP, 'by', $SP, $sorted_tptp_xml_in_db);
 }
+
+# Normalize names
+my $normalize_step_names_stylesheet = "${TSTP_STYLESHEET_HOME}/normalize-step-names.xsl";
+apply_stylesheet ($normalize_step_names_stylesheet,
+		  $tptp_xml_in_db,
+		  $tptp_xml_in_db);
 
 my $tptp_dirname = dirname ($tptp_file);
 
@@ -253,6 +242,8 @@ if ($opt_style eq 'eprover') {
     $derivation = TSTPDerivation->new (path => $tptp_xml_in_db);
 } elsif ($opt_style eq 'tptp') {
     $derivation = TPTPProblem->new (path => $tptp_xml_in_db);
+} elsif ($opt_style eq 'ivy') {
+    $derivation = IvyDerivation->new (path => $tptp_xml_in_db);
 } else {
     print {*STDERR} error_message ('Unknown derivation style \'', $opt_style, '\'.');
     exit 1;
@@ -260,6 +251,17 @@ if ($opt_style eq 'eprover') {
 
 $derivation->to_miz ($db,
 		     { 'shape' => $opt_nested ? 'nested' : 'flat' });
+
+my $repair_script = "$RealBin/mrepair.pl";
+
+my $repair_status = system ($repair_script,
+			    "--style=${opt_style}",
+			    "--tptp-proof=${sorted_tptp_xml_in_db}",
+			    "${db}/text/article.miz");
+my $repair_exit_code = $repair_status >> 8;
+if ($repair_exit_code != 0) {
+    die error_message ('The repair script did not terminate cleanly.');
+}
 
 __END__
 

@@ -2,3 +2,179 @@ stylesheet "1.0";
 include "../tptp/tptp2dno.xsl";
 output method="xml" encoding="utf-8" indent="yes";
 output omit-xml-declaration="no";
+
+//////////////////////////////////////////////////////////////////////
+// Stylesheet parameters
+//////////////////////////////////////////////////////////////////////
+
+// Deal only with skolems
+#only-skolems = { ""; }
+
+tpl [tstp] {
+  if [$only-skolems = "1"] {
+    $num-skolem-functions = `count(descendant::function[starts-with (@name, "esk") and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)])`;
+    $article-uc = uc (#s = `$article`);
+
+    <Notations {
+      <Signature {
+        <ArticleID {
+          @"name" = "HIDDEN";
+        }
+        <ArticleID {
+          @"name" = `$article-uc`;
+        }
+      }
+      <Vocabularies {
+
+        <Vocabulary {
+          <ArticleID {
+            @"name" = `$article-uc`;
+          }
+          <SymbolCount { @kind="G"; @nr="0"; }
+          <SymbolCount { @kind="K"; @nr="0"; }
+          <SymbolCount { @kind="L"; @nr="0"; }
+          <SymbolCount { @kind="M"; @nr="0"; }
+          <SymbolCount { @kind="O"; @nr=`$num-skolem-functions`; }
+          <SymbolCount { @kind="R"; @nr="0"; }
+          <SymbolCount { @kind="U"; @nr="0"; }
+          <SymbolCount { @kind="V"; @nr="0"; }
+
+        }
+      }
+
+      // functions
+      for-each [descendant::function[starts-with (@name, "esk") and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
+        <Pattern {
+          @kind = "K";
+          @nr = `position()`;
+          @aid = `$article-uc`;
+          @constrkind = "K";
+          @constrnr = `position()`;
+          <Format {
+            @kind = "O";
+            @symbolnr = `position()`;
+            @argnr = `count (*)`;
+            @leftargnr = "0";
+          }
+          <ArgTypes {
+            for-each [*] {
+              set ();
+            }
+          }
+          <Visible {
+            for-each [*] {
+              <Int {
+                @x = `position()`;
+              }
+            }
+          }
+        }
+      }
+    }
+  } else {
+    $num-predicates = `count(descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)])`;
+    $num-functions = `count(descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)])`;
+    $article-uc = uc (#s = `$article`);
+
+    <Notations {
+      <Signature {
+        <ArticleID {
+          @"name" = "HIDDEN";
+        }
+        <ArticleID {
+          @"name" = `$article-uc`;
+        }
+      }
+      <Vocabularies {
+
+        // // import stuff from HIDDEN
+        // <Vocabulary {
+        //   <ArticleID {
+        //     @"name" = "HIDDEN";
+        //   }
+        //   <SymbolCount { @kind="G"; @nr="0"; }
+        //   <SymbolCount { @kind="K"; @nr="3"; }
+        //   <SymbolCount { @kind="L"; @nr="3"; }
+        //   <SymbolCount { @kind="M"; @nr="1"; }
+        //   <SymbolCount { @kind="O"; @nr="0"; }
+        //   <SymbolCount { @kind="R"; @nr="3"; }
+        //   <SymbolCount { @kind="U"; @nr="0"; }
+        //   <SymbolCount { @kind="V"; @nr="1"; }
+        // }
+
+        <Vocabulary {
+          <ArticleID {
+            @"name" = `$article-uc`;
+          }
+          <SymbolCount { @kind="G"; @nr="0"; }
+          <SymbolCount { @kind="K"; @nr="0"; }
+          <SymbolCount { @kind="L"; @nr="0"; }
+          <SymbolCount { @kind="M"; @nr="0"; }
+          <SymbolCount { @kind="O"; @nr=`$num-functions`; }
+          <SymbolCount { @kind="R"; @nr=`$num-predicates`; }
+          <SymbolCount { @kind="U"; @nr="0"; }
+          <SymbolCount { @kind="V"; @nr="0"; }
+
+        }
+      }
+
+      // predicates
+      for-each [descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)]] {
+        <Pattern {
+          @kind = "R";
+          @nr = `position()`;
+          @aid = `$article-uc`;
+          @constrkind = "R";
+          @constrnr = `2 + position()`;
+          <Format {
+            @kind = "R";
+            @symbolnr = `position()`;
+            @argnr = `count (*)`;
+            @leftargnr = "0";
+          }
+          <ArgTypes {
+            for-each [*] {
+              set ();
+            }
+          }
+          <Visible {
+            for-each [*] {
+              <Int {
+                @x = `position()`;
+              }
+            }
+          }
+        }
+      }
+
+      // functions
+      for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
+        <Pattern {
+          @kind = "K";
+          @nr = `position()`;
+          @aid = `$article-uc`;
+          @constrkind = "K";
+          @constrnr = `position()`;
+          <Format {
+            @kind = "O";
+            @symbolnr = `position()`;
+            @argnr = `count (*)`;
+            @leftargnr = "0";
+          }
+          <ArgTypes {
+            for-each [*] {
+              set ();
+            }
+          }
+          <Visible {
+            for-each [*] {
+              <Int {
+                @x = `position()`;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

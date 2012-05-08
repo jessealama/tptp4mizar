@@ -4,7 +4,7 @@ XSLTXT = ../xsltxt.jar
 %.xsl: %.xsltxt
 	$(JAVA) -jar $(XSLTXT) toXSL $*.xsltxt $*.xsl || rm $*.xsl;
 
-all: sort-tstp.xsl tstp-dependencies.xsl tstp2wsx.xsl normalize-step-names.xsl tstp2dco.xsl
+all: ivy2wsx.xsl ivy2dco.xsl ivy2dno.xsl ivy2voc.xsl ivy2evl.xsl
 
 clean:
 	rm -f *.xsl

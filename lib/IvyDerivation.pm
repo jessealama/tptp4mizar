@@ -1,4 +1,4 @@
-package VampireDerivation;
+package IvyDerivation;
 
 use Moose;
 use Carp qw(carp confess croak);
@@ -19,7 +19,7 @@ extends 'TSTPDerivation';
 
 Readonly my $EMPTY_STRING => q{};
 Readonly my $STYLESHEET_HOME => "$RealBin/../xsl";
-Readonly my $VAMPIRE_STYLESHEET_HOME => "${STYLESHEET_HOME}/vampire";
+Readonly my $IVY_STYLESHEET_HOME => "${STYLESHEET_HOME}/ivy";
 Readonly my $MIZAR_STYLESHEET_HOME => "${STYLESHEET_HOME}/mizar";
 
 my %directory_for_extension = (
@@ -31,7 +31,7 @@ my %directory_for_extension = (
     'the' => 'prel',
 );
 
-my @extensions_to_generate = ('voc', 'evl', 'dno', 'dco', 'wsx', 'the');
+my @extensions_to_generate = ('voc', 'evl', 'dno', 'dco', 'wsx');
 
 sub to_miz {
     my $self = shift;
@@ -73,7 +73,7 @@ sub to_miz {
 	    push (@xsltproc_call, '--stringparam', 'shape', 'flat');
 	}
 
-	push (@xsltproc_call, "${VAMPIRE_STYLESHEET_HOME}/vampire2${extension}.xsl");
+	push (@xsltproc_call, "${IVY_STYLESHEET_HOME}/ivy2${extension}.xsl");
 	push (@xsltproc_call, $path);
 
 	my $xsltproc_err = $EMPTY_STRING;
@@ -88,18 +88,6 @@ sub to_miz {
 
 	if ($xsltproc_exit_code != 0) {
 	    confess error_message ('xsltproc did not exit cleanly when generating the .', $extension, ' file for', "\n", "\n", '  ', $path, "\n", "\n", 'The exit code was ', $xsltproc_exit_code, '. The error message was:',  "\n", "\n", '  ', $xsltproc_err);
-	}
-    }
-
-    # skolem functions
-    my @skolem_extensions = ('the');
-    foreach my $extension (@skolem_extensions) {
-	my $stylesheet = "${VAMPIRE_STYLESHEET_HOME}/vampire2${extension}.xsl";
-	my $skolem_path = "${directory}/prel/skolem.${extension}";
-	my $xsltproc_status = system ("xsltproc --stringparam article 'article' --stringparam prel-directory '${prel_subdir_full}' $stylesheet ${path} > $skolem_path");
-    my $xsltproc_exit_code = $xsltproc_status >> 8;
-	if ($xsltproc_exit_code != 0) {
-	    croak ('Error: xsltproc did not exit cleanly when generating skolem.', $extension, ' for', "\n", "\n", '  ', $path, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);
 	}
     }
 
@@ -123,18 +111,20 @@ __END__
 
 =head1 NAME
 
-VampireDerivation
+IvyDerivation
 
 =head1 DESCRIPTION
 
-VampireDerivation is a subclass of Derivation that extracts used
-premises from proofs output by the E theorem prover.
+IvyDerivation is a subclass of Derivation that extracts used
+premises from proof objects emitted by the Ivy proof checker.
 
 =head1 SEE ALSO
 
 =over 8
 
-=item L<The Vampire theorem prover|http://www.vprover.org/>
+=item L<"Ivy: A preprocessor and proof checker for first-order logic", by William McCune  and Olga Shumsky|http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.45.4430>
+
+=back
 
 =back
 

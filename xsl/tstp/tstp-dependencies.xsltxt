@@ -34,7 +34,17 @@ tpl [formula[not(source)]] {
  ""; // formulas without a source depend on nothing
 }
 
-tpl [formula[@name and source]] {
+tpl [formula[@name and @status = "axiom"]] {
+  $axiom-name = `@name`;
+  for-each [parent::*] {
+    for-each [formula[@name and not(@status = "axiom")]] {
+      $non-axiom-name = `@name`;
+      `$axiom-name`; " "; `$non-axiom-name`; "\n";
+    }
+  }
+}
+
+tpl [formula[@name and source and not(@status = "axiom")]] {
   apply [source] (#formula = `@name`);
 }
 

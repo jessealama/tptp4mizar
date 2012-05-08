@@ -1,3 +1,37 @@
 stylesheet "1.0";
 include "../tptp/tptp2voc.xsl";
 output method="text";
+
+//////////////////////////////////////////////////////////////////////
+// Stylesheet parameters
+//////////////////////////////////////////////////////////////////////
+
+// Emit only skolem symbols
+#only-skolems = { ""; }
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+tpl [tstp] {
+  if [$only-skolems = "1"] {
+    for-each [descendant::function[starts-with (@name, "esk") and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
+      apply [.]; "\n";
+    }
+  } else {
+    for-each [descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)]] {
+      apply [.]; "\n";
+    }
+    for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
+      apply [.]; "\n";
+    }
+  }
+}
+
+tpl [predicate[@name and not(@name = "=")]] {
+  "R"; `@name`;
+}
+
+tpl [function[@name]] {
+  "O"; `@name`;
+}

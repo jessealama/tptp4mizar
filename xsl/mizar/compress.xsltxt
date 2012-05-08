@@ -1,4 +1,5 @@
 stylesheet "1.0";
+include "../utils/token-strings.xsl";
 output method="xml" indent="yes";
 
 //////////////////////////////////////////////////////////////////////
@@ -39,56 +40,23 @@ tpl [*] (#message) mode="die" {
   msg terminate="yes" $message;
 }
 
-tpl token-string-tail (#token-string) {
-  $empty = token-string-is-empty (#token-string = $token-string);
-  if [$empty = "1"] {
-    msg terminate="yes" "Error: cannot take the tail of an empty token string.";
-  } else {
-    $after-first-comma = `substring-after ($token-string, ",")`;
-    $after-second-comma = `substring-after ($after-first-comma, ",")`;
-    if [$after-second-comma = ""] {
-      ",,";
-    } else {
-      `concat (",", $after-second-comma)`;
-    }
-  }
-}
-
-tpl token-string-head (#token-string) {
-  $empty = token-string-is-empty (#token-string = $token-string);
-  if [$empty = "1"] {
-    msg terminate="yes" "Error: cannot take the head of an empty token string.";
-  } else {
-    $after-first-comma = `substring-after ($token-string, ",")`;
-    `substring-before ($after-first-comma, ",")`;
-  }
-}
-
-tpl token-string-is-empty (#token-string) {
-  if [$token-string = ",,"] {
-    "1";
-  } else {
-    "0";
-  }
-}
-
 //////////////////////////////////////////////////////////////////////
 // Templates
 //////////////////////////////////////////////////////////////////////
 
 tpl [/] {
   if [Text-Proper] {
-    apply [Text-Proper];
+    apply [Text-Proper] (#ignore-inacc = "0");
   } else {
     msg terminate="yes" "Error: the Text-Proper root element is missing.";
   }
 }
 
-tpl [*] {
+tpl [*] (#ignore-inacc) {
   $n = `name (.)`;
   <$n {
     for-each [@*] { copy-of `.`; }
-    apply [*];
+    apply [*] (#ignore-inacc = $ignore-inacc);
   }
 }
 
@@ -96,7 +64,7 @@ tpl [*] mode="copy" {
   $n = `name (.)`;
   <$n {
     for-each [@*] { copy-of `.`; }
-    apply [*] mode="copy";
+    apply [*];
   }
 }
 
@@ -105,19 +73,26 @@ tpl fragile-recommendation-applied-to-any (#candidates) {
     $candidate = `$candidates[1]`;
     $candidate-line = `$candidate/@line`;
     $candidate-col = `$candidate/@col`;
-    $token = `concat (",", $candidate-line, ":", $candidate-col, ":", "604", ",")`;
-    if [contains ($recommendations, $token)] {
-      "1";
-    } else {
-      $remaining-candidates = `$candidates[position() > 1]`;
-      fragile-recommendation-applied-to-any (#candidates = $remaining-candidates);
+    $token-1 = `concat (",", $candidate-line, ":", $candidate-col, ":", "604", ",")`;
+    $token-2 = `concat (",", $candidate-line, ":", $candidate-col, ":", "602", ",")`;
+    choose {
+      when [contains ($recommendations, $token-1)] {
+        "1";
+      }
+      when [contains ($recommendations, $token-2)] {
+        "1";
+      }
+      otherwise {
+        $remaining-candidates = `$candidates[position() > 1]`;
+        fragile-recommendation-applied-to-any (#candidates = $remaining-candidates);
+      }
     }
   } else {
     "0";
   }
 }
 
-tpl consider-recommendation (#recommendation) {
+tpl consider-recommendation (#recommendation, #ignore-inacc) {
   choose {
     when [$recommendation = "601"] { // chklab
       $message = "chklab recommendation accepted; rewriting justification.";
@@ -133,9 +108,15 @@ tpl consider-recommendation (#recommendation) {
       $recommendation-already-applied = fragile-recommendation-applied-to-any (#candidates = `preceding-sibling::Local-Reference`);
       if [$recommendation-already-applied = "1"] {
         msg "We have already accepted a 604 recommendation for the current list of references; not rewriting...";
-        apply [.] mode="copy";
+        $n = `name (.)`;
+        <$n {
+          for-each [@*] { copy-of `.`; }
+          apply [*] (#ignore-inacc = $ignore-inacc);
+        }
       } else {
-        $message = "604 recommendation accepted; rewriting justification.";
+        $line = `@line`;
+        $col = `@col`;
+        $message = `concat ("604 recommendation at line ", $line, " and column ", $col, " accepted; rewriting justification.")`;
         msg $message;
         if [self::*[@spelling]] {
           $formula-name = `@spelling`;
@@ -143,7 +124,9 @@ tpl consider-recommendation (#recommendation) {
             for-each [key ("labelled-formulas", $formula-name)] {
               if [Straightforward-Justification] {
                 for-each [Straightforward-Justification] {
-                  apply [*] mode="copy";
+                  for-each [*] {
+                    apply [.] mode="copy";
+                  }
                 }
               } else {
                 apply [.] (#message = "Error: we expected to find a Straightforward-Justification child of the current item, but there is none.") mode="die";
@@ -158,36 +141,50 @@ tpl consider-recommendation (#recommendation) {
         }
       }
     }
-    when [$recommendation = "610"] {
+    when [$recommendation = "610" and not($ignore-inacc = "1")] {
       // Start to ignore some formulas (inacc)
       msg "Starting to ignore inaccessible formulas...";
     }
-    when [$recommendation = "611"] {
+    when [$recommendation = "611" and not($ignore-inacc = "1")] {
       // Done ignoring formulas
       msg "Done ignoring formulas.";
     }
     when [$recommendation = "602"] {  // irrelevant reference
-      msg "Ignoring irrelevant reference.";
-      // ignore
+      $recommendation-already-applied = fragile-recommendation-applied-to-any (#candidates = `preceding-sibling::Local-Reference`);
+      if [$recommendation-already-applied = "1"] {
+        msg "We have already accepted a recommendation for the current list of references; not rewriting...";
+        $n = `name (.)`;
+        <$n {
+          for-each [@*] { copy-of `.`; }
+          apply [*] (#ignore-inacc = $ignore-inacc);
+        }
+      } else {
+        msg "Ignoring irrelevant reference.";
+        // ignore
+      }
     }
     otherwise {
       $message = `concat ("Warning: Unable to make sense of the recommendation '", $recommendation, "'.")`;
-      msg $message;
-      apply [.] mode="copy";
+      msg terminate="yes" $message;
+      // apply [.] mode="copy";
     }
   }
 }
 
-tpl [Label[@spelling]] {
+tpl [Label[@spelling]] (#ignore-inacc) {
   $line = `@line`;
   $col = `@col`;
   $pseudo-token = `concat (",", $line, ":", $col, ":")`;
   if [contains ($recommendations, $pseudo-token)] {
     $after-token = `substring-after ($recommendations, $pseudo-token)`;
     $recommendation = `substring-before ($after-token, ",")`;
-    consider-recommendation (#recommendation = $recommendation);
+    consider-recommendation (#recommendation = $recommendation,
+    			     #ignore-inacc = $ignore-inacc);
   } else {
-    apply [.] mode="copy";
+    <Label {
+      for-each [@*] { copy-of `.`; }
+      apply [*] (#ignore-inacc = $ignore-inacc);
+    }
   }
 }
 
@@ -407,33 +404,96 @@ tpl within-inacc-block (#line, #col) {
                         #recs = $recommendations);
 }
 
-tpl [Item[Proposition]] {
+tpl [Item[Proposition]] (#ignore-inacc) {
   $item = `.`;
   $current-line = `@line`;
   $current-col = `@col`; // for inacc
   $within = within-inacc-block (#line = $current-line, #col = $current-col);
   if [$within = "1"] {
-    // keep skipping
-    msg "Skipping an item inside an inacc block";
+    choose {
+      when [$ignore-inacc = "1"] {
+        <Item {
+          for-each [@*] { copy-of `.`; }
+          apply [*] (#ignore-inacc = "1");
+        }
+      }
+      when [following-sibling::Item] {
+        // keep skipping
+        msg "Skipping an item inside an inacc block";
+      }
+      otherwise {
+        msg "Although this item is in an inaccessible block, it is the final item of the current block.  Refusing to delete it.";
+        <Item {
+          for-each [@*] { copy-of `.`; }
+          apply [*] (#ignore-inacc = "1");
+        }
+      }
+    }
   } else {
     <Item {
-      for-each [$item] {
-        for-each [@*] { copy-of `.`; }
-        apply [*];
-      }
+      for-each [@*] { copy-of `.`; }
+      apply [*] (#ignore-inacc = $ignore-inacc);
     }
   }
 }
 
-tpl [Local-Reference[@line and @col]] {
+tpl [Item[Block]] (#ignore-inacc) {
+  $item = `.`;
+  $current-line = `@line`;
+  $current-col = `@col`; // for inacc
+  $within = within-inacc-block (#line = $current-line, #col = $current-col);
+  if [$within = "1"] {
+    choose {
+      when [$ignore-inacc = "1"] {
+        <Item {
+          for-each [@*] { copy-of `.`; }
+          apply [*] (#ignore-inacc = "1");
+        }
+      }
+      when [following-sibling::Item] {
+        // keep skipping
+        msg "Skipping an item inside an inacc block";
+      }
+      otherwise {
+        msg "Although this item is in an inaccessible block, it is the final item of the current block.  Refusing to delete it.";
+        <Item {
+          for-each [@*] { copy-of `.`; }
+          apply [*] (#ignore-inacc = "1");
+        }
+      }
+    }
+  } else {
+    <Item {
+      for-each [@*] { copy-of `.`; }
+      apply [*] (#ignore-inacc = $ignore-inacc);
+    }
+  }
+}
+
+tpl [Local-Reference[@line and @col]] (#ignore-inacc) {
   $line = `@line`;
   $col = `@col`;
   $pseudo-token = `concat (",", $line, ":", $col, ":")`;
   if [contains ($recommendations, $pseudo-token)] {
     $after-token = `substring-after ($recommendations, $pseudo-token)`;
     $recommendation = `substring-before ($after-token, ",")`;
-    consider-recommendation (#recommendation = $recommendation);
+    consider-recommendation (#recommendation = $recommendation,
+    			     #ignore-inacc = $ignore-inacc);
   } else {
-    apply [.] mode="copy";
+    <Local-Reference {
+      for-each [@*] { copy-of `.`; }
+    }
   }
+}
+
+tpl [Item[@kind = "Conclusion"]] (#ignore-inacc) {
+  // Do not delete conclusions
+  <Item {
+    for-each [@*] { copy-of `.`; }
+    apply [*] (#ignore-inacc = "1");
+  }
+}
+
+tpl [Inference-Error] {
+  apply [.] (#message = "There was an inference error somewhere.") mode="die";
 }

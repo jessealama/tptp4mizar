@@ -1,5 +1,5 @@
 stylesheet "1.0";
-
+include "../utils/strings.xsl";
 output method="xml" encoding="utf-8" indent="yes";
 output omit-xml-declaration="no";
 
@@ -10,98 +10,140 @@ output omit-xml-declaration="no";
 // The name of the article .dco that we will create
 #article = { ""; }
 
-//////////////////////////////////////////////////////////////////////
-// Utilities
-//////////////////////////////////////////////////////////////////////
+// Emit constructors only for skolem functions
+#only-skolems = { ""; }
 
-$lcletters = { "abcdefghijklmnopqrstuvwxyz"; }
-$ucletters = { "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; }
-
-tpl lc (#s) { `translate($s, $ucletters, $lcletters)`; }
-tpl uc (#s) { `translate($s, $lcletters, $ucletters)`; }
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
 
 tpl [/] {
   choose {
     when [$article = ""] {
-      msg terminate="yes" "Error: a value for the article stylesheet parameter was not supplied (or the empty string was supplied).";
+      msg terminate="yes" "Error: the empty string is not an acceptable value for the article stylesheet parameter.";
     }
-    when [not(tstp)] {
-      msg terminate="yes" "Error: this does not appear to be a TSTP XML document, because it lacks a 'tstp' root element.";
+    when [string-length ($article) > 8] {
+      $too-long-message = `concat ("Error: the value (", $article, ") of the article stylesheet parameter is too long (it must be at most 8 characters).")`;
+      msg terminate="yes" $too-long-message;
     }
-    when [tstp[2]] {
-      msg terminate="yes" "Error: this does not appear to be a TSTP XML document, because it has multiple 'tstp' root elements.";
+    when [contains ($article, " ")] {
+      msg terminate="yes" "Error: the value of the article stylesheet parameter contains whitespace.";
+    }
+    when [tstp] {
+      apply [tstp];
     }
     otherwise {
-      apply [tstp];
+      msg terminate="yes" "Error: the required tstp document element is missing.";
     }
   }
 }
 
 tpl [tstp] {
-  $num-predicates = `count(descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)])`;
-  $num-functions = `count(descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)])`;
-  $article-uc = uc (#s = `$article`);
-  <Constructors {
-    <Signature {
-      <ArticleID {
-        @"name" = "HIDDEN";
-      }
-    }
-    <ConstrCounts {
-      if [$num-predicates > 0] {
-        <ConstrCount {
-          @kind = "R";
-          @nr = `$num-predicates`;
+  if [$only-skolems = "1"] {
+    $num-skolem-functions = `count(descendant::function[starts-with (@name, "esk") and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)])`;
+    <Constructors {
+      <Signature {
+        <ArticleID {
+          @"name" = "HIDDEN";
         }
       }
-      if [$num-functions > 0] {
-        <ConstrCount {
+      <ConstrCounts {
+        if [$num-skolem-functions > 0] {
+          <ConstrCount {
+            @kind = "K";
+            @nr = `$num-skolem-functions`;
+          }
+        }
+      }
+      for-each [descendant::function[starts-with (@name, "esk") and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
+        <Constructor {
           @kind = "K";
-          @nr = `$num-functions`;
-        }
-      }
-    }
-    for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
-      <Constructor {
-        @kind = "K";
-        @nr = `position()`;
-        @aid = `$article-uc`;
-        @relnr = `position()`;
-        @spelling = `@name`;
-        <ArgTypes {
-          for-each [*] {
-            <Typ {
-              @kind = "M";
-              @nr = "1";
-              <Cluster;
+          @nr = `position ()`;
+          @aid = "ARTICLE";
+          @relnr = `position ()`;
+          @spelling = `@name`;
+          <ArgTypes {
+            for-each [*] {
+              <Typ {
+                @kind = "M";
+                @nr = "1";
+                <Cluster;
+              }
             }
           }
-        }
-        <Typ {
-          @kind = "M";
-          @nr = "1";
-          <Cluster;
-        }
-      }
-    }
-    for-each [descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)]] {
-      <Constructor {
-        @kind = "R";
-        @nr = `position()`;
-        @aid = `$article-uc`;
-        @relnr = `2 + position()`;
-        @spelling = `@name`;
-        <ArgTypes {
-          for-each [*] {
-            <Typ {
-              @kind = "M";
-              @nr = "1";
-              <Cluster;
-            }
+          <Typ {
+            @kind = "M";
+            @nr = "1";
+            <Cluster;
           }
         }
       }
     }
-
+  } else {
+    $num-predicates = `count(descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)])`;
+    $num-functions = `count(descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)])`;
+    $article-uc = uc (#s = `$article`);
+    <Constructors {
+      <Signature {
+        <ArticleID {
+          @"name" = "HIDDEN";
+        }
+      }
+      <ConstrCounts {
+        if [$num-predicates > 0] {
+          <ConstrCount {
+            @kind = "R";
+            @nr = `$num-predicates`;
+          }
+        }
+        if [$num-functions > 0] {
+          <ConstrCount {
+            @kind = "K";
+            @nr = `$num-functions`;
+          }
+        }
+      }
+      for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
+        <Constructor {
+          @kind = "K";
+          @nr = `position ()`;
+          @aid = "ARTICLE";
+          @relnr = `position ()`;
+          @spelling = `@name`;
+          <ArgTypes {
+            for-each [*] {
+              <Typ {
+                @kind = "M";
+                @nr = "1";
+                <Cluster;
+              }
+            }
+          }
+          <Typ {
+            @kind = "M";
+            @nr = "1";
+            <Cluster;
+          }
+        }
+      }
+      for-each [descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)]] {
+        <Constructor {
+          @kind = "R";
+          @nr = `position()`;
+          @aid = `$article-uc`;
+          @relnr = `2 + position()`;
+          @spelling = `@name`;
+          <ArgTypes {
+            for-each [*] {
+              <Typ {
+                @kind = "M";
+                @nr = "1";
+                <Cluster;
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }

@@ -9,6 +9,7 @@ use feature 'say';
 use charnames qw(:full);
 use Regexp::DefaultFlags;
 use Readonly;
+use Data::Dumper;
 use Pod::Usage;
 use Getopt::Long;
 use File::Temp qw(tempdir tempfile);
@@ -19,7 +20,11 @@ use IPC::Cmd qw(can_run);
 use File::Copy qw(copy);
 use File::Basename qw(basename dirname);
 use Term::ANSIColor qw(colored);
+use List::MoreUtils qw(any);
+
 use FindBin qw($RealBin);
+use lib "$RealBin/../lib";
+use Xsltproc qw(apply_stylesheet);
 
 # Strings
 Readonly my $EMPTY_STRING => q{};
@@ -48,8 +53,8 @@ Readonly my $ERROR_COLOR => 'red';
 Readonly my $WARNING_COLOR => 'yellow';
 
 # Stylesheets
-Readonly my $COMPRESS_STYLESHEET => "$RealBin/../xsl/compress.xsl";
-Readonly my $PP_STYLESHEET => "$RealBin/../xsl/pp.xsl";
+Readonly my $COMPRESS_STYLESHEET => "$RealBin/../xsl/mizar/compress.xsl";
+Readonly my $PP_STYLESHEET => "$RealBin/../xsl/mizar/pp.xsl";
 
 sub is_readable_file {
     my $file = shift;
@@ -91,13 +96,35 @@ sub message_with_colored_prefix {
     return;
 }
 
+my $opt_man = 0;
+my $opt_help = 0;
+my $opt_debug = 0;
+
 sub process_commandline {
     my $commandline_ok
-	= GetOptions ();
+	= GetOptions (
+	    'help' => \$opt_help,
+	    'man' => \$opt_man,
+	    'debug' => \$opt_debug,
+	);
 
     if (! $commandline_ok) {
 	pod2usage (
 	    -exitval => 2,
+	);
+    }
+
+    if ($opt_help) {
+	pod2usage(
+	    -exitstatus => 0,
+	    -verbose => 2,
+	);
+    }
+
+    if ($opt_man) {
+	pod2usage(
+	    -exitstatus => 0,
+	    -verbose => 2,
 	);
     }
 
@@ -108,8 +135,11 @@ sub process_commandline {
     }
 
     my $article = $ARGV[0];
+    my $article_dirname = dirname ($article);
+    my $article_basename = basename ($article, '.miz');
+    my $article_miz = "${article_dirname}/${article_basename}.miz";
 
-    if (! is_readable_file ($article)) {
+    if (! is_readable_file ($article_miz)) {
 	die error_message ('The given file', $SP, $article, $SP, 'does not exist or is unreadable.');
     }
 
@@ -117,7 +147,7 @@ sub process_commandline {
 	die error_message 'Not all the Mizar text enhancers are runnable.';
     }
 
-    return $article;
+    return $article_miz;
 }
 
 sub slurp {
@@ -132,14 +162,33 @@ sub slurp {
     close $fh
         or die error_message ('Unable to close the file (or filehandle) ', $path_or_fh,$FS);
 
-    return $contents;
+    if (wantarray) {
+	return split ("\N{LF}", $contents);
+    } else {
+	return $contents;
+    }
 }
 
 sub sensible_err_file {
-    my $article = shift;
+    my $article_err = shift;
 
-    my $article_basename = basename ($article, '.miz');
-    my $article_err = "${article_basename}.err";
+    if (-e $article_err) {
+
+	my @err_lines = slurp ($article_err);
+
+	if ($opt_debug) {
+	    warn 'Error lines:', "\N{LF}", join ("\N{LF}", @err_lines);
+	}
+
+	if (any { $_ =~ /\N{SPACE} 4 \z/ } @err_lines) {
+	    return 0;
+	} else {
+	    return 1;
+	}
+    } else {
+	return 1;
+    }
+
 }
 
 sub run_mizar_tool {
@@ -188,7 +237,7 @@ sub is_compressible {
 	} elsif (-z $article_err) {
 	    next;
 	} else {
-	    if (sensible_err_file ($article)) {
+	    if (sensible_err_file ($article_err)) {
 		$compressible = 1;
 		last;
 	    } else {
@@ -205,9 +254,9 @@ sub cmp_line_col {
     my $line_col_a = shift;
     my $line_col_b = shift;
 
-    if ($line_col_a =~ /\A (\d+) [:] (\d+) \z/) {
+    if ($line_col_a =~ /\A (\d+) [:] (\d+) /) {
 	(my $line_a, my $col_a) = ($1, $2);
-	if ($line_col_b =~ /\A (\d+) [:] (\d+) \z/) {
+	if ($line_col_b =~ /\A (\d+) [:] (\d+) /) {
 	    (my $line_b, my $col_b) = ($1, $2);
 	    if ($line_a < $line_b) {
 		return -1;
@@ -238,6 +287,10 @@ sub recommend_compressions {
     my $article_basename = basename ($article, '.miz');
     my $article_err = "${article_dirname}/${article_basename}.err";
 
+    if (-e $article_err) {
+	unlink $article_err; # ensure that we start from scratch
+    }
+
     my %recommendations = ();
 
     foreach my $program (@ENHANCERS) {
@@ -249,7 +302,7 @@ sub recommend_compressions {
 	} elsif (-z $article_err) {
 	    next;
 	} else {
-	    if (sensible_err_file ($article)) {
+	    if (sensible_err_file ($article_err)) {
 		my $err_contents = slurp ($article_err);
 		my @err_lines = split ("\N{LF}", $err_contents);
 		foreach my $err_line (@err_lines) {
@@ -271,17 +324,46 @@ sub recommend_compressions {
     my @recommendations = keys %recommendations;
     my @sorted_recommendations = sort { cmp_line_col ($a, $b) } @recommendations;
 
-    foreach my $rec (@sorted_recommendations) {
-	$recommendation .= ',' . $rec . ':' . $recommendations{$rec};
+    @sorted_recommendations
+	= map { $_ . ':' . $recommendations{$_}} @sorted_recommendations;
+
+    # warn '@sorted_recommendations is', "\N{LF}", Dumper (@sorted_recommendations);
+
+    # Ensure that nothing intervenes within an inacc block
+    my %recommendations_to_keep = ();
+    foreach my $i (0 .. scalar @sorted_recommendations - 1) {
+	my $recommendation = $sorted_recommendations[$i];
+	if ($recommendation =~ / [:] 610 \z/) {
+	    if ($i < scalar @sorted_recommendations - 1) {
+		my $next_recommendation = $sorted_recommendations[$i + 1];
+		if ($next_recommendation =~ / [:] 611 \z/) {
+		    $recommendations_to_keep{$recommendation} = 0;
+		} else {
+		    if ($opt_debug) {
+			warn 'The 610 recommendation ', $recommendation, ' is not immediately followed by a closing 611 recommendation.  Ignoring it...';
+		    }
+		}
+	    }
+	} elsif ($recommendation =~ / [:] 611 \z/) {
+	    if ($i > 0) {
+		my $previous_recommendation = $sorted_recommendations[$i - 1];
+		if ($previous_recommendation =~ / [:] 610 \z/) {
+		    $recommendations_to_keep{$recommendation} = 0;
+		} else {
+		    if ($opt_debug) {
+			warn 'The 611 recommendation ', $recommendation, ' is not immediately preceded by an opening 610 recommendation.  Ignoring it...';
+		    }
+		}
+	    }
+	} else {
+	    $recommendations_to_keep{$recommendation} = 0;
+	}
     }
 
-    if ($recommendation eq $EMPTY_STRING) {
-	$recommendation = ',,';
-    } else {
-	$recommendation .= ',';
-    }
+    @sorted_recommendations
+	= sort { cmp_line_col ($a, $b) } keys %recommendations_to_keep;
 
-    return $recommendation;
+    return ',' . join (',', @sorted_recommendations) . ',';
 
 }
 
@@ -295,19 +377,21 @@ sub apply_recommendations {
     my $article_wsx_temp = "${article_dirname}/${article_basename}.wsx1";
     my $article_miz = "${article_dirname}/${article_basename}.miz";
 
-    my $compress_result = system ("xsltproc --stringparam recommendations '${recommendation}' ${COMPRESS_STYLESHEET} ${article_wsx} > ${article_wsx_temp}");
-    my $compress_exit_code = $compress_result >> 8;
+    apply_stylesheet ($COMPRESS_STYLESHEET,
+		      $article_wsx,
+		      $article_wsx,
+		      {
+			  'recommendations' => $recommendation,
+		      }
+		  );
 
-    if ($compress_exit_code != 0) {
-	die 'xsltproc died applying the compress stylsheet.';
-    }
-
-    my $pp_result = system ("xsltproc ${PP_STYLESHEET} ${article_wsx_temp} > ${article_miz}");
-    my $pp_exit_code = $pp_result >> 8;
-
-    if ($pp_exit_code != 0) {
-	die 'xsltproc died applying the pp stylsheet.';
-    }
+    apply_stylesheet ($PP_STYLESHEET,
+		      $article_wsx,
+		      $article_miz,
+		      {
+			  'indenting' => '1',
+		      }
+		  );
 
     return 1;
 
@@ -318,6 +402,9 @@ my $article_dirname = dirname ($article);
 my $article_basename = basename ($article, '.miz');
 
 my $fresh_article = "${article_dirname}/compress.miz";
+my $fresh_article_wsx = "${article_dirname}/compress.wsx";
+my $fresh_article_old = "${article_dirname}/compress.miz.old";
+my $fresh_article_wsx_old = "${article_dirname}/compress.wsx.old";
 
 copy ($article, $fresh_article)
     or die 'Failed to make a copy of ', $article, ': ', $!;
@@ -325,11 +412,31 @@ copy ($article, $fresh_article)
 run_mizar_tool ('accom', $fresh_article);
 run_mizar_tool ('wsmparser', $fresh_article);
 
+my %applied_recommendations = ();
+
 my $compression_recommendations = recommend_compressions ($fresh_article);
 
-while ($compression_recommendations ne ',,') {
+if ($opt_debug) {
+    say 'Recommendations: ', $compression_recommendations;
+}
+
+while ($compression_recommendations ne ',,'
+	   && ! defined $applied_recommendations{$compression_recommendations}) {
+
+    # Save our work
+    if (-e $fresh_article_wsx) {
+	copy ($fresh_article_wsx, $fresh_article_wsx_old);
+    }
+    copy ($fresh_article, $fresh_article_old);
+
     apply_recommendations ($fresh_article, $compression_recommendations);
+    $applied_recommendations{$compression_recommendations} = 0;
     $compression_recommendations = recommend_compressions ($fresh_article);
+
+    if ($opt_debug) {
+	say 'Recommendations: ', $compression_recommendations;
+    }
+
     run_mizar_tool ('wsmparser', $fresh_article);
 }
 
