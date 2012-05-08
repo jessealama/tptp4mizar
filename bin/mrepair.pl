@@ -301,7 +301,7 @@ foreach my $problem (@problems) {
 
     my @eprove_call = ('eprove', $problem_path);
     my @epclextract_call = ('epclextract', '--tstp-out');
-    my @tptp4X_call = ('tptp4X', '-tfofify', '-fxml', '--');
+    my @tptp4X_call = ('tptp4X', '-fxml', '--');
 
     my $eprover_harness = harness (\@eprove_call,
 				   '|',
