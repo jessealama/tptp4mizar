@@ -132,8 +132,11 @@ sub process_commandline {
     }
 
     my $article = $ARGV[0];
+    my $article_dirname = dirname ($article);
+    my $article_basename = basename ($article, '.miz');
+    my $article_miz = "${article_dirname}/${article_basename}.miz";
 
-    if (! is_readable_file ($article)) {
+    if (! is_readable_file ($article_miz)) {
 	die error_message ('The given file', $SP, $article, $SP, 'does not exist or is unreadable.');
     }
 
@@ -141,7 +144,7 @@ sub process_commandline {
 	die error_message 'Not all the Mizar text enhancers are runnable.';
     }
 
-    return $article;
+    return $article_miz;
 }
 
 sub slurp {
