@@ -134,6 +134,48 @@ tpl skolemized-eventually (#formula-name, #candidates) {
   }
 }
 
+// tpl [tstp] {
+//   if [$only-skolemized-part = "1"] {
+//     for-each [formula] {
+//       $skolemized-eventually = skolemized-eventually (#formula-name = `@name`,
+//       			     			    #candidates = `ancestor::tstp/formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]`);
+//       choose {
+//         when [$skolemized-eventually = "1"] {
+//           apply [.];
+//         }
+//         when [source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]] {
+//           apply [.];
+//         }
+//         otherwise {
+//           // ignore
+//         }
+//       }
+//     }
+//   } else {
+//     for-each [formula] {
+//       $skolemized-eventually = skolemized-eventually (#formula-name = `@name`,
+//       			     			    #candidates = `ancestor::tstp/formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]`);
+//       choose {
+//         when [@status = "axiom" and $skolemized-eventually = "1"] {
+//           // ignore
+//         }
+//         when [@status = "axiom" and $skolemized-eventually = "0"] {
+//           apply [.];
+//         }
+//         when [source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]] {
+//           apply [.] mode="make-axiom";
+//         }
+//         when [@status = "conjecture"] {
+//           apply [.];
+//         }
+//         otherwise {
+//           // ignore
+//         }
+//       }
+//     }
+//   }
+// }
+
 tpl [tstp] {
   if [$only-skolemized-part = "1"] {
     for-each [formula] {
@@ -152,26 +194,11 @@ tpl [tstp] {
       }
     }
   } else {
-    for-each [formula] {
-      $skolemized-eventually = skolemized-eventually (#formula-name = `@name`,
-      			     			    #candidates = `ancestor::tstp/formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]`);
-      choose {
-        when [@status = "axiom" and $skolemized-eventually = "1"] {
-          // ignore
-        }
-        when [@status = "axiom" and $skolemized-eventually = "0"] {
-          apply [.];
-        }
-        when [source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]] {
-          apply [.] mode="make-axiom";
-        }
-        when [@status = "conjecture"] {
-          apply [.];
-        }
-        otherwise {
-          // ignore
-        }
-      }
+    for-each [formula[@syntax = "formula"]] {
+      apply [.];
+    }
+    for-each [formula[@syntax = "clause" and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]] {
+      apply [.];
     }
   }
 }
