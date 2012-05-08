@@ -21,7 +21,10 @@ use File::Copy qw(copy);
 use File::Basename qw(basename dirname);
 use Term::ANSIColor qw(colored);
 use List::MoreUtils qw(any);
+
 use FindBin qw($RealBin);
+use lib "$RealBin/../lib";
+use Xsltproc qw(apply_stylesheet);
 
 # Strings
 Readonly my $EMPTY_STRING => q{};
@@ -374,19 +377,16 @@ sub apply_recommendations {
     my $article_wsx_temp = "${article_dirname}/${article_basename}.wsx1";
     my $article_miz = "${article_dirname}/${article_basename}.miz";
 
-    my $compress_result = system ("xsltproc --stringparam recommendations '${recommendation}' ${COMPRESS_STYLESHEET} ${article_wsx} > ${article_wsx_temp}");
-    my $compress_exit_code = $compress_result >> 8;
+    apply_stylesheet ($COMPRESS_STYLESHEET,
+		      $article_wsx,
+		      $article_wsx,
+		      {
+			  'recommendations' => $recommendation,
+		      });
 
-    if ($compress_exit_code != 0) {
-	die 'xsltproc died applying the compress stylsheet.';
-    }
-
-    my $pp_result = system ("xsltproc ${PP_STYLESHEET} ${article_wsx_temp} > ${article_miz}");
-    my $pp_exit_code = $pp_result >> 8;
-
-    if ($pp_exit_code != 0) {
-	die 'xsltproc died applying the pp stylsheet.';
-    }
+    apply_stylesheet ($PP_STYLESHEET,
+		      $article_wsx,
+		      $article_miz);
 
     return 1;
 
