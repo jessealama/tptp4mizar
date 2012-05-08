@@ -578,6 +578,7 @@ foreach my $problem (@problems) {
 			  'prel-directory' => File::Spec->rel2abs ('prel'),
 			  'article' => $problem_name,
 			  'only-skolems' => '1',
+			  'reference-dco' => 'article',
 		      }
 		  );
 
