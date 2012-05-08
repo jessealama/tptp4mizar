@@ -14,6 +14,9 @@ output omit-xml-declaration="no";
 // The directory in which we will look for the dco file
 #prel-directory = { ""; }
 
+// Generate only skolem "definitions"
+#only-skolems = { ""; }
+
 //////////////////////////////////////////////////////////////////////
 // Keys
 //////////////////////////////////////////////////////////////////////
@@ -73,11 +76,13 @@ tpl [tstp] {
       }
     }
 
-    // Generate the axioms
-    for-each [formula[@status = "axiom"]] {
-      <Theorem {
-        @kind = "T";
-        apply [.] mode="render-definiens";
+    if [not($only-skolems = "1")] {
+      // Generate the axioms
+      for-each [formula[@status = "axiom"]] {
+        <Theorem {
+          @kind = "T";
+          apply [.] mode="render-definiens";
+        }
       }
     }
 
