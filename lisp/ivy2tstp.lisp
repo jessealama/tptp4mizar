@@ -138,6 +138,11 @@
 	    name-1
 	    name-2)))
 
+(defun render-propositional-step (step)
+  (destructuring-bind (formula-name)
+      step
+    (format nil "inference(propositional,[],[~a])" formula-name)))
+
 (defun render-source (source)
   (let ((rule-name (first source))
 	(tail (rest source)))
@@ -152,6 +157,8 @@
        (render-flip-step tail))
       (paramod
        (render-paramod-step tail))
+      (propositional
+       (render-propositional-step tail))
       (otherwise
        (error "Unknown rule of inference '~a'" rule-name)))))
 
