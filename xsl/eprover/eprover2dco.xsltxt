@@ -1,2 +1,3 @@
 stylesheet "1.0";
 include "../tstp/tstp2dco.xsl";
+output method="xml" indent="yes";
