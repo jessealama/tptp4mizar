@@ -165,6 +165,14 @@ tpl [quantifier[@type = "existential"]] {
   " : "; apply [*[position() = last()]]; ")";
 }
 
+tpl [defined-predicate[@name = "false"]] {
+  "$false";
+}
+
+tpl [defined-predicate[@name = "true"]] {
+  "$true";
+}
+
 //////////////////////////////////////////////////////////////////////
 // Terms
 //////////////////////////////////////////////////////////////////////
