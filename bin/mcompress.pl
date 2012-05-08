@@ -324,7 +324,7 @@ sub recommend_compressions {
     @sorted_recommendations
 	= map { $_ . ':' . $recommendations{$_}} @sorted_recommendations;
 
-    warn '@sorted_recommendations is', "\N{LF}", Dumper (@sorted_recommendations);
+    # warn '@sorted_recommendations is', "\N{LF}", Dumper (@sorted_recommendations);
 
     # Ensure that nothing intervenes within an inacc block
     my %recommendations_to_keep = ();
