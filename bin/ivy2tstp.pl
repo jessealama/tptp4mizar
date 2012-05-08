@@ -14,7 +14,6 @@ use File::Temp qw(tempfile);
 
 use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
-use Utils qw(slurp);
 
 my $opt_man = 0;
 my $opt_help = 0;
