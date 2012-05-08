@@ -225,15 +225,3 @@ tpl [formula] mode="make-axiom" {
     }
   }
 }
-
-tpl [function] {
-  $n = `@name`;
-  if [starts-with ($n, "esk")] {
-    <function {
-      @"name" = `concat ($n, "_", $skolem-prefix)`;
-      apply [*];
-    }
-  } else {
-    apply [.] mode="copy";
-  }
-}
