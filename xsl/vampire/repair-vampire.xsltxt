@@ -21,6 +21,18 @@ output method="xml" indent="yes";
 #herbrand-proofs = { ""; }
 
 //////////////////////////////////////////////////////////////////////
+// Keys
+//////////////////////////////////////////////////////////////////////
+
+key "splits"
+    [formula[@name and source/non-logical-data[@name = "introduced"]/non-logical-data[@name = "backtracking_splitting_component"]]]
+    `@name`;
+
+key "formulas"
+    [formula[@name]]
+    `@name`;
+
+//////////////////////////////////////////////////////////////////////
 // Templates
 //////////////////////////////////////////////////////////////////////
 
@@ -345,7 +357,98 @@ tpl [source] (#step) mode="ivy-source"{
   }
 }
 
-tpl [formula[@name]] (#step) mode="ivy-lemma" {
+tpl emit-implicitly-qualified-variables (#variables, #seen) {
+  if [$variables] {
+    $variable = `$variables[1]`;
+    $variable-name = `$variable/@name`;
+    $token = `concat (",", $variable-name)`;
+    if [contains ($seen, $token)] {
+      emit-implicitly-qualified-variables (#variables = `$variables[position() > 1]`,
+      					   #seen = $seen);
+    } else {
+      $new-seen = `concat ($seen, $token)`;
+      <Implicitly-Qualified-Segment {
+        apply [$variable];
+      }
+      emit-implicitly-qualified-variables (#variables = `$variables[position() > 1]`,
+      					   #seen = $new-seen);
+    }
+  }
+}
+
+tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "resolve"]]] (#step) mode="ivy-lemma" {
+  $n = `@name`;
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Compact-Statement";
+    <Proposition {
+      <Label {
+        @spelling = `concat ($step, "ivy", $n)`;
+      }
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
+    }
+    if [descendant::variable] {
+      <Block {
+        @kind = "Proof";
+        <Item {
+          @kind = "Generalization";
+          emit-implicitly-qualified-variables (#variables = `descendant::variable`,
+ 	  				       #seen = "");
+        }
+        for-each [source] {
+          for-each [non-logical-data[@name = "inference"]] {
+            for-each [non-logical-data[position() = last()]] {
+              for-each [non-logical-data[@name] | number[@name]] {
+                $pos = `position ()`;
+                $local-name = `@name`;
+                <Item {
+                  @kind = "Regular-Statement";
+                  @shape = "Compact-Statement";
+                  <Proposition {
+                    <Label {
+                      @spelling = `concat ("A", $pos)`;
+                    }
+                    for-each [key ("formulas", $local-name)] {
+                      for-each [*[1]] {
+                        apply [.] mode="strip-universal-prefix";
+                      }
+                    }
+                  }
+                  <Straightforward-Justification {
+                    <Local-Reference {
+                      @spelling = `concat ($step, "ivy", $local-name)`;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        <Item {
+          @kind = "Conclusion";
+          @shape = "Compact-Statement";
+          <Proposition {
+            <Thesis;
+          }
+          // resolution always has exactly two premises
+          <Straightforward-Justification {
+            <Local-Reference {
+              @spelling = "A1";
+            }
+            <Local-Reference {
+              @spelling = "A2";
+            }
+          }
+        }
+      }
+    } else {
+      apply [source] (#step = $step) mode="ivy-source";
+    }
+  }
+}
+
+tpl [formula[@name and not(source/non-logical-data[@name = "inference"]/non-logical-data[@name = "resolve"])]] (#step) mode="ivy-lemma" {
   $n = `@name`;
   <Item {
     @kind = "Regular-Statement";
@@ -376,15 +479,6 @@ tpl [formula[@name]] (#step) mode="ivy-conclusion" {
     apply [source] (#step = $step) mode="ivy-source";
   }
 }
-
-
-//////////////////////////////////////////////////////////////////////
-// Keys
-//////////////////////////////////////////////////////////////////////
-
-key "splits"
-    [formula[@name and source/non-logical-data[@name = "introduced"]/non-logical-data[@name = "backtracking_splitting_component"]]]
-    `@name`;
 
 //////////////////////////////////////////////////////////////////////
 // Templates
