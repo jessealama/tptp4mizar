@@ -435,12 +435,12 @@ my @solution_names = map { $_->findvalue ('@name') } @problems;
 
 my $solutions_token_string = ',' . join (',', @solution_names) . ',';
 
-my $vampire_to_wsx_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/vampire2wsx.xsl";
 my $repair_vampire_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/repair-vampire.xsl";
-my $vampire_to_voc_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/vampire2voc.xsl";
-my $vampire_to_dco_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/vampire2dco.xsl";
-my $vampire_to_dno_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/vampire2dno.xsl";
-my $vampire_to_the_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/vampire2the.xsl";
+
+my $eprover_to_voc_stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2voc.xsl";
+my $eprover_to_dco_stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2dco.xsl";
+my $eprover_to_dno_stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2dno.xsl";
+my $eprover_to_the_stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2the.xsl";
 foreach my $problem (@problems) {
     my $problem_name = $problem->findvalue ('@name');
     my $solution_path = "${repair_dir}/${problem_name}.p.eprover-proof.xml";
@@ -449,7 +449,7 @@ foreach my $problem (@problems) {
     my $solution_dno = "prel/${problem_name}.dno";
     my $solution_the = "prel/${problem_name}.the";
 
-    apply_stylesheet ($vampire_to_voc_stylesheet,
+    apply_stylesheet ($eprover_to_voc_stylesheet,
 		      $solution_path,
 		      $solution_voc,
 		      {
@@ -457,7 +457,7 @@ foreach my $problem (@problems) {
 		      }
 		  );
 
-    apply_stylesheet ($vampire_to_dco_stylesheet,
+    apply_stylesheet ($eprover_to_dco_stylesheet,
 		      $solution_path,
 		      $solution_dco,
 		      {
@@ -466,7 +466,7 @@ foreach my $problem (@problems) {
 		      }
 		  );
 
-    apply_stylesheet ($vampire_to_dno_stylesheet,
+    apply_stylesheet ($eprover_to_dno_stylesheet,
 		      $solution_path,
 		      $solution_dno,
 		      {
@@ -475,12 +475,13 @@ foreach my $problem (@problems) {
 		      }
 		  );
 
-    apply_stylesheet ($vampire_to_the_stylesheet,
+    apply_stylesheet ($eprover_to_the_stylesheet,
 		      $solution_path,
 		      $solution_the,
 		      {
 			  'prel-directory' => File::Spec->rel2abs ('prel'),
-			  'article' => 'ARTICLE',
+			  'article' => $problem_name,
+			  'only-skolems' => '1',
 		      }
 		  );
 
@@ -518,7 +519,10 @@ my $pp_stylesheet = "${MIZAR_STYLESHEET_HOME}/pp.xsl";
 apply_stylesheet ($pp_stylesheet,
 		  $repaired_wsx,
 		  $repaired_miz,
-		  { 'evl' => File::Spec->rel2abs ('text/repaired.evl') });
+		  {
+		      'evl' => File::Spec->rel2abs ('text/repaired.evl'),
+		      'indenting' => '1',
+		  });
 
 
 __END__
