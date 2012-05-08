@@ -482,7 +482,6 @@ tpl [Local-Reference[@line and @col]] (#ignore-inacc) {
   } else {
     <Local-Reference {
       for-each [@*] { copy-of `.`; }
-      apply [*] (#ignore-inacc = $ignore-inacc);
     }
   }
 }
