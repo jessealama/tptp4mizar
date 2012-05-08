@@ -114,7 +114,9 @@ tpl consider-recommendation (#recommendation, #ignore-inacc) {
           apply [*] (#ignore-inacc = $ignore-inacc);
         }
       } else {
-        $message = "604 recommendation accepted; rewriting justification.";
+        $line = `@line`;
+        $col = `@col`;
+        $message = `concat ("604 recommendation at line ", $line, " and column ", $col, " accepted; rewriting justification.")`;
         msg $message;
         if [self::*[@spelling]] {
           $formula-name = `@spelling`;
