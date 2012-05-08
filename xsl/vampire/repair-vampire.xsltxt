@@ -119,7 +119,7 @@ tpl [non-logical-data[@name = "inference"]] (#step) mode="imported-eprover-lemma
     for-each [non-logical-data[@name and not(*)] | number[@name]] {
       $n = `@name`;
       <Local-Reference {
-        @spelling = `concat ($step, $n)`;
+        @spelling = `concat ($step, "eprover", $n)`;
       }
     }
   }
@@ -159,9 +159,10 @@ tpl [formula[@name]] (#step) mode="imported-eprover-lemma" {
     @shape = "Compact-Statement";
     <Proposition {
       <Label {
-        @spelling = `concat ($step, $n)`;
+        @spelling = `concat ($step, "eprover", $n)`;
       }
-      apply [*[1]] mode="strip-universal-prefix";
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
     }
     <Straightforward-Justification {
       for-each [source] {
@@ -178,9 +179,10 @@ tpl [formula[@name]] (#step) mode="imported-eprover-axiom" {
     @shape = "Compact-Statement";
     <Proposition {
       <Label {
-        @spelling = `concat ($step, $n)`;
+        @spelling = `concat ($step, "eprover", $n)`;
       }
-      apply [*[1]] mode="strip-universal-prefix";
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
     }
     <Straightforward-Justification {
       for-each [source] {
@@ -197,9 +199,10 @@ tpl [formula[@name]] (#step) mode="imported-eprover-raa" {
     <Single-Assumption {
       <Proposition {
         <Label {
-          @spelling = `concat ($step, $n)`;
+          @spelling = `concat ($step, "eprover", $n)`;
         }
-        apply [*[1]] mode="strip-universal-prefix";
+        // apply [*[1]] mode="strip-universal-prefix";
+        apply [*[1]];
       }
     }
   }
@@ -217,9 +220,10 @@ tpl [tstp[formula[@status = "conjecture"]]] (#step, #herbrand-proof) mode="impor
       @shape = "Compact-Statement";
       <Proposition {
         <Label {
-          @spelling = `concat ($step, $n)`;
+          @spelling = `concat ($step, "eprover", $n)`;
         }
-        apply [*[1]] mode="strip-universal-prefix";
+        // apply [*[1]] mode="strip-universal-prefix";
+        apply [*[1]];
       }
       <Block {
         @kind = "Proof";
@@ -261,13 +265,13 @@ tpl [tstp[formula[@status = "conjecture"]]] (#step, #herbrand-proof) mode="impor
                   for-each [formula[@syntax = "clause" and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]] {
                     $local-name = `@name`;
                     <Local-Reference {
-                      @spelling = `concat ($step, $local-name)`;
+                      @spelling = `concat ($step, "eprover", $local-name)`;
                     }
                   }
                   for-each [formula[@syntax = "formula" and (@status = "plain" or @status = "axiom")]] {
                     $local-name = `@name`;
                     <Local-Reference {
-                      @spelling = `concat ($step, $local-name)`;
+                      @spelling = `concat ($step, "eprover", $local-name)`;
                     }
                   }
                 }
@@ -317,9 +321,10 @@ tpl [formula[@name]] (#step) mode="ivy-assumption" {
     <Single-Assumption {
       <Proposition {
         <Label {
-          @spelling = `concat ($step, $n)`;
+          @spelling = `concat ($step, "ivy", $n)`;
         }
-        apply [*[1]] mode="strip-universal-prefix";
+        // apply [*[1]] mode="strip-universal-prefix";
+        apply [*[1]];
       }
     }
   }
@@ -332,7 +337,7 @@ tpl [source] (#step) mode="ivy-source"{
         for-each [non-logical-data[@name] | number[@name]] {
           $n = `@name`;
           <Local-Reference {
-            @spelling = `concat ($step, $n)`;
+            @spelling = `concat ($step, "ivy", $n)`;
           }
         }
       }
@@ -347,9 +352,10 @@ tpl [formula[@name]] (#step) mode="ivy-lemma" {
     @shape = "Compact-Statement";
     <Proposition {
       <Label {
-        @spelling = `concat ($step, $n)`;
+        @spelling = `concat ($step, "ivy", $n)`;
       }
-      apply [*[1]] mode="strip-universal-prefix";
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
     }
     apply [source] (#step = $step) mode="ivy-source";
   }
@@ -362,9 +368,10 @@ tpl [formula[@name]] (#step) mode="ivy-conclusion" {
     @shape = "Compact-Statement";
     <Proposition {
       <Label {
-        @spelling = `concat ($step, $n)`;
+        @spelling = `concat ($step, "ivy", $n)`;
       }
-      apply [*[1]] mode="strip-universal-prefix";
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
     }
     apply [source] (#step = $step) mode="ivy-source";
   }
@@ -589,7 +596,8 @@ tpl [formula[@name]] (#linked) mode="lemma" {
         <Label {
           @spelling = $n;
         }
-        apply [*[1]] mode="strip-universal-prefix";
+        // apply [*[1]] mode="strip-universal-prefix";
+        apply [*[1]];
       }
       <Block {
         @kind = "Proof";
@@ -609,7 +617,7 @@ tpl [formula[@name]] (#linked) mode="lemma" {
               for-each [tstp/formula[@status = "conjecture"]] {
                 $local-name = `@name`;
                 <Local-Reference {
-                  @spelling = `concat ($n, $local-name)`;
+                  @spelling = `concat ($n, "eprover", $local-name)`;
                 }
               }
             }
@@ -625,7 +633,8 @@ tpl [formula[@name]] (#linked) mode="lemma" {
         <Label {
           @spelling = `@name`;
         }
-        apply [*[1]] mode="strip-universal-prefix";
+        // apply [*[1]] mode="strip-universal-prefix";
+        apply [*[1]];
       }
       <Straightforward-Justification {
         if [$linked = "1"] {
