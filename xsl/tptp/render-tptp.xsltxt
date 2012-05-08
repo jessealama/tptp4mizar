@@ -118,7 +118,7 @@ tpl [source] {
 }
 
 tpl [useful-info] {
-  msg terminate="yes" "Error: sorry, we don't the useful-data part of TPTP formulas yet.";
+  msg terminate="yes" "Error: sorry, we don't handle the useful-data part of TPTP formulas yet.";
 }
 
 //////////////////////////////////////////////////////////////////////
