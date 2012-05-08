@@ -17,6 +17,10 @@ output omit-xml-declaration="no";
 // Generate only skolem "definitions"
 #only-skolems = { ""; }
 
+// Name of a dco file (sans extension) in which we shall look for
+// other functions and predicates.
+#reference-dco = { ""; }
+
 //////////////////////////////////////////////////////////////////////
 // Keys
 //////////////////////////////////////////////////////////////////////
@@ -65,11 +69,16 @@ tpl [/] {
 
 tpl [tstp] {
   $article-uc = uc (#s = `$article`);
-
+  $reference-dco-uc = uc (#s = `$reference-dco`);
   <Theorems {
     <Signature {
       <ArticleID {
         @"name" = "HIDDEN";
+      }
+      if [not($reference-dco = "")] {
+        <ArticleID {
+          @"name" = $reference-dco-uc;
+        }
       }
       <ArticleID {
         @"name" = $article-uc;
@@ -87,7 +96,7 @@ tpl [tstp] {
     }
 
     // "Definitions" for skolem functions
-    $num-functions = `count(descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)])`;
+    $num-functions = `count(descendant::function[starts-with (@name, "esk") and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)])`;
     for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] {
       $this-formula-name = `@name`;
       <Theorem {
@@ -97,9 +106,11 @@ tpl [tstp] {
         <Not {
           <And {
             for-each [source] {
+              msg "source";
               for-each [non-logical-data[@name = "inference"]] {
+                msg "inference";
                 for-each [non-logical-data[position() = last()]] {
-                  for-each [number[@name]] {
+                  for-each [non-logical-data[@name and not(*)] | number[@name]] {
                     $other-formula-name = `@name`;
                     if [key ("formulas", $other-formula-name)] {
                       for-each [key ("formulas", $other-formula-name)] {
@@ -265,23 +276,46 @@ tpl [predicate[@name and not(@name = "=")]] (#variable-alist) mode="render-defin
     $n = `@name`;
     $article-lc = lc (#s = $article);
     $article-dco = `concat ($prel-directory, "/", $article-lc, ".dco")`;
-    if [document ($article-dco, /)] {
-      for-each [document ($article-dco, /)] {
-        if [Constructors/Constructor[@kind = "R" and @spelling = $n and @nr]] {
-          for-each [Constructors/Constructor[@kind = "R" and @spelling = $n and @nr]] {
-            @nr = `@nr + 2`; // compensates for equality and membership in HIDDEN
+    if [$reference-dco = ""] {
+      if [document ($article-dco, /)] {
+        for-each [document ($article-dco, /)] {
+          if [Constructors/Constructor[@kind = "R" and @spelling = $n and @nr]] {
+            for-each [Constructors/Constructor[@kind = "R" and @spelling = $n and @nr]] {
+              @nr = `@nr + 2`; // compensates for equality and membership in HIDDEN
+            }
+          } else {
+            $message = `concat ("Error: unable to find the predicate ", $n, " in ", $article-dco, ".")`;
+            msg terminate="yes" $message;
           }
-        } else {
-          $message = `concat ("Error: unable to find the predicate ", $n, " in ", $article-dco, ".")`;
-          msg terminate="yes" $message;
         }
+
+        apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
+
+      } else {
+        $message = `concat ("Error: cannot load predicates becuase we are unable to open ", $article-dco, " (or it is empty, but we assume it is non-empty.)")`;
+        msg terminate="yes" $message;
       }
-
-      apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
-
     } else {
-      $message = `concat ("Error: unable to open ", $article-dco, " (or it is empty, but we assume it is non-empty.)")`;
-      msg terminate="yes" $message;
+      // We expect to find predicates in the reference dco
+      $reference-dco-path = `concat ($prel-directory, "/", $reference-dco, ".dco")`;
+      if [document ($reference-dco-path, /)] {
+        for-each [document ($reference-dco-path, /)] {
+          if [Constructors/Constructor[@kind = "R" and @spelling = $n and @nr]] {
+            for-each [Constructors/Constructor[@kind = "R" and @spelling = $n and @nr]] {
+              @nr = `@nr + 2`; // compensates for equality and membership in HIDDEN
+            }
+          } else {
+            $message = `concat ("Error: unable to find the predicate ", $n, " in the reference .dco file ", $reference-dco-path, ".")`;
+            msg terminate="yes" $message;
+          }
+        }
+
+        apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
+
+      } else {
+        $message = `concat ("Error: cannot load functions because we are unable to open ", $reference-dco-path, " (or it is empty, but we assume it is non-empty.)")`;
+        msg terminate="yes" $message;
+      }
     }
   }
 }
@@ -306,25 +340,60 @@ tpl [function[@name]] (#variable-alist) mode="render-definiens" {
     @kind = "K";
     // @spelling = `@name`;
     $n = `@name`;
-    $article-lc = lc (#s = $article);
-    $article-dco = `concat ($prel-directory, "/", $article-lc, ".dco")`;
-    if [document ($article-dco, /)] {
-      for-each [document ($article-dco, /)] {
-        if [Constructors/Constructor[@kind = "K" and @spelling = $n and @nr]] {
-          for-each [Constructors/Constructor[@kind = "K" and @spelling = $n and @nr]] {
-            @nr = `@nr`;
+    if [$reference-dco = ""] {
+      $article-lc = lc (#s = $article);
+      $article-dco = `concat ($prel-directory, "/", $article-lc, ".dco")`;
+      if [document ($article-dco, /)] {
+        for-each [document ($article-dco, /)] {
+          if [Constructors/Constructor[@kind = "K" and @spelling = $n and @nr]] {
+            for-each [Constructors/Constructor[@kind = "K" and @spelling = $n and @nr]] {
+              @nr = `@nr`;
+            }
+          } else {
+            $message = `concat ("Error: unable to find the function ", $n, " in ", $article-dco, ".")`;
+            msg terminate="yes" $message;
           }
-        } else {
-          $message = `concat ("Error: unable to find the function ", $n, " in ", $article-dco, ".")`;
-          msg terminate="yes" $message;
         }
+        apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
+      } else {
+        $message = `concat ("Error: unable to load functions because we cannot open ", $article-dco, " (or it is empty, but we assume it is non-empty.)")`;
+        msg terminate="yes" $message;
       }
-
-      apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
-
     } else {
-      $message = `concat ("Error: unable to open ", $article-dco, " (or it is empty, but we assume it is non-empty.)")`;
-      msg terminate="yes" $message;
+      $reference-dco-path = `concat ($prel-directory, "/", $reference-dco, ".dco")`;
+      if [document ($reference-dco-path, /)] {
+        for-each [document ($reference-dco-path, /)] {
+          $num-functions-in-reference-dco = `count (Constructors/Constructor[@kind = "K"])`;
+          if [Constructors/Constructor[@kind = "K" and @spelling = $n and @nr]] {
+            for-each [Constructors/Constructor[@kind = "K" and @spelling = $n and @nr]] {
+              @nr = `@nr`;
+            }
+          } else {
+            $article-lc = lc (#s = $article);
+            $article-dco = `concat ($prel-directory, "/", $article-lc, ".dco")`;
+            if [document ($article-dco, /)] {
+              for-each [document ($article-dco, /)] {
+                if [Constructors/Constructor[@kind = "K" and @spelling = $n and @nr]] {
+                  for-each [Constructors/Constructor[@kind = "K" and @spelling = $n and @nr]] {
+                    $pos = `@nr`;
+                    @nr = `$num-functions-in-reference-dco + $pos`;
+                  }
+                } else {
+                  $message = `concat ("Error: unable to find the function ", $n, " in ", $article-dco, ".")`;
+                  msg terminate="yes" $message;
+                }
+              }
+            } else {
+              $message = `concat ("Error: failed to open ", $article-dco)`;
+              msg terminate="yes" $message;
+            }
+          }
+        }
+        apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
+      } else {
+        $message = `concat ("Error: failed to open ", $reference-dco-path)`;
+        msg terminate="yes" $message;
+      }
     }
   }
 }
