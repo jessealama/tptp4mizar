@@ -382,11 +382,16 @@ sub apply_recommendations {
 		      $article_wsx,
 		      {
 			  'recommendations' => $recommendation,
-		      });
+		      }
+		  );
 
     apply_stylesheet ($PP_STYLESHEET,
 		      $article_wsx,
-		      $article_miz);
+		      $article_miz,
+		      {
+			  'indenting' => '1',
+		      }
+		  );
 
     return 1;
 
