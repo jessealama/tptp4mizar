@@ -524,8 +524,8 @@ foreach my $problem (@problems) {
 my @eprover_clausification_xmls = glob "${repair_dir}/*-clausification.xml";
 my @ivy_proof_xmls = glob "${repair_dir}/*-clausified.ivy-proof.xml";
 
-warn 'eprover clausification xmls:', $LF, Dumper (@eprover_clausification_xmls);
-warn 'ivy proof xmls:', $LF, Dumper (@ivy_proof_xmls);
+# warn 'eprover clausification xmls:', $LF, Dumper (@eprover_clausification_xmls);
+# warn 'ivy proof xmls:', $LF, Dumper (@ivy_proof_xmls);
 
 my @solution_names = map { $_->findvalue ('@name') } @problems;
 
@@ -597,8 +597,8 @@ apply_stylesheet ($vampire_to_evl_stylesheet,
 		  });
 
 
-warn 'clausifications:', $LF, $clausifications_token_string;
-warn 'herbrand-proofs:', $LF, $herbrand_proofs_token_string;
+# warn 'clausifications:', $LF, $clausifications_token_string;
+# warn 'herbrand-proofs:', $LF, $herbrand_proofs_token_string;
 
 apply_stylesheet ($repair_vampire_stylesheet,
 		  'problem.xml',
