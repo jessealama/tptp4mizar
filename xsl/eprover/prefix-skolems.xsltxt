@@ -41,6 +41,9 @@ tpl [function] {
       apply [*];
     }
   } else {
-    apply [.] mode="copy";
+    <function {
+      for-each [@*] { copy-of `.`; }
+      apply [*];
+    }
   }
 }
