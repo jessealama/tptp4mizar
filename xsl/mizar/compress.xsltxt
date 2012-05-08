@@ -124,7 +124,9 @@ tpl consider-recommendation (#recommendation, #ignore-inacc) {
             for-each [key ("labelled-formulas", $formula-name)] {
               if [Straightforward-Justification] {
                 for-each [Straightforward-Justification] {
-                  apply [*] (#ignore-inacc = $ignore-inacc);
+                  for-each [*] {
+                    apply [.] mode="copy";
+                  }
                 }
               } else {
                 apply [.] (#message = "Error: we expected to find a Straightforward-Justification child of the current item, but there is none.") mode="die";
