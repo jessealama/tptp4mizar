@@ -88,6 +88,7 @@ if (scalar @ARGV == 1) {
 my $ivy_to_tstp_lisp = "$RealBin/../lisp/ivy2tstp.lisp";
 
 my @ccl_call = ('ccl',
+		'--batch',
 		'--load', $ivy_to_tstp_lisp,
 		'--eval', '(print-ivy2tstp #p"' . $ivy_file . '")',
 	        '--eval', '(ccl:quit)');
