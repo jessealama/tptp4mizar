@@ -92,12 +92,14 @@ my $help = 0;
 my $man = 0;
 my $db = undef;
 my $verbose = 0;
+my $opt_debug = 0;
 my $opt_nested = 0;
 my $opt_style = 'tptp';
 
 my $options_ok = GetOptions (
     "db=s"     => \$db,
     "verbose"  => \$verbose,
+    'debug' => \$opt_debug,
     'help' => \$help,
     'man' => \$man,
     'nested' => \$opt_nested,
@@ -127,6 +129,10 @@ if (scalar @ARGV != 1) {
     pod2usage(
 	-exitval => 1,
     );
+}
+
+if ($opt_debug) {
+    $verbose = 1;
 }
 
 if (! defined $STYLES{$opt_style}) {
