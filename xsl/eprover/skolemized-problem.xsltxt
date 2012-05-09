@@ -82,7 +82,7 @@ tpl exists-path-from-any-to (#candidates, #to) {
               when [non-logical-data[@name = "inference"]] {
                 for-each [non-logical-data[@name = "inference"]] {
                   for-each [non-logical-data[position() = last()]] {
-                    $path = exists-path-from-any-to (#candidates = `number[@name]/@name`,
+                    $path = exists-path-from-any-to (#candidates = `number/@name | non-logical-data/@name`,
     		    	    			     #to = $to);
                     if [$path = "1"] {
                       "1";
