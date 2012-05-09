@@ -300,7 +300,7 @@ my $err_token_string = ',' . $errs;
 
 # warn 'error token string: ', $err_token_string;
 
-my $repair_stylesheet = "${MIZAR_STYLESHEET_HOME}/repair.xsl";
+my $mizar_repair_stylesheet = "${MIZAR_STYLESHEET_HOME}/repair.xsl";
 
 # Warning: we are inside $db at this point
 my $repair_dir = 'repair';
@@ -309,7 +309,7 @@ mkdir $repair_dir
 
 my $repair_problems = "${repair_dir}/problems.xml";
 apply_stylesheet (
-    $repair_stylesheet,
+    $mizar_repair_stylesheet,
     $article_wsx,
     $repair_problems,
     {
@@ -545,7 +545,18 @@ my @solution_names = map { $_->findvalue ('@name') } @problems;
 
 my $solutions_token_string = ',' . join (',', @solution_names) . ',';
 
-my $repair_vampire_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/repair-vampire.xsl";
+my $repair_stylesheet = undef;
+if ($opt_style eq 'vampire') {
+    $repair_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/repair-vampire.xsl";
+} elsif ($opt_style eq 'eprover') {
+    $repair_stylesheet = "${EPROVER_STYLESHEET_HOME}/repair-eprover.xsl";
+} else {
+    die error_message ('Unsuported proof style "', $opt_style, '".');
+}
+
+if (! is_readable_file ($repair_stylesheet)) {
+    die error_message ('The repair stylesheet does not exist at the expected location (', $repair_stylesheet, '), or it is unreadable.');
+}
 
 my $eprover_to_voc_stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2voc.xsl";
 my $eprover_to_dco_stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2dco.xsl";
@@ -615,7 +626,7 @@ apply_stylesheet ($vampire_to_evl_stylesheet,
 # warn 'clausifications:', $LF, $clausifications_token_string;
 # warn 'herbrand-proofs:', $LF, $herbrand_proofs_token_string;
 
-apply_stylesheet ($repair_vampire_stylesheet,
+apply_stylesheet ($repair_stylesheet,
 		  'problem.xml',
 		  $repaired_wsx,
 		  {
