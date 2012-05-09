@@ -128,6 +128,7 @@ tpl [source[non-logical-data[@name = "file"]]] (#step) mode="imported-eprover-ax
 
 tpl [formula[@name]] (#step) mode="imported-eprover-lemma" {
   $n = `@name`;
+  $step-uc = uc (#s = $step);
   <Item {
     @kind = "Regular-Statement";
     @shape = "Compact-Statement";
@@ -138,9 +139,65 @@ tpl [formula[@name]] (#step) mode="imported-eprover-lemma" {
       // apply [*[1]] mode="strip-universal-prefix";
       apply [*[1]];
     }
-    <Straightforward-Justification {
+    <Block {
+      @kind = "Proof";
+      apply [*[1]] mode="emit-universal-prefix";
       for-each [source] {
-        apply [.] (#step = $step) mode="imported-eprover-lemma";
+        for-each [non-logical-data[@name = "inference"]] {
+          for-each [non-logical-data[position() = last()]] {
+            for-each [non-logical-data[@name and not(*)] | number[@name]] {
+              $local-name = `@name`;
+              $position = `position ()`;
+              for-each [ancestor::tstp/formula[@name = $local-name]] {
+                <Item {
+                  @kind = "Regular-Statement";
+                  @shape = "Compact-Statement";
+                  <Proposition {
+                    <Label {
+                      @spelling = `concat ("A", $position)`;
+                    }
+                    apply [*[1]] mode="strip-universal-prefix";
+                  }
+                  <Straightforward-Justification {
+                    <Local-Reference {
+                      @spelling = `concat ($step, "eprover", $local-name)`;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      <Item {
+        @kind = "Conclusion";
+        @shape = "Compact-Statement";
+        <Proposition {
+          <Thesis;
+        }
+        <Straightforward-Justification {
+          for-each [source] {
+            for-each [non-logical-data[@name = "inference"]] {
+              for-each [non-logical-data[position() = last()]] {
+                for-each [non-logical-data[@name and not(*)] | number[@name]] {
+                  $local-name = `@name`;
+                  $position = `position ()`;
+                  <Local-Reference {
+                    @spelling = `concat ("A", $position)`;
+                  }
+                }
+              }
+
+  	      if [non-logical-data[@name = "skolemize"]] {
+                <Definition-Reference {
+                  @spelling = $step-uc;
+                  $position = `count (preceding::non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]) + 1`;
+                  @"number" = $position;
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -340,6 +397,22 @@ tpl emit-implicitly-qualified-variables (#variables, #seen) {
       					   #seen = $new-seen);
     }
   }
+}
+
+tpl [*] mode="emit-universal-prefix" {
+  "";
+}
+
+tpl [quantifier[@type ="universal"]] mode="emit-universal-prefix" {
+  for-each [variable] {
+    <Item {
+      @kind = "Generalization";
+      <Implicitly-Qualified-Segment {
+        apply [.];
+      }
+    }
+  }
+  apply [*[position() = last()]] mode="emit-universal-prefix";
 }
 
 tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "resolve"]]] (#step) mode="ivy-lemma" {
