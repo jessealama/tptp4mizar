@@ -110,20 +110,20 @@ tpl exists-path-from-any-to (#candidates, #to) {
   }
 }
 
-tpl skolemized-eventually (#formula-name, #candidates) {
+tpl skolemized-eventually-1 (#formula-name, #candidates) {
   if [$candidates] {
     $candidate = `$candidates[1]`;
     for-each [$candidate] {
       for-each [source] {
         for-each [non-logical-data] {
           for-each [non-logical-data[position() = last()]] {
-            $path = exists-path-from-any-to (#candidates = `number[@name]/@name`,
+            $path = exists-path-from-any-to (#candidates = `number[@name]/@name | non-logical-data[@name]/@name`,
                                              #to = $formula-name);
             if [$path = "1"] {
               "1";
             } else {
-              skolemized-eventually (#formula-name = $formula-name,
-	      			     #candidates = `$candidates[position() > 1]`);
+              skolemized-eventually-1 (#formula-name = $formula-name,
+	      			       #candidates = `$candidates[position() > 1]`);
             }
           }
         }
@@ -132,6 +132,11 @@ tpl skolemized-eventually (#formula-name, #candidates) {
   } else {
     "0";
   }
+}
+
+tpl skolemized-eventually {
+  skolemized-eventually-1 (#formula-name = `@name`,
+                           #candidates = `ancestor::tstp[formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]]`);
 }
 
 tpl [tstp] {
@@ -146,11 +151,11 @@ tpl [tstp] {
       apply [.];
     }
   } else {
-    for-each [formula[@syntax = "formula" and @status = "axiom"]] {
-      apply [.];
-    }
-    for-each [formula[@syntax = "formula" and @status = "plain"]] {
-      apply [.];
+    for-each [formula[@syntax = "formula" and @status = "axiom" or @status = "plain"]] {
+      $skolemized = skolemized-eventually ();
+      if [$skolemized = "0"] {
+        apply [.];
+      }
     }
     for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]] {
       apply [.];
