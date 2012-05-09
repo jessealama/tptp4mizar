@@ -609,6 +609,9 @@ foreach my $problem (@problems) {
 
 }
 
+# Normalize varibles in the original problem
+normalize_variables ('problem.xml');
+
 # Let's try the evl
 my $repaired_wsx = 'text/repaired.wsx';
 my $clausifications_token_string = ',' . join (',', map { basename ($_, '-clausification.xml') . ':' . File::Spec->rel2abs ($_) } @eprover_clausification_xmls) . ',';
