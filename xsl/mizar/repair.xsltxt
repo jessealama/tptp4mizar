@@ -340,6 +340,12 @@ tpl [Predicative-Formula[@spelling and Arguments]] mode="mizar-to-tptp" {
   }
 }
 
+tpl [Contradiction] mode="mizar-to-tptp" {
+  <defined-predicate {
+    @"name" = "false";
+  }
+}
+
 tpl starts-with-capital-letter (#string) {
   if [$string = ""] {
     "0";
