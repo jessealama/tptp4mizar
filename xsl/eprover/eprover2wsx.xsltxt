@@ -106,9 +106,7 @@ tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-
     @shape = "Compact-Statement";
     <Proposition {
       <Label {
-        $safe-name = capitalize-after-underscore (#string = `@name`);
-        $step-name = `concat ("Step", $safe-name)`;
-        @spelling = $step-name;
+        @spelling = `@name`;
       }
       apply [*[1]] mode="strip-universal-prefix";
     }
@@ -163,29 +161,32 @@ tpl [formula[@name and not(source/non-logical-data[@name = "inference"]/non-logi
     @shape = "Compact-Statement";
     <Proposition {
       <Label {
-        $safe-name = capitalize-after-underscore (#string = `@name`);
-        $step-name = `concat ("Step", $safe-name)`;
-        @spelling = $step-name;
+        @spelling = `@name`;
       }
-      apply [*[1]] mode="strip-universal-prefix";
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
     }
     <Straightforward-Justification {
       for-each [source] {
-        for-each [non-logical-data[@name = "inference"]] {
-          for-each [non-logical-data[position() = last()]] {
-            for-each [number[@name]] {
-              <Local-Reference {
-                @spelling = `@name`;
-              }
-            }
-          }
-          if [non-logical-data[@name = "skolemize"]] {
-            <Definition-Reference {
-              @spelling = "SKOLEM";
-              @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]) + 1`;
-            }
-          }
+        apply [.];
+      }
+    }
+  }
+}
+
+tpl [source] {
+  for-each [non-logical-data[@name = "inference"]] {
+    for-each [non-logical-data[position() = last()]] {
+      for-each [non-logical-data[@name] | number[@name]] {
+        <Local-Reference {
+          @spelling = `@name`;
         }
+      }
+    }
+    if [non-logical-data[@name = "skolemize"]] {
+      <Definition-Reference {
+        @spelling = "SKOLEM";
+        @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]) + 1`;
       }
     }
   }
