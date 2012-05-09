@@ -308,6 +308,16 @@ tpl [Existential-Quantifier-Formula[Implicitly-Qualified-Segment]] mode="mizar-t
   }
 }
 
+tpl [Universal-Quantifier-Formula[Implicitly-Qualified-Segment]] mode="mizar-to-tptp" {
+  <quantifier {
+    @type = "universal";
+    for-each [Implicitly-Qualified-Segment] {
+      apply [Variable] mode="mizar-to-tptp";
+    }
+    apply [*[position() = last()]] mode="mizar-to-tptp";
+  }
+}
+
 tpl [Negated-Formula] mode="mizar-to-tptp" {
   <negation {
     apply [*[1]] mode="mizar-to-tptp";
