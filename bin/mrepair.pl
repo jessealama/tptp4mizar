@@ -18,6 +18,7 @@ use Cwd qw(getcwd);
 use XML::LibXML;
 use IPC::Run qw(harness);
 use List::MoreUtils qw(first_index);
+use Term::ANSIColor qw(colored);
 
 use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
