@@ -116,21 +116,6 @@ tpl [source[not(non-logical-data[@name = "file"])]] (#step) mode="imported-eprov
   apply [.] (#message = "Error: we don't know how to import an E axiom if there is no source for it.") mode="die";
 }
 
-tpl [source[non-logical-data[@name = "file"]]] (#step) mode="imported-eprover-axiom" {
-  <Block {
-    @kind = "Proof";
-    <Item {
-      @kind = "Conclusion";
-      @shape = "Compact-Statement";
-      <Proposition {
-        <Thesis;
-      }
-      <Straightforward-Justification {
-      }
-    }
-  }
-}
-
 tpl [formula[@name]] (#step) mode="imported-eprover-lemma" {
   $n = `@name`;
   $step-uc = uc (#s = $step);
@@ -162,6 +147,7 @@ tpl [formula[@name]] (#step) mode="imported-eprover-lemma" {
                       @spelling = `concat ("A", $position)`;
                     }
                     apply [*[1]] mode="strip-universal-prefix";
+                    // apply [*[1]];
                   }
                   <Straightforward-Justification {
                     <Local-Reference {
@@ -222,7 +208,39 @@ tpl [formula[@name]] (#step) mode="imported-eprover-axiom" {
       // apply [*[1]] mode="strip-universal-prefix";
       apply [*[1]];
     }
-    apply [source] (#step = $step) mode="imported-eprover-axiom";
+
+    <Block {
+      @kind = "Proof";
+      apply [*[1]] mode="emit-universal-prefix";
+      <Item {
+        @kind = "Regular-Statement";
+        @shape = "Compact-Statement";
+        <Proposition {
+          apply [*[1]] mode="strip-universal-prefix";
+        }
+        <Straightforward-Justification {
+          for-each [source] {
+            for-each [non-logical-data[@name = "file"]] {
+              for-each [non-logical-data[position() = last()]] {
+                <Local-Reference {
+                  @spelling = `@name`;
+                }
+              }
+            }
+          }
+        }
+      }
+      <Item {
+        @kind = "Conclusion";
+        @shape = "Compact-Statement";
+        <Proposition {
+          <Thesis;
+        }
+        <Straightforward-Justification {
+          <Link;
+        }
+      }
+    }
   }
 }
 
@@ -450,7 +468,8 @@ tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-
                     }
                     for-each [key ("formulas", $local-name)] {
                       for-each [*[1]] {
-                        apply [.] mode="strip-universal-prefix";
+                        // apply [.] mode="strip-universal-prefix";
+                        apply [.];
                       }
                     }
                   }
@@ -571,6 +590,9 @@ tpl [tstp] mode="flat" {
             apply [.] mode="conclusion";
           }
           otherwise {
+            $local-name = `@name`;
+            $message = `concat ("Dealing with formula named ", $local-name)`;
+            msg $message;
             apply [.] mode="lemma";
           }
         }
@@ -649,8 +671,8 @@ tpl [formula[@name]] (#linked) mode="lemma" {
         <Label {
           @spelling = `@name`;
         }
-        apply [*[1]] mode="strip-universal-prefix";
-        // apply [*[1]];
+        // apply [*[1]] mode="strip-universal-prefix";
+        apply [*[1]];
       }
       <Straightforward-Justification {
         if [$linked = "1"] {
