@@ -626,8 +626,10 @@ apply_stylesheet ($vampire_to_evl_stylesheet,
 		  });
 
 
-# warn 'clausifications:', $LF, $clausifications_token_string;
-# warn 'herbrand-proofs:', $LF, $herbrand_proofs_token_string;
+if ($opt_debug) {
+    warn 'clausifications:', $LF, $clausifications_token_string;
+    warn 'herbrand-proofs:', $LF, $herbrand_proofs_token_string;
+}
 
 apply_stylesheet ($repair_stylesheet,
 		  'problem.xml',
