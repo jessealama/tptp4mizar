@@ -106,9 +106,7 @@ tpl [tstp] {
         <Not {
           <And {
             for-each [source] {
-              msg "source";
               for-each [non-logical-data[@name = "inference"]] {
-                msg "inference";
                 for-each [non-logical-data[position() = last()]] {
                   for-each [non-logical-data[@name and not(*)] | number[@name]] {
                     $other-formula-name = `@name`;
