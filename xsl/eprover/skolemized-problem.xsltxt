@@ -117,7 +117,7 @@ tpl skolemized-eventually-1 (#formula-name, #candidates) {
       for-each [source] {
         for-each [non-logical-data] {
           for-each [non-logical-data[position() = last()]] {
-            $path = exists-path-from-any-to (#candidates = `number[@name]/@name | non-logical-data[@name]/@name`,
+            $path = exists-path-from-any-to (#candidates = `number/@name | non-logical-data/@name`,
                                              #to = $formula-name);
             if [$path = "1"] {
               "1";
