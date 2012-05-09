@@ -262,6 +262,7 @@ my $repair_script = "$RealBin/mrepair.pl";
 
 my $repair_status = system ($repair_script,
 			    "--style=${opt_style}",
+			    '--debug',
 			    "--tptp-proof=${sorted_tptp_xml_in_db}",
 			    "${db}/text/article.miz");
 my $repair_exit_code = $repair_status >> 8;
