@@ -207,7 +207,8 @@ tpl [Text-Proper] (#errs) {
               }
               otherwise {
                 $message = `concat ("Error: we failed to look up the formula with the name '", $n, "'.  We are currently handling the error token '", $head, "'.")`;
-                apply [.] (#message = $message) mode="die";
+                msg $message;
+                // apply [.] (#message = $message) mode="die";
               }
             }
           }
