@@ -116,39 +116,9 @@ tpl [source[not(non-logical-data[@name = "file"])]] (#step) mode="imported-eprov
   apply [.] (#message = "Error: we don't know how to import an E axiom if there is no source for it.") mode="die";
 }
 
-tpl [source[non-logical-data[@name = "file"]]] (#step, #original-formula) mode="imported-eprover-axiom" {
-  $source = `.`;
+tpl [source[non-logical-data[@name = "file"]]] (#step) mode="imported-eprover-axiom" {
   <Block {
     @kind = "Proof";
-    for-each [non-logical-data[@name = "file"]] {
-      for-each [non-logical-data[position() = last()]] {
-        $local-name = `@name`;
-        $position = `position ()`;
-        for-each [$original-formula] {
-          if [not(ancestor::tstp/formula[@name = $local-name])] {
-            $unfound-message = `concat ("Error: we failed to find the formula '", $local-name, "'.")`;
-            msg terminate="yes" $unfound-message;
-          }
-          for-each [ancestor::tstp/formula[@name = $local-name]] {
-            <Item {
-              @kind = "Regular-Statement";
-              @shape = "Compact-Statement";
-              <Proposition {
-                <Label {
-                  @spelling = `concat ("A", $position)`;
-                }
-                apply [*[1]] mode="strip-universal-prefix";
-              }
-              <Straightforward-Justification {
-                <Local-Reference {
-                  @spelling = $local-name;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
     <Item {
       @kind = "Conclusion";
       @shape = "Compact-Statement";
@@ -156,7 +126,6 @@ tpl [source[non-logical-data[@name = "file"]]] (#step, #original-formula) mode="
         <Thesis;
       }
       <Straightforward-Justification {
-        <Link;
       }
     }
   }
@@ -253,7 +222,7 @@ tpl [formula[@name]] (#step) mode="imported-eprover-axiom" {
       // apply [*[1]] mode="strip-universal-prefix";
       apply [*[1]];
     }
-    apply [source] (#step = $step, #original-formula = $formula) mode="imported-eprover-axiom";
+    apply [source] (#step = $step) mode="imported-eprover-axiom";
   }
 }
 
