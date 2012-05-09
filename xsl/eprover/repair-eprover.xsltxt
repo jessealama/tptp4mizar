@@ -194,6 +194,41 @@ tpl [formula[@name]] (#step) mode="imported-eprover-lemma" {
   }
 }
 
+tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] (#step) mode="imported-eprover-lemma" {
+  $n = `@name`;
+  $step-uc = uc (#s = $step);
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Compact-Statement";
+    <Proposition {
+      <Label {
+        @spelling = `concat ($step, "eprover", $n)`;
+      }
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
+    }
+    <Straightforward-Justification {
+      for-each [source] {
+        for-each [non-logical-data[@name = "inference"]] {
+          for-each [non-logical-data[position() = last()]] {
+            for-each [non-logical-data[@name and not(*)] | number[@name]] {
+              $local-name = `@name`;
+              <Local-Reference {
+                @spelling = `concat ($step, "eprover", $local-name)`;
+              }
+            }
+          }
+        }
+      }
+      <Definition-Reference {
+        @spelling = $step-uc;
+        $position = `count (preceding::non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]) + 1`;
+        @"number" = $position;
+      }
+    }
+  }
+}
+
 tpl [formula[@name]] (#step) mode="imported-eprover-axiom" {
   $n = `@name`;
   $step-uc = uc (#s = $step);
@@ -468,8 +503,8 @@ tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-
                     }
                     for-each [key ("formulas", $local-name)] {
                       for-each [*[1]] {
-                        // apply [.] mode="strip-universal-prefix";
-                        apply [.];
+                        apply [.] mode="strip-universal-prefix";
+                        // apply [.];
                       }
                     }
                   }
