@@ -48,7 +48,7 @@ Readonly my $STYLE_COLOR => 'blue';
 Readonly my %STYLES => (
     # 'tptp' => 0,
     'vampire' => 0,
-    # 'eprover' => 0,
+    'eprover' => 0,
     # 'tstp' => 0,
     # 'ivy' => 0,
 );
