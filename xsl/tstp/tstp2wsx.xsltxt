@@ -171,6 +171,26 @@ tpl [formula] mode="reiterate" {
   }
 }
 
+tpl [source] {
+  for-each [non-logical-data[@name = "inference"]] {
+    for-each [non-logical-data[position() = last()]] {
+      for-each [*[@name]] {
+        $n = `@name`;
+        // Is this a known formula?  If it is, then emit a reference
+        // to it.  Otherwise, just skip it.
+        if [key ("formulas", $n)] {
+          <Local-Reference {
+            @spelling = `@name`;
+          }
+        } else {
+          $not-found-message = `concat ("Warning: unknown formula '", $n, "'.  Skipping...")`;
+          msg $not-found-message;
+        }
+      }
+    }
+  }
+}
+
 tpl [formula[@name and source/non-logical-data[@name = "inference"]]] mode="lemma" {
   <Item {
     @kind = "Regular-Statement";
@@ -183,21 +203,7 @@ tpl [formula[@name and source/non-logical-data[@name = "inference"]]] mode="lemm
     }
     <Straightforward-Justification {
       for-each [source] {
-        for-each [non-logical-data[@name = "inference"]] {
-          for-each [non-logical-data[position() = last()]] {
-            for-each [*[@name]] {
-              <Local-Reference {
-                @spelling = `@name`;
-              }
-            }
-          }
-          if [non-logical-data[@name = "skolemize"]] {
-            <Definition-Reference {
-              @spelling = "SKOLEM";
-              @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]) + 1`;
-            }
-          }
-        }
+        apply [.];
       }
     }
   }
@@ -274,29 +280,7 @@ tpl [formula[@name and not(@name = "")]] mode="conclusion" {
     }
     <Straightforward-Justification {
       for-each [source] {
-        choose {
-          when [non-logical-data[@name = "inference"]] {
-            for-each [non-logical-data[@name = "inference"]] {
-              for-each [non-logical-data[position() = last()]] {
-                for-each [*[@name]] {
-                  <Local-Reference {
-                    @spelling = `@name`;
-                  }
-                }
-              }
-              if [non-logical-data[@name = "skolemize"]] {
-                <Definition-Reference {
-                  @spelling = "SKOLEM";
-                  @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]) + 1`;
-                }
-              }
-            }
-          }
-          otherwise {
-            apply [.] mode="trace";
-            msg terminate="yes" "Error: Unable to figure out how to deal with the justification of a formula";
-          }
-        }
+        apply [.];
       }
     }
   }
@@ -316,29 +300,7 @@ tpl [formula[@name and not(@name = "")]] mode="full" {
     }
     <Straightforward-Justification {
       for-each [source] {
-        choose {
-          when [non-logical-data[@name = "inference"]] {
-            for-each [non-logical-data[@name = "inference"]] {
-              for-each [non-logical-data[position() = last()]] {
-                for-each [*[@name]] {
-                  <Local-Reference {
-                    @spelling = `@name`;
-                  }
-                }
-              }
-              if [non-logical-data[@name = "skolemize"]] {
-                <Definition-Reference {
-                  @spelling = "SKOLEM";
-                  @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]) + 1`;
-                }
-              }
-            }
-          }
-          otherwise {
-            apply [.] mode="trace";
-            msg terminate="yes" "Error: Unable to figure out how to deal with the justification of a formula";
-          }
-        }
+        apply [.];
       }
     }
   }
