@@ -26,7 +26,8 @@ use Utils qw(is_readable_file
 	     error_message
 	     slurp
 	     run_mizar_tool
-	     normalize_variables);
+	     normalize_variables
+	     tptp_fofify);
 
 # Strings
 Readonly my $EMPTY_STRING => q{};
@@ -223,6 +224,9 @@ apply_stylesheet (
     }
 );
 
+# Normalize the variables in the problem
+normalize_variables ($repair_problems);
+
 # Extract the problems
 my $xml_parser = XML::LibXML->new ();
 my $problems_doc = $xml_parser->parse_file ($repair_problems);
@@ -252,6 +256,8 @@ foreach my $problem (@problems) {
 	or die error_message ('Unable to close the output filehandle for', $SP, $problem_path);
 }
 
+
+
 # Render the problems as plain text TPTP files
 foreach my $problem (@problems) {
     my $problem_name = $problem->exists ('@name') ? $problem->findvalue ('@name') : undef;
@@ -272,11 +278,10 @@ foreach my $problem (@problems) {
 		      $problem_tmp_path);
 
     # fofify
-    my $fofify_status = system ("tptp4X -tfofify ${problem_tmp_path} > ${problem_path}");
-    my $fofify_exit_code = $fofify_status >> 8;
-    if ($fofify_exit_code != 0) {
-	die error_message ('tptp4X did not exit cleanly fofifying ', $problem_tmp_path);
-    }
+
+    # fofify
+    tptp_fofify ($problem_path);
+    tptp_xmlize ($problem_path, $problem_xml_path);
 
     unlink $problem_tmp_path;
 
