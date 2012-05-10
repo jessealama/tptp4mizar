@@ -106,9 +106,7 @@ tpl [tstp] {
         <Not {
           <And {
             for-each [source] {
-              msg "source";
               for-each [non-logical-data[@name = "inference"]] {
-                msg "inference";
                 for-each [non-logical-data[position() = last()]] {
                   for-each [non-logical-data[@name and not(*)] | number[@name]] {
                     $other-formula-name = `@name`;
@@ -256,6 +254,27 @@ tpl [implication] (#variable-alist) mode="render-definiens" {
       apply [*[1]] (#variable-alist = $variable-alist) mode="render-definiens";
       <Not {
         apply [*[2]] (#variable-alist = $variable-alist) mode="render-definiens";
+      }
+    }
+  }
+}
+
+tpl [equivalence] (#variable-alist) mode="render-definiens" {
+  <And {
+    <Not {
+      <And {
+        apply [*[1]] (#variable-alist = $variable-alist) mode="render-definiens";
+        <Not {
+          apply [*[2]] (#variable-alist = $variable-alist) mode="render-definiens";
+        }
+      }
+    }
+    <Not {
+      <And {
+        apply [*[2]] (#variable-alist = $variable-alist) mode="render-definiens";
+        <Not {
+          apply [*[1]] (#variable-alist = $variable-alist) mode="render-definiens";
+        }
       }
     }
   }

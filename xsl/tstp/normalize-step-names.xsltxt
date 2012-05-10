@@ -115,8 +115,8 @@ tpl [source[ancestor::formula[not(@status = "axiom")]]] {
                   }
                 }
                 otherwise {
-                  $message = `concat ("Error: unknown formula '", $n, "'.")`;
-                  msg terminate="yes" $message;
+                  $message = `concat ("Warning: unknown formula '", $n, "'.")`;
+                  msg terminate="no" $message;
                 }
               }
             }

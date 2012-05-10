@@ -25,9 +25,6 @@ output method="xml" indent="yes";
 // useful-info parts)
 #tstp = { "0"; }
 
-// Prefix to put in front of skolem functions
-#skolem-prefix = { ""; }
-
 //////////////////////////////////////////////////////////////////////
 // Keys
 //////////////////////////////////////////////////////////////////////
@@ -82,7 +79,7 @@ tpl exists-path-from-any-to (#candidates, #to) {
               when [non-logical-data[@name = "inference"]] {
                 for-each [non-logical-data[@name = "inference"]] {
                   for-each [non-logical-data[position() = last()]] {
-                    $path = exists-path-from-any-to (#candidates = `number[@name]/@name`,
+                    $path = exists-path-from-any-to (#candidates = `number/@name | non-logical-data/@name`,
     		    	    			     #to = $to);
                     if [$path = "1"] {
                       "1";
@@ -110,20 +107,20 @@ tpl exists-path-from-any-to (#candidates, #to) {
   }
 }
 
-tpl skolemized-eventually (#formula-name, #candidates) {
+tpl skolemized-eventually-1 (#formula-name, #candidates) {
   if [$candidates] {
     $candidate = `$candidates[1]`;
     for-each [$candidate] {
       for-each [source] {
         for-each [non-logical-data] {
           for-each [non-logical-data[position() = last()]] {
-            $path = exists-path-from-any-to (#candidates = `number[@name]/@name`,
+            $path = exists-path-from-any-to (#candidates = `number/@name | non-logical-data/@name`,
                                              #to = $formula-name);
             if [$path = "1"] {
               "1";
             } else {
-              skolemized-eventually (#formula-name = $formula-name,
-	      			     #candidates = `$candidates[position() > 1]`);
+              skolemized-eventually-1 (#formula-name = $formula-name,
+	      			       #candidates = `$candidates[position() > 1]`);
             }
           }
         }
@@ -134,65 +131,38 @@ tpl skolemized-eventually (#formula-name, #candidates) {
   }
 }
 
-// tpl [tstp] {
-//   if [$only-skolemized-part = "1"] {
-//     for-each [formula] {
-//       $skolemized-eventually = skolemized-eventually (#formula-name = `@name`,
-//       			     			    #candidates = `ancestor::tstp/formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]`);
-//       choose {
-//         when [$skolemized-eventually = "1"] {
-//           apply [.];
-//         }
-//         when [source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]] {
-//           apply [.];
-//         }
-//         otherwise {
-//           // ignore
-//         }
-//       }
-//     }
-//   } else {
-//     for-each [formula] {
-//       $skolemized-eventually = skolemized-eventually (#formula-name = `@name`,
-//       			     			    #candidates = `ancestor::tstp/formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]`);
-//       choose {
-//         when [@status = "axiom" and $skolemized-eventually = "1"] {
-//           // ignore
-//         }
-//         when [@status = "axiom" and $skolemized-eventually = "0"] {
-//           apply [.];
-//         }
-//         when [source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]] {
-//           apply [.] mode="make-axiom";
-//         }
-//         when [@status = "conjecture"] {
-//           apply [.];
-//         }
-//         otherwise {
-//           // ignore
-//         }
-//       }
-//     }
-//   }
-// }
+tpl skolemized-eventually {
+  skolemized-eventually-1 (#formula-name = `@name`,
+                           #candidates = `ancestor::tstp/formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]`);
+}
+
+tpl split-eventually {
+  skolemized-eventually-1 (#formula-name = `@name`,
+                           #candidates = `ancestor::tstp/formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]`);
+}
 
 tpl [tstp] {
   if [$only-skolemized-part = "1"] {
     for-each [formula[@syntax = "formula"]] {
-      apply [.];
+      $skolemized = skolemized-eventually ();
+      $split-eventually = split-eventually ();
+      if [$skolemized = "1" or $split-eventually = "1"] {
+        apply [.];
+      }
     }
-    for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]] {
-      apply [.];
-    }
-    for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] {
-      apply [.];
-    }
+    // for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]] {
+    //   apply [.];
+    // }
+    // for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] {
+    //   apply [.];
+    // }
   } else {
-    for-each [formula[@syntax = "formula" and @status = "axiom"]] {
-      apply [.];
-    }
-    for-each [formula[@syntax = "formula" and @status = "plain"]] {
-      apply [.];
+    for-each [formula[@syntax = "formula" and (@status = "axiom" or @status = "plain")]] {
+      $skolemized = skolemized-eventually ();
+      $split = split-eventually ();
+      if [$skolemized = "0" and $split = "0"] {
+        apply [.];
+      }
     }
     for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]] {
       apply [.];

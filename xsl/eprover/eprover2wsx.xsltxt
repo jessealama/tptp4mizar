@@ -22,8 +22,7 @@ tpl [tstp[formula[@status = "conjecture"]]] {
         apply [.] mode="nested";
       }
       otherwise {
-        $message = `concat ("Error: unknown shape '", $shape, "'.")`;
-        msg terminate="yes" $message;
+        apply [.] mode="flat";
       }
     }
   }
@@ -100,15 +99,14 @@ tpl [tstp] mode="nested" {
   }
 }
 
-tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "csr"]]] mode="lemma" {
+tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "csr" or @name = "fof_nnf" or @name = "spm"]]] mode="lemma" {
+  $step-name = `@name`;
   <Item {
     @kind = "Regular-Statement";
     @shape = "Compact-Statement";
     <Proposition {
       <Label {
-        $safe-name = capitalize-after-underscore (#string = `@name`);
-        $step-name = `concat ("Step", $safe-name)`;
-        @spelling = $step-name;
+        @spelling = `@name`;
       }
       apply [*[1]] mode="strip-universal-prefix";
     }
@@ -117,36 +115,35 @@ tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-
       for-each [source] {
         for-each [non-logical-data[@name = "inference"]] {
           for-each [non-logical-data[position() = last()]] {
-            for-each [number[@name]] {
+            for-each [non-logical-data[@name] | number[@name]] {
               $n = `@name`;
               $position = `position ()`;
+              $label = `concat ($step-name, "A", $position)`;
               $dependent-formula = `key ("formulas", $n)`;
-              choose {
-                when [position() = 1] {
-                  for-each [$dependent-formula] {
-                    apply [.] mode="reiterate";
+              for-each [$dependent-formula] {
+                apply [.] (#label = $label) mode="reiterate";
+              }
+            }
+          }
+        }
+      }
+      <Item {
+        @kind = "Conclusion";
+        @shape = "Compact-Statement";
+        <Proposition {
+          <Thesis;
+        }
+        <Straightforward-Justification {
+          for-each [source] {
+            for-each [non-logical-data[@name = "inference"]] {
+              for-each [non-logical-data[position() = last()]] {
+                for-each [non-logical-data[@name] | number[@name]] {
+                  $n = `@name`;
+                  $position = `position ()`;
+                  $label = `concat ($step-name, "A", $position)`;
+                  <Local-Reference {
+                    @spelling = $label;
                   }
-                }
-                when [position() = 2] {
-                  <Item {
-                    @kind = "Conclusion";
-                    @shape = "Compact-Statement";
-                    <Proposition {
-                      <Thesis;
-                    }
-                    <Straightforward-Justification {
-                      <Link;
-                      <Local-Reference {
-                        for-each [$dependent-formula] {
-                          @spelling = `@name`;
-                        }
-                      }
-                    }
-                  }
-                }
-                otherwise {
-                  apply [.] mode="trace";
-                  msg terminate="yes" "Error: we are dealing with a CSR inference having more than two premises.";
                 }
               }
             }
@@ -157,35 +154,38 @@ tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-
   }
 }
 
-tpl [formula[@name and not(source/non-logical-data[@name = "inference"]/non-logical-data[@name = "csr"])]] mode="lemma" {
+tpl [formula[@name and not(source/non-logical-data[@name = "inference"]/non-logical-data[@name = "csr" or @name = "fof_nnf" or @name = "spm"])]] mode="lemma" {
   <Item {
     @kind = "Regular-Statement";
     @shape = "Compact-Statement";
     <Proposition {
       <Label {
-        $safe-name = capitalize-after-underscore (#string = `@name`);
-        $step-name = `concat ("Step", $safe-name)`;
-        @spelling = $step-name;
+        @spelling = `@name`;
       }
-      apply [*[1]] mode="strip-universal-prefix";
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
     }
     <Straightforward-Justification {
       for-each [source] {
-        for-each [non-logical-data[@name = "inference"]] {
-          for-each [non-logical-data[position() = last()]] {
-            for-each [number[@name]] {
-              <Local-Reference {
-                @spelling = `@name`;
-              }
-            }
-          }
-          if [non-logical-data[@name = "skolemize"]] {
-            <Definition-Reference {
-              @spelling = "SKOLEM";
-              @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]) + 1`;
-            }
-          }
+        apply [.];
+      }
+    }
+  }
+}
+
+tpl [source] {
+  for-each [non-logical-data[@name = "inference"]] {
+    for-each [non-logical-data[position() = last()]] {
+      for-each [non-logical-data[@name] | number[@name]] {
+        <Local-Reference {
+          @spelling = `@name`;
         }
+      }
+    }
+    if [non-logical-data[@name = "skolemize"]] {
+      <Definition-Reference {
+        @spelling = "SKOLEM";
+        @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]) + 1`;
       }
     }
   }
