@@ -30,7 +30,9 @@ use Utils qw(is_readable_file
 	     warning_message
 	     error_message
 	     slurp
-	     run_mizar_tool);
+	     normalize_variables
+	     run_mizar_tool
+	     tptp_xmlize);
 use TPTPProblem qw(is_valid_tptp_file);
 use EproverDerivation;
 use VampireDerivation;
@@ -92,12 +94,14 @@ my $help = 0;
 my $man = 0;
 my $db = undef;
 my $verbose = 0;
+my $opt_debug = 0;
 my $opt_nested = 0;
 my $opt_style = 'tptp';
 
 my $options_ok = GetOptions (
     "db=s"     => \$db,
     "verbose"  => \$verbose,
+    'debug' => \$opt_debug,
     'help' => \$help,
     'man' => \$man,
     'nested' => \$opt_nested,
@@ -127,6 +131,10 @@ if (scalar @ARGV != 1) {
     pod2usage(
 	-exitval => 1,
     );
+}
+
+if ($opt_debug) {
+    $verbose = 1;
 }
 
 if (! defined $STYLES{$opt_style}) {
@@ -187,11 +195,8 @@ copy ($tptp_file, $tptp_file_in_db)
 
 # XMLize
 my $tptp_xml_in_db = "${db}/problem.xml";
-my $tptp4X_status = system ("tptp4X -N -V -c -x -fxml ${tptp_file_in_db} > ${tptp_xml_in_db}");
-my $tptp4X_exit_code = $tptp4X_status >> 8;
-if ($tptp4X_exit_code != 0) {
-    say {*STDERR} error_message ('tptp4X did not terminate cleanly when XMLizing', $SP, $tptp_file_in_db);
-}
+tptp_xmlize ($tptp_file_in_db, $tptp_xml_in_db);
+normalize_variables ($tptp_xml_in_db);
 
 my $sort_tstp_stylesheet = "${TSTP_STYLESHEET_HOME}/sort-tstp.xsl";
 my $dependencies_stylesheet = "${TSTP_STYLESHEET_HOME}/tstp-dependencies.xsl";
@@ -256,6 +261,7 @@ my $repair_script = "$RealBin/mrepair.pl";
 
 my $repair_status = system ($repair_script,
 			    "--style=${opt_style}",
+			    '--debug',
 			    "--tptp-proof=${sorted_tptp_xml_in_db}",
 			    "${db}/text/article.miz");
 my $repair_exit_code = $repair_status >> 8;

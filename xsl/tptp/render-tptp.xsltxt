@@ -144,6 +144,10 @@ tpl [implication] {
  "( "; apply [*[1]]; " => "; apply [*[2]]; " )";
 }
 
+tpl [equivalence] {
+ "( "; apply [*[1]]; " <=> "; apply [*[2]]; " )";
+}
+
 tpl [predicate[@name = "="]] {
   "("; apply [*[1]]; " = "; apply [*[2]]; ")";
 }

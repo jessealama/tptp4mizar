@@ -1,0 +1,760 @@
+stylesheet "1.0";
+include "eprover2wsx.xsl";
+include "../utils/token-strings.xsl";
+output method="xml" indent="yes";
+
+//////////////////////////////////////////////////////////////////////
+// Stylesheet parameters
+//////////////////////////////////////////////////////////////////////
+
+// Two token lists whose tokens are comma-separated
+//
+//   <step-name>:<path of XMLized solution>
+//
+// The intention the step <step-name> will be proved using the
+// contents contained in the document with the indicated path.
+
+// The clausifications (from E)
+#clausifications = { ""; }
+
+// The proofs of the clausified problems (from Prover9/Ivy)
+#herbrand-proofs = { ""; }
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+tpl every-repair-proof-exists (#repairs) {
+  $empty = token-string-is-empty (#token-string = $repairs);
+  if [$empty = "1"] {
+    "1";
+  } else {
+    $head = token-string-head (#token-string = $repairs);
+    $tail = token-string-tail (#token-string = $repairs);
+    $path = `substring-after ($head, ":")`;
+    if [document ($path, /)] {
+      every-repair-proof-exists (#repairs = $tail);
+    } else {
+      "0";
+    }
+  }
+}
+
+tpl [/] {
+  if [tstp] {
+    if [$clausifications = "" and $herbrand-proofs = "1"] {
+      apply [tstp] mode="copy";
+    } else {
+      $clausifications-valid = is-valid-token-string (#string = $clausifications);
+      $herbrand-proofs-valid = is-valid-token-string (#string = $herbrand-proofs);
+      if [$clausifications-valid = "1" and $herbrand-proofs-valid = "1"] {
+        $every-clausification-exists
+          = every-repair-proof-exists (#repairs = $clausifications);
+        $every-herbrand-proof-exists
+          = every-repair-proof-exists (#repairs = $herbrand-proofs);
+        if [$every-clausification-exists = "1" and $every-herbrand-proof-exists = "1"] {
+          apply [tstp];
+        } else {
+          msg terminate="yes" "Error: at least one of the given repair proof documents does not exist (or could not be loaded)";
+        }
+      } else {
+        msg terminate="yes" "Error: the string given as the value of the clausifications or herbrand-proofs stylesheet parameter is not a valid token string.";
+      }
+    }
+
+  } else {
+    msg terminate="yes" "Error: the required tstp document element is missing.";
+  }
+}
+
+tpl [*] (#step, #herbrand-proof) mode="imported-eprover-clausification" {
+  msg terminate="yes" "Error: unhandled node in imported-eprover-clausification mode.";
+}
+
+tpl [*] (#step) mode="imported-ivy-refutation" {
+  msg terminate="yes" "Error: unhandled node in imported-ivy-refutation mode.";
+}
+
+tpl [*] (#step) mode="imported-eprover-axiom" {
+  msg terminate="yes" "Error: unhandled node in imported-eprover-axiom mode.";
+}
+
+tpl [*] (#step) mode="imported-eprover-conclusion" {
+  msg terminate="yes" "Error: unhandled node in imported-eprover-conclusion mode.";
+}
+
+tpl [*] (#step) mode="imported-eprover-lemma" {
+  msg terminate="yes" "Error: unhandled node in imported-eprover-lemma mode.";
+}
+
+tpl [non-logical-data[@name = "inference"]] (#step) mode="imported-eprover-lemma" {
+  for-each [non-logical-data[position() = last()]] {
+    for-each [non-logical-data[@name and not(*)] | number[@name]] {
+      $n = `@name`;
+      <Local-Reference {
+        @spelling = `concat ($step, "eprover", $n)`;
+      }
+    }
+  }
+}
+
+tpl [source] (#step) mode="imported-eprover-lemma" {
+  $step-uc = uc (#s = $step);
+  for-each [non-logical-data[@name = "inference"]] {
+    apply [.] (#step = $step) mode="imported-eprover-lemma";
+    if [non-logical-data[@name = "skolemize"]] {
+      <Definition-Reference {
+        @spelling = $step-uc;
+        $position = `count (preceding::non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]) + 1`;
+        @"number" = $position;
+      }
+    }
+  }
+}
+
+tpl [source[not(non-logical-data[@name = "file"])]] (#step) mode="imported-eprover-axiom" {
+  apply [.] (#message = "Error: we don't know how to import an E axiom if there is no source for it.") mode="die";
+}
+
+tpl [formula[@name]] (#step) mode="imported-eprover-lemma" {
+  $n = `@name`;
+  $step-uc = uc (#s = $step);
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Compact-Statement";
+    <Proposition {
+      <Label {
+        @spelling = `concat ($step, "eprover", $n)`;
+      }
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
+    }
+    <Block {
+      @kind = "Proof";
+      apply [*[1]] mode="emit-universal-prefix";
+      for-each [source] {
+        for-each [non-logical-data[@name = "inference"]] {
+          for-each [non-logical-data[position() = last()]] {
+            for-each [non-logical-data[@name and not(*)] | number[@name]] {
+              $local-name = `@name`;
+              $position = `position ()`;
+              for-each [ancestor::tstp/formula[@name = $local-name]] {
+                <Item {
+                  @kind = "Regular-Statement";
+                  @shape = "Compact-Statement";
+                  <Proposition {
+                    <Label {
+                      @spelling = `concat ("A", $position)`;
+                    }
+                    apply [*[1]] mode="strip-universal-prefix";
+                    // apply [*[1]];
+                  }
+                  <Straightforward-Justification {
+                    <Local-Reference {
+                      @spelling = `concat ($step, "eprover", $local-name)`;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      <Item {
+        @kind = "Conclusion";
+        @shape = "Compact-Statement";
+        <Proposition {
+          <Thesis;
+        }
+        <Straightforward-Justification {
+          for-each [source] {
+            for-each [non-logical-data[@name = "inference"]] {
+              for-each [non-logical-data[position() = last()]] {
+                for-each [non-logical-data[@name and not(*)] | number[@name]] {
+                  $local-name = `@name`;
+                  $position = `position ()`;
+                  <Local-Reference {
+                    @spelling = `concat ("A", $position)`;
+                  }
+                }
+              }
+
+  	      if [non-logical-data[@name = "skolemize"]] {
+                <Definition-Reference {
+                  @spelling = $step-uc;
+                  $position = `count (preceding::non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]) + 1`;
+                  @"number" = $position;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] (#step) mode="imported-eprover-lemma" {
+  $n = `@name`;
+  $step-uc = uc (#s = $step);
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Compact-Statement";
+    <Proposition {
+      <Label {
+        @spelling = `concat ($step, "eprover", $n)`;
+      }
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
+    }
+    <Straightforward-Justification {
+      for-each [source] {
+        for-each [non-logical-data[@name = "inference"]] {
+          for-each [non-logical-data[position() = last()]] {
+            for-each [non-logical-data[@name and not(*)] | number[@name]] {
+              $local-name = `@name`;
+              <Local-Reference {
+                @spelling = `concat ($step, "eprover", $local-name)`;
+              }
+            }
+          }
+        }
+      }
+      <Definition-Reference {
+        @spelling = $step-uc;
+        $position = `count (preceding::non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]) + 1`;
+        @"number" = $position;
+      }
+    }
+  }
+}
+
+tpl [formula[@name]] (#step) mode="imported-eprover-axiom" {
+  $n = `@name`;
+  $step-uc = uc (#s = $step);
+  $formula = `.`;
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Compact-Statement";
+    <Proposition {
+      <Label {
+        @spelling = `concat ($step, "eprover", $n)`;
+      }
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
+    }
+
+    <Block {
+      @kind = "Proof";
+      apply [*[1]] mode="emit-universal-prefix";
+      <Item {
+        @kind = "Regular-Statement";
+        @shape = "Compact-Statement";
+        <Proposition {
+          apply [*[1]] mode="strip-universal-prefix";
+        }
+        <Straightforward-Justification {
+          for-each [source] {
+            for-each [non-logical-data[@name = "file"]] {
+              for-each [non-logical-data[position() = last()]] {
+                <Local-Reference {
+                  @spelling = `@name`;
+                }
+              }
+            }
+          }
+        }
+      }
+      <Item {
+        @kind = "Conclusion";
+        @shape = "Compact-Statement";
+        <Proposition {
+          <Thesis;
+        }
+        <Straightforward-Justification {
+          <Link;
+        }
+      }
+    }
+  }
+}
+
+tpl [formula[@name]] (#step) mode="imported-eprover-raa" {
+  $n = `@name`;
+  <Item {
+    @kind = "Assumption";
+    <Single-Assumption {
+      <Proposition {
+        <Label {
+          @spelling = `concat ($step, "eprover", $n)`;
+        }
+        // apply [*[1]] mode="strip-universal-prefix";
+        apply [*[1]];
+      }
+    }
+  }
+}
+
+tpl [tstp[not(formula[@status = "conjecture"])]] (#step, #herbrand-proof) mode="imported-eprover-clausification" {
+  apply [.] (#message = "Error: Don't know how to deal with imported E clausifications that lack a conjecture formula.") mode="die";
+}
+
+tpl [tstp[formula[@status = "conjecture"]]] (#step, #herbrand-proof) mode="imported-eprover-clausification" {
+  msg "wow, amazing";
+  for-each [formula[@status = "conjecture"]] {
+    $n = `@name`;
+    <Item {
+      @kind = "Regular-Statement";
+      @shape = "Compact-Statement";
+      <Proposition {
+        <Label {
+          @spelling = `concat ($step, "eprover", $n)`;
+        }
+        // apply [*[1]] mode="strip-universal-prefix";
+        apply [*[1]];
+      }
+      <Block {
+        @kind = "Proof";
+        for-each [parent::tstp] {
+          for-each [formula[not(@status = "conjecture")]] {
+            if [@status = "axiom"] {
+              apply [.] (#step = $step) mode="imported-eprover-axiom";
+            }
+            if [@status = "plain"] {
+              apply [.] (#step = $step) mode="imported-eprover-lemma";
+            }
+          }
+        }
+        <Item {
+          @kind = "Regular-Statement";
+	  @shape = "Diffuse-Statement";
+          <Block {
+            @kind = "Now-Reasoning";
+            for-each [following-sibling::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "assume_negation"]]] {
+              apply [.] (#step = $step) mode="imported-eprover-raa";
+            }
+            for-each [parent::tstp] {
+              for-each [formula[@status = "negated_conjecture" and not(source/non-logical-data[@name = "inference"]/non-logical-data[@name = "assume_negation"])]] {
+                apply [.] (#step = $step) mode="imported-eprover-lemma";
+              }
+            }
+            for-each [document ($herbrand-proof, /)] {
+              apply [.] (#step = $step) mode="imported-ivy-refutation";
+            }
+            <Item {
+              @kind = "Conclusion";
+              @shape = "Compact-Statement";
+              <Proposition {
+                <Contradiction;
+              }
+              <Straightforward-Justification {
+                <Link;
+                for-each [ancestor::tstp] {
+                  for-each [formula[@syntax = "clause" and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]] {
+                    $local-name = `@name`;
+                    <Local-Reference {
+                      @spelling = `concat ($step, "eprover", $local-name)`;
+                    }
+                  }
+                  for-each [formula[@syntax = "formula" and (@status = "plain" or @status = "axiom")]] {
+                    $local-name = `@name`;
+                    <Local-Reference {
+                      @spelling = `concat ($step, "eprover", $local-name)`;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        <Item {
+          @kind = "Conclusion";
+          @shape = "Compact-Statement";
+          <Proposition {
+            <Thesis;
+          }
+          <Straightforward-Justification {
+            <Link;
+          }
+        }
+      }
+    }
+  }
+}
+
+tpl [tstp] (#step) mode="imported-ivy-refutation" {
+  $aid-uc = uc (#s = $article);
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Diffuse-Statement";
+    <Block {
+      @kind = "Now-Reasoning";
+      for-each [formula[source/non-logical-data[@name = "input"]]] {
+        apply [.] (#step = $step) mode="ivy-assumption";
+      }
+      for-each [formula[position() < last() and not(source/non-logical-data[@name = "input"])]] {
+        apply [.] (#step = $step) mode="ivy-lemma";
+      }
+      for-each [formula[position() = last()]] {
+        apply [.] (#step = $step) mode="ivy-conclusion";
+      }
+    }
+  }
+}
+
+tpl [formula[@name]] (#step) mode="ivy-assumption" {
+  $n = `@name`;
+  <Item {
+    @kind = "Assumption";
+    <Single-Assumption {
+      <Proposition {
+        <Label {
+          @spelling = `concat ($step, "ivy", $n)`;
+        }
+        // apply [*[1]] mode="strip-universal-prefix";
+        apply [*[1]];
+      }
+    }
+  }
+}
+
+tpl [source] (#step) mode="ivy-source"{
+  <Straightforward-Justification {
+    for-each [non-logical-data] {
+      for-each [non-logical-data[position() = last()]] {
+        for-each [non-logical-data[@name] | number[@name]] {
+          $n = `@name`;
+          <Local-Reference {
+            @spelling = `concat ($step, "ivy", $n)`;
+          }
+        }
+      }
+    }
+  }
+}
+
+tpl emit-implicitly-qualified-variables (#variables, #seen) {
+  if [$variables] {
+    $variable = `$variables[1]`;
+    $variable-name = `$variable/@name`;
+    $token = `concat (",", $variable-name)`;
+    if [contains ($seen, $token)] {
+      emit-implicitly-qualified-variables (#variables = `$variables[position() > 1]`,
+      					   #seen = $seen);
+    } else {
+      <Item {
+        @kind = "Generalization";
+        <Implicitly-Qualified-Segment {
+          apply [$variable];
+        }
+      }
+      $new-seen = `concat ($seen, $token)`;
+      emit-implicitly-qualified-variables (#variables = `$variables[position() > 1]`,
+      					   #seen = $new-seen);
+    }
+  }
+}
+
+tpl [*] mode="emit-universal-prefix" {
+  "";
+}
+
+tpl [quantifier[@type ="universal"]] mode="emit-universal-prefix" {
+  for-each [variable] {
+    <Item {
+      @kind = "Generalization";
+      <Implicitly-Qualified-Segment {
+        apply [.];
+      }
+    }
+  }
+  apply [*[position() = last()]] mode="emit-universal-prefix";
+}
+
+tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "resolve"]]] (#step) mode="ivy-lemma" {
+  $n = `@name`;
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Compact-Statement";
+    <Proposition {
+      <Label {
+        @spelling = `concat ($step, "ivy", $n)`;
+      }
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
+    }
+    if [descendant::variable] {
+      <Block {
+        @kind = "Proof";
+        emit-implicitly-qualified-variables (#variables = `descendant::variable`,
+  	 			             #seen = "");
+        for-each [source] {
+          for-each [non-logical-data[@name = "inference"]] {
+            for-each [non-logical-data[position() = last()]] {
+              for-each [non-logical-data[@name] | number[@name]] {
+                $pos = `position ()`;
+                $local-name = `@name`;
+                <Item {
+                  @kind = "Regular-Statement";
+                  @shape = "Compact-Statement";
+                  <Proposition {
+                    <Label {
+                      @spelling = `concat ("A", $pos)`;
+                    }
+                    for-each [key ("formulas", $local-name)] {
+                      for-each [*[1]] {
+                        apply [.] mode="strip-universal-prefix";
+                        // apply [.];
+                      }
+                    }
+                  }
+                  <Straightforward-Justification {
+                    <Local-Reference {
+                      @spelling = `concat ($step, "ivy", $local-name)`;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        <Item {
+          @kind = "Conclusion";
+          @shape = "Compact-Statement";
+          <Proposition {
+            <Thesis;
+          }
+          // resolution always has exactly two premises
+          <Straightforward-Justification {
+            <Local-Reference {
+              @spelling = "A1";
+            }
+            <Local-Reference {
+              @spelling = "A2";
+            }
+          }
+        }
+      }
+    } else {
+      apply [source] (#step = $step) mode="ivy-source";
+    }
+  }
+}
+
+tpl [formula[@name and not(source/non-logical-data[@name = "inference"]/non-logical-data[@name = "resolve"])]] (#step) mode="ivy-lemma" {
+  $n = `@name`;
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Compact-Statement";
+    <Proposition {
+      <Label {
+        @spelling = `concat ($step, "ivy", $n)`;
+      }
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
+    }
+    apply [source] (#step = $step) mode="ivy-source";
+  }
+}
+
+tpl [formula[@name]] (#step) mode="ivy-conclusion" {
+  $n = `@name`;
+  <Item {
+    @kind = "Conclusion";
+    @shape = "Compact-Statement";
+    <Proposition {
+      <Label {
+        @spelling = `concat ($step, "ivy", $n)`;
+      }
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
+    }
+    apply [source] (#step = $step) mode="ivy-source";
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+tpl [tstp] mode="flat" {
+  // reserve variables
+  for-each [formula[@name]] {
+    $n = `@name`;
+    $pseudo-token = `concat (",", $n, ":")`;
+    if [contains ($clausifications, $pseudo-token)
+          and contains ($herbrand-proofs, $pseudo-token)] {
+      $after-pseudo-token-clausifications
+        = `substring-after ($clausifications, $pseudo-token)`;
+      $clausification-proof-path
+        = `substring-before ($after-pseudo-token-clausifications, ",")`;
+      $after-pseudo-token-herbrand-proofs
+        = `substring-after ($herbrand-proofs, $pseudo-token)`;
+      $herbrand-proof-path
+        = `substring-before ($after-pseudo-token-herbrand-proofs, ",")`;
+      for-each [document ($clausification-proof-path, /)] {
+        reserve-variables ();
+      }
+      for-each [document ($herbrand-proof-path, /)] {
+        reserve-variables ();
+      }
+    }
+  }
+  for-each [formula[@status = "axiom"]] {
+    apply [.] mode="axiom";
+  }
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Diffuse-Statement";
+    <Label {
+      @spelling = "Refutation";
+    }
+    <Block {
+      @kind = "Now-Reasoning";
+      for-each [formula[not(@status = "axiom") and not(@status = "conjecture") and source/non-logical-data[@name = "inference"]]] {
+        choose {
+          when [@status = "negated_conjecture" and not(preceding-sibling::formula[@status = "negated_conjecture"])] {
+            <Item {
+              @kind = "Assumption";
+              <Single-Assumption {
+                apply [.] mode="no-justification";
+              }
+            }
+          }
+          when [position() = last()] {
+            apply [.] mode="conclusion";
+          }
+          otherwise {
+            $local-name = `@name`;
+            $message = `concat ("Dealing with formula named ", $local-name)`;
+            msg $message;
+            apply [.] mode="lemma";
+          }
+        }
+      }
+    }
+  }
+  <Item {
+    @kind = "Theorem-Item";
+    for-each [formula[@status = "negated_conjecture"]] {
+      <Proposition {
+        apply [*[1]] mode="unnegate"; // render the formula
+      }
+    }
+    <Straightforward-Justification {
+      <Local-Reference {
+        @spelling = "Refutation";
+      }
+    }
+  }
+}
+
+tpl [formula[@name]] (#linked) mode="lemma" {
+  $n = `@name`;
+  $pseudo-token = `concat (",", $n, ":")`;
+  if [contains ($clausifications, $pseudo-token)
+        and contains ($herbrand-proofs, $pseudo-token)] {
+    $after-pseudo-token-clausifications
+      = `substring-after ($clausifications, $pseudo-token)`;
+    $clausification-proof-path
+      = `substring-before ($after-pseudo-token-clausifications, ",")`;
+    $after-pseudo-token-herbrand-proofs
+      = `substring-after ($herbrand-proofs, $pseudo-token)`;
+    $herbrand-proof-path
+      = `substring-before ($after-pseudo-token-herbrand-proofs, ",")`;
+    <Item {
+      @kind = "Regular-Statement";
+      @shape = "Compact-Statement";
+      <Proposition {
+        <Label {
+          @spelling = $n;
+        }
+        // apply [*[1]] mode="strip-universal-prefix";
+        apply [*[1]];
+      }
+      <Block {
+        @kind = "Proof";
+        for-each [document ($clausification-proof-path, /)] {
+          apply [tstp] (#step = $n,
+	  	        #herbrand-proof = $herbrand-proof-path) mode="imported-eprover-clausification";
+        }
+        <Item {
+          @kind = "Conclusion";
+          @shape = "Compact-Statement";
+          <Proposition {
+            <Thesis;
+          }
+          <Straightforward-Justification {
+            <Link;
+            for-each [document ($clausification-proof-path, /)] {
+              for-each [tstp/formula[@status = "conjecture"]] {
+                $local-name = `@name`;
+                <Local-Reference {
+                  @spelling = `concat ($n, "eprover", $local-name)`;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  } else {
+    <Item {
+      @kind = "Regular-Statement";
+      @shape = "Compact-Statement";
+      <Proposition {
+        <Label {
+          @spelling = `@name`;
+        }
+        // apply [*[1]] mode="strip-universal-prefix";
+        apply [*[1]];
+      }
+      <Straightforward-Justification {
+        if [$linked = "1"] {
+          <Link;
+        }
+        for-each [source] {
+          apply [.];
+        }
+      }
+    }
+  }
+}
+
+tpl [*] mode="unnegate" {
+  apply [.] (#message = "Error: we have reached an unhandled node in unnegate mode.") mode="die";
+}
+
+tpl [negation] mode="unnegate" {
+  apply [*[1]];
+}
+
+tpl [formula[@name and not(@name = "")]] mode="conclusion" {
+  <Item {
+    @kind = "Conclusion";
+    @shape = "Compact-Statement";
+    <Proposition {
+      apply [*[1]];
+    }
+    <Straightforward-Justification {
+      for-each [source] {
+        apply [.];
+      }
+    }
+  }
+}
+
+tpl [formula[@name and not(@name = "")]] (#step) mode="imported-eprover-conclusion" {
+  <Item {
+    @kind = "Conclusion";
+    @shape = "Compact-Statement";
+    <Proposition {
+      apply [*[1]];
+    }
+    <Straightforward-Justification {
+      for-each [source] {
+        apply [.] (#step = $step) mode="imported-eprover-lemma";
+      }
+    }
+  }
+}

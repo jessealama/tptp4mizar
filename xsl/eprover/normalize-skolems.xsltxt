@@ -1,0 +1,44 @@
+stylesheet "1.0";
+output method="xml" indent="yes";
+
+tpl [*] {
+  $n = `name (.)`;
+  <$n {
+    for-each [@*] { copy-of `.`; }
+    apply [*];
+  }
+}
+
+tpl [/] {
+  apply [tstp];
+}
+
+tpl position-of-skolem {
+  $n = `@name`;
+  for-each [ancestor::tstp] {
+    for-each [descendant::function[@name = $n][1]] {
+      if [preceding::function[starts-with (@name, "esk")]] {
+        for-each [preceding::function[starts-with (@name, "esk")][1]] {
+          $pos-previous = position-of-skolem ();
+          `$pos-previous + 1`;
+        }
+      } else {
+        "1";
+      }
+    }
+  }
+}
+
+tpl [function] {
+  $n = `@name`;
+  <function {
+    for-each [@*] { copy-of `.`; }
+    if [starts-with(@name, "esk")] {
+      $pos = position-of-skolem ();
+      $pos-message = `concat ("Position of ", $n, " is ", $pos)`;
+      msg $pos-message;
+      @"name" = `concat ("skolem", $pos)`;
+    }
+    apply [*];
+  }
+}

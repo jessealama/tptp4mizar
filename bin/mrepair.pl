@@ -17,7 +17,7 @@ use File::Basename qw(basename dirname);
 use Cwd qw(getcwd);
 use XML::LibXML;
 use IPC::Run qw(harness);
-use List::MoreUtils qw(first_index);
+use Term::ANSIColor qw(colored);
 
 use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
@@ -25,7 +25,8 @@ use Xsltproc qw(apply_stylesheet);
 use Utils qw(is_readable_file
 	     error_message
 	     slurp
-	     run_mizar_tool);
+	     run_mizar_tool
+	     normalize_variables);
 
 # Strings
 Readonly my $EMPTY_STRING => q{};
@@ -47,7 +48,7 @@ Readonly my $STYLE_COLOR => 'blue';
 Readonly my %STYLES => (
     # 'tptp' => 0,
     'vampire' => 0,
-    # 'eprover' => 0,
+    'eprover' => 0,
     # 'tstp' => 0,
     # 'ivy' => 0,
 );
@@ -84,100 +85,6 @@ sub sort_tstp_solution {
 		      $solution,
 		      $solution,
 		      { 'ordering' => $dependencies_token_string });
-}
-
-sub normalize_term_or_formula {
-    my $node = shift;
-    my @variables = @_;
-    my $node_name = $node->nodeName ();
-    if ($node_name eq 'variable') {
-	my $variable_name = $node->findvalue ('@name');
-	my $index = first_index { $_ eq $variable_name } @variables;
-	if ($index < 0) {
-	    die error_message ('We cannot find ', $variable_name, ' in the list ', Dumper (@variables));
-	}
-	my $new_variable = XML::LibXML::Element->new ('variable');
-	my $new_name_attribute = XML::LibXML::Attr->new ('name', "V${index}");
-	$new_variable->addChild ($new_name_attribute);
-	return $new_variable;
-    } else {
-	my $new_node = $node->cloneNode (0);
-	my @children = $node->childNodes ();
-	my @normalized_children
-	    = map { normalize_term_or_formula ($_, @variables) } @children;
-	foreach my $child (@normalized_children) {
-	    $new_node->addChild ($child);
-	}
-	return $new_node;
-    }
-}
-
-sub normalize_tptp_formula_node {
-    my $formula_node = shift;
-    my $normalized_formula_node = XML::LibXML::Element->new ('formula');
-
-    # Attributes
-    foreach my $attribute ($formula_node->attributes ()) {
-    	$normalized_formula_node->addChild ($attribute->cloneNode ());
-    }
-
-    (my $formula_proper_node) = $formula_node->findnodes ('*[1]');
-    my @variables = $formula_proper_node->findnodes ('descendant::variable');
-    my %variables = ();
-    my @variables_no_repetitions = ();
-    foreach my $variable (@variables) {
-	my $variable_name = $variable->findvalue ('@name');
-	if (defined $variables{$variable_name}) {
-	    # ship
-	} else {
-	    push (@variables_no_repetitions, $variable_name);
-	    $variables{$variable_name} = 0;
-	}
-    }
-
-    # warn 'variables without repetitions:', $LF, Dumper (@variables_no_repetitions);
-
-    my $normalized_formula_proper = normalize_term_or_formula ($formula_proper_node, @variables_no_repetitions);
-    $normalized_formula_node->appendChild ($normalized_formula_proper);
-
-    # source
-    if ($formula_node->exists ('source')) {
-	(my $source) = $formula_node->findnodes ('source');
-	$normalized_formula_node->appendChild ($source->cloneNode (1));
-    }
-
-    # useful-info
-    if ($formula_node->exists ('useful-info')) {
-	(my $useful_info) = $formula_node->findnodes ('useful-info');
-	$normalized_formula_node->appendChild ($useful_info->cloneNode (1));
-    }
-
-    return $normalized_formula_node;
-}
-
-sub normalize_variables {
-    my $tptp_file = shift;
-    my $parser = XML::LibXML->new ();
-    my $tptp_document = $parser->parse_file ($tptp_file);
-    my $normalized_tptp_document = XML::LibXML::Document->createDocument ();
-    my $normalized_tptp_root = XML::LibXML::Element->new ('tstp');
-    $normalized_tptp_document->setDocumentElement ($normalized_tptp_root);
-    foreach my $formula_node ($tptp_document->findnodes ('/tstp/formula')) {
-	my $normalized_formula_node = normalize_tptp_formula_node ($formula_node);
-	$normalized_tptp_root->appendChild ($normalized_formula_node);
-	$normalized_tptp_document->importNode ($normalized_formula_node);
-    }
-
-    my $tptp_document_as_string = $normalized_tptp_document->toString (1);
-
-    open (my $tptp_fh, '>', $tptp_file)
-	or die error_message ('Unable to open an output filehandle for', $SP, $tptp_file);
-    say {$tptp_fh} $tptp_document_as_string
-	or die error_message ('Unable to write the normalized contents of', $SP, $tptp_file);
-    close $tptp_fh
-	or die error_message ('Unable to close the output filehandle for', $SP, $tptp_file);
-
-    return $tptp_document_as_string;
 }
 
 my $opt_help = 0;
@@ -227,7 +134,7 @@ sub process_commandline {
 
     if (! defined $STYLES{$opt_style}) {
 	my $message = 'Unknown derivation style \'' . $opt_style . '\'.  The available  styles are:' . $LF . $LF;
-	$message .= message (summarize_styles ());
+	$message .= summarize_styles ();
 	pod2usage (
 	    -message => error_message ($message),
 	    -exitval => 1,
@@ -299,7 +206,7 @@ my $err_token_string = ',' . $errs;
 
 # warn 'error token string: ', $err_token_string;
 
-my $repair_stylesheet = "${MIZAR_STYLESHEET_HOME}/repair.xsl";
+my $mizar_repair_stylesheet = "${MIZAR_STYLESHEET_HOME}/repair.xsl";
 
 # Warning: we are inside $db at this point
 my $repair_dir = 'repair';
@@ -308,7 +215,7 @@ mkdir $repair_dir
 
 my $repair_problems = "${repair_dir}/problems.xml";
 apply_stylesheet (
-    $repair_stylesheet,
+    $mizar_repair_stylesheet,
     $article_wsx,
     $repair_problems,
     {
@@ -544,7 +451,18 @@ my @solution_names = map { $_->findvalue ('@name') } @problems;
 
 my $solutions_token_string = ',' . join (',', @solution_names) . ',';
 
-my $repair_vampire_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/repair-vampire.xsl";
+my $repair_stylesheet = undef;
+if ($opt_style eq 'vampire') {
+    $repair_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/repair-vampire.xsl";
+} elsif ($opt_style eq 'eprover') {
+    $repair_stylesheet = "${EPROVER_STYLESHEET_HOME}/repair-eprover.xsl";
+} else {
+    die error_message ('Unsuported proof style "', $opt_style, '".');
+}
+
+if (! is_readable_file ($repair_stylesheet)) {
+    die error_message ('The repair stylesheet does not exist at the expected location (', $repair_stylesheet, '), or it is unreadable.');
+}
 
 my $eprover_to_voc_stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2voc.xsl";
 my $eprover_to_dco_stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2dco.xsl";
@@ -597,6 +515,9 @@ foreach my $problem (@problems) {
 
 }
 
+# Normalize varibles in the original problem
+normalize_variables ('problem.xml');
+
 # Let's try the evl
 my $repaired_wsx = 'text/repaired.wsx';
 my $clausifications_token_string = ',' . join (',', map { basename ($_, '-clausification.xml') . ':' . File::Spec->rel2abs ($_) } @eprover_clausification_xmls) . ',';
@@ -611,10 +532,12 @@ apply_stylesheet ($vampire_to_evl_stylesheet,
 		  });
 
 
-# warn 'clausifications:', $LF, $clausifications_token_string;
-# warn 'herbrand-proofs:', $LF, $herbrand_proofs_token_string;
+if ($opt_debug) {
+    warn 'clausifications:', $LF, $clausifications_token_string;
+    warn 'herbrand-proofs:', $LF, $herbrand_proofs_token_string;
+}
 
-apply_stylesheet ($repair_vampire_stylesheet,
+apply_stylesheet ($repair_stylesheet,
 		  'problem.xml',
 		  $repaired_wsx,
 		  {
