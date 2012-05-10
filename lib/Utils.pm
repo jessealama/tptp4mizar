@@ -239,7 +239,7 @@ sub tptp_xmlize {
     my $tptp4X_exit_code = ($tptp4X_harness->results)[0];
 
     if ($tptp4X_exit_code != 0) {
-	confess ('tptp4X did not terminate cleanly when XMLizing', $SP, $tptp_file);
+	confess ('tptp4X did not terminate cleanly when XMLizing', $SP, $tptp_file, '. Its exit code was', $SP, $tptp4X_exit_code, '.');
     }
 
     if (defined $output_path) {
@@ -273,7 +273,7 @@ sub tptp_fofify {
     my $tptp4X_exit_code = ($tptp4X_harness->results)[0];
 
     if ($tptp4X_exit_code != 0) {
-	confess ('tptp4X did not terminate cleanly when XMLizing', $SP, $tptp_file);
+	confess ('tptp4X did not terminate cleanly when XMLizing', $SP, $tptp_file, '. Its exit code was', $SP, $tptp4X_exit_code, '.');
     }
 
     if (defined $output_path) {
