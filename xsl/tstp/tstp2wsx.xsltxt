@@ -137,7 +137,8 @@ tpl [formula[@name]] mode="axiom" {
       <Label {
         @spelling = `@name`;
       }
-      apply [*[1]] mode="strip-universal-prefix";
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
     }
     <Straightforward-Justification {
       <Theorem-Reference {
