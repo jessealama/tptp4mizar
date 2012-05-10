@@ -85,6 +85,13 @@ tpl [tstp] {
       }
     }
 
+    for-each [formula[source/non-logical-data[@name = "introduced"]/non-logical-data[@name = "inequality_splitting_name_introduction"]]] {
+      <Theorem {
+        @kind = "T";
+        apply [.] mode="render-definiens";
+      }
+    }
+
     // "Definitions" for skolem functions
     $num-functions = `count(descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)])`;
     for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemisation"]]] {
