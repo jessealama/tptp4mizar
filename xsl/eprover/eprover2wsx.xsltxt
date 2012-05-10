@@ -108,43 +108,17 @@ tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-
       <Label {
         @spelling = `@name`;
       }
-      apply [*[1]] mode="strip-universal-prefix";
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
     }
-    <Block {
-      @kind = "Proof";
+    <Straightforward-Justification {
       for-each [source] {
         for-each [non-logical-data[@name = "inference"]] {
           for-each [non-logical-data[position() = last()]] {
             for-each [non-logical-data[@name] | number[@name]] {
               $n = `@name`;
-              $position = `position ()`;
-              $label = `concat ($step-name, "A", $position)`;
-              $dependent-formula = `key ("formulas", $n)`;
-              for-each [$dependent-formula] {
-                apply [.] (#label = $label) mode="reiterate";
-              }
-            }
-          }
-        }
-      }
-      <Item {
-        @kind = "Conclusion";
-        @shape = "Compact-Statement";
-        <Proposition {
-          <Thesis;
-        }
-        <Straightforward-Justification {
-          for-each [source] {
-            for-each [non-logical-data[@name = "inference"]] {
-              for-each [non-logical-data[position() = last()]] {
-                for-each [non-logical-data[@name] | number[@name]] {
-                  $n = `@name`;
-                  $position = `position ()`;
-                  $label = `concat ($step-name, "A", $position)`;
-                  <Local-Reference {
-                    @spelling = $label;
-                  }
-                }
+              <Local-Reference {
+                @spelling = $n;
               }
             }
           }
