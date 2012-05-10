@@ -1,0 +1,45 @@
+!! MIZAR-MSE UNIX  version 2.2  Dep of Comp Sci, Univ of Alberta
+!!
+environ 
+   reserve r,q,r for relation; reserve x,y,z for individual;
+symmetry: for r,x,y st symmetric[r] & is[x,r,y] holds is[y,r,x];
+transitivity: for r,x,y,z st transitive[r] & is[x,r,y] & is[y,r,z]
+                         holds is[x,r,z]
+begin
+ now
+  let p,q be relation; assume
+    sp: symmetric[p]; assume
+    tp: transitive[p]; assume
+    sq: symmetric[q]; assume
+    tq: transitive[q]; assume
+    x2: for x,y holds is[x,p,y] or is[x,q,y];
+
+  thus
+
+  (for x,y holds is[x,p,y]) or (for x,y holds is[x,q,y])
+   proof
+    assume 0: not (for x,y holds is[x,p,y]);
+           consider a,b being individual such that 
+     apb: not is[a,p,b] by 0;
+     aqb: is[a,q,b] by x2, apb;
+     bqa: is[b,q,a] by symmetry,sq, aqb;
+    let x,y be individual;
+      lemma1:
+        now let z be individual;
+            l1: not is[a,p,z] or not is[z,p,b] by tp,apb,transitivity;
+            l2: now assume a: not is[z,p,b];
+                           c: is[z,q,b] by a, x2;
+                           b: is[z,q,a] by transitivity,tq,bqa, c;
+                    thus is[a,q,z] by symmetry,sq, b
+                end;
+          thus is[a,q,z] by l1,l2, x2
+        end;
+      aqx: is[a,q,x] by lemma1;
+      xqa: is[x,q,a] by symmetry,sq, aqx;
+      aqy: is[a,q,y] by lemma1;
+    thus is[x,q,y] by aqy, xqa, tq,transitivity
+   end
+  end
+!!
+!! Thanks, OK
+!! ----------
