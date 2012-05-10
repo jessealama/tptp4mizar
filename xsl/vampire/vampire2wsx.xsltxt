@@ -15,7 +15,7 @@ key "splits"
 //////////////////////////////////////////////////////////////////////
 
 tpl [tstp] mode="nested" {
-  for-each [formula[@status = "axiom"]] {
+  for-each [formula[@status = "axiom" or source/non-logical-data[@name = "introduced"]/non-logical-data[@name = "inequality_splitting_name_introduction"]]] {
     apply [.] mode="axiom";
   }
   for-each [formula[not(@status = "axiom") and source/non-logical-data[@name = "inference"]]] {
@@ -80,7 +80,7 @@ tpl [formula[source/non-logical-data[@name = "introduced"]/non-logical-data[@nam
 }
 
 tpl [tstp] mode="flat" {
-  for-each [formula[@status = "axiom"]] {
+  for-each [formula[@status = "axiom" or source/non-logical-data[@name = "introduced"]/non-logical-data[@name = "inequality_splitting_name_introduction"]]] {
     apply [.] mode="axiom";
   }
   <Item {
@@ -91,7 +91,7 @@ tpl [tstp] mode="flat" {
     }
     <Block {
       @kind = "Now-Reasoning";
-      for-each [formula[not(@status = "axiom")]] {
+      for-each [formula[not(@status = "axiom") and not(source/non-logical-data[@name = "introduced"]/non-logical-data[@name = "inequality_splitting_name_introduction"])]] {
         choose {
           when [@status = "negated_conjecture"] {
             <Item {
@@ -124,6 +124,28 @@ tpl [tstp] mode="flat" {
     <Straightforward-Justification {
       <Local-Reference {
         @spelling = "Refutation";
+      }
+    }
+  }
+}
+
+tpl [formula[@name]] mode="axiom" {
+  $n = `@name`;
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Compact-Statement";
+    <Proposition {
+      <Label {
+        @spelling = `@name`;
+      }
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
+    }
+    <Straightforward-Justification {
+      <Theorem-Reference {
+        $article-uc = uc (#s = $article);
+        @spelling = $article-uc;
+        @"number" = `count (preceding::formula[@status = "axiom" or source/non-logical-data[@name = "introduced"]/non-logical-data[@name = "inequality_splitting_name_introduction"]]) + 1`;
       }
     }
   }
@@ -186,7 +208,8 @@ tpl [formula[@name]] mode="lemma" {
       <Label {
         @spelling = `@name`;
       }
-      apply [*[1]] mode="strip-universal-prefix";
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
     }
     <Straightforward-Justification {
       for-each [source] {
