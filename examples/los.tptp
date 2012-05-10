@@ -6,7 +6,7 @@ fof(def_symmetric,
           <=>
         ( ! [X,Y] : (
           (individual(X) & individual(Y)) =>
-            (is(X,R,Y) => is(Y,R,X)))))))).
+            (blah(X,R,Y) => blah(Y,R,X)))))))).
 
 fof(def_transitive,
     definition,(
@@ -16,7 +16,7 @@ fof(def_transitive,
             <=>
           ( ! [X,Y,Z] : (
             (individual(X) & individual(Y) & individual(Z)) =>
-              ((is(X,R,Y) & is(Y,R,Z)) => is(X,R,Z)))))))).
+              ((blah(X,R,Y) & blah(Y,R,Z)) => blah(X,R,Z)))))))).
 
 fof(def_reflexive,
     definition,(
@@ -24,7 +24,7 @@ fof(def_reflexive,
         relation(R) => (
           reflexive(R)
             <=>
-          ( ! [X] : (individual(X) => is(X,R,X))))))).
+          ( ! [X] : (individual(X) => blah(X,R,X))))))).
 
 fof(p_is_a_relation,
     hypothesis,
@@ -62,9 +62,9 @@ fof(domain_partition,
     axiom,
     ( ! [X] : (individual(X) <=> ~ relation(X)))).
 
-fof(is_sorting,
+fof(blah_sorting,
     axiom,
-    ( ! [X,Y,Z] : (is(X,Y,Z) => (individual(X) & relation(Y) & individual(Z))))).
+    ( ! [X,Y,Z] : (blah(X,Y,Z) => (individual(X) & relation(Y) & individual(Z))))).
 
 fof(reflexive_sorting,
     axiom,
@@ -80,10 +80,10 @@ fof(transitive_sorting,
 
 fof(p_and_q_together_are_everything,
     hypothesis,
-    (! [X,Y] : ((individual(X) & individual(Y)) => (is(X,p,Y) | is(X,q,Y))))).
+    (! [X,Y] : ((individual(X) & individual(Y)) => (blah(X,p,Y) | blah(X,q,Y))))).
 
 fof(piotr,
     conjecture,
-    ((! [X,Y] : ((individual(X) & individual(Y)) => is(X,p,Y)))
+    ((! [X,Y] : ((individual(X) & individual(Y)) => blah(X,p,Y)))
      |
-     (! [X,Y] : ((individual(X) & individual(Y)) => is(X,q,Y))))).
+     (! [X,Y] : ((individual(X) & individual(Y)) => blah(X,q,Y))))).
