@@ -27,7 +27,8 @@ use Utils qw(is_readable_file
 	     slurp
 	     run_mizar_tool
 	     normalize_variables
-	     tptp_fofify);
+	     tptp_fofify
+	     tptp_xmlize);
 
 # Strings
 Readonly my $EMPTY_STRING => q{};
@@ -224,9 +225,6 @@ apply_stylesheet (
     }
 );
 
-# Normalize the variables in the problem
-normalize_variables ($repair_problems);
-
 # Extract the problems
 my $xml_parser = XML::LibXML->new ();
 my $problems_doc = $xml_parser->parse_file ($repair_problems);
@@ -273,17 +271,15 @@ foreach my $problem (@problems) {
 	die error_message ('We failed to generate the XML TPTP representation for', $SP, $problem_name);
     }
 
+    normalize_variables ($problem_xml_path);
+
     apply_stylesheet ($render_tptp_stylesheet,
 		      $problem_xml_path,
-		      $problem_tmp_path);
+		      $problem_path);
 
     # fofify
-
-    # fofify
-    tptp_fofify ($problem_path);
+    tptp_fofify ($problem_path, $problem_path);
     tptp_xmlize ($problem_path, $problem_xml_path);
-
-    unlink $problem_tmp_path;
 
 }
 
@@ -454,6 +450,13 @@ my @ivy_proof_xmls = glob "${repair_dir}/*-clausified.ivy-proof.xml";
 
 my @solution_names = map { $_->findvalue ('@name') } @problems;
 
+my %solution_names = ();
+foreach my $name (@solution_names) {
+    $solution_names{$name} = 0;
+}
+
+@solution_names = sort keys %solution_names;
+
 my $solutions_token_string = ',' . join (',', @solution_names) . ',';
 
 my $repair_stylesheet = undef;
@@ -527,8 +530,8 @@ normalize_variables ('problem.xml');
 my $repaired_wsx = 'text/repaired.wsx';
 my $clausifications_token_string = ',' . join (',', map { basename ($_, '-clausification.xml') . ':' . File::Spec->rel2abs ($_) } @eprover_clausification_xmls) . ',';
 my $herbrand_proofs_token_string = ',' . join (',', map { basename ($_, '-clausified.ivy-proof.xml') . ':' . File::Spec->rel2abs ($_) } @ivy_proof_xmls) . ',';
-my $vampire_to_evl_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/vampire2evl.xsl";
-apply_stylesheet ($vampire_to_evl_stylesheet,
+my $eprover_to_evl_stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2evl.xsl";
+apply_stylesheet ($eprover_to_evl_stylesheet,
 		  'problem.xml',
 		  'text/repaired.evl',
 		  {
@@ -590,6 +593,8 @@ proof.  Supported styles are:
 =over 8
 
 =item vampire
+
+=item eprover
 
 =back
 

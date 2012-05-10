@@ -300,81 +300,28 @@ tpl [tstp[not(formula[@status = "conjecture"])]] (#step, #herbrand-proof) mode="
 }
 
 tpl [tstp[formula[@status = "conjecture"]]] (#step, #herbrand-proof) mode="imported-eprover-clausification" {
-  msg "wow, amazing";
-  for-each [formula[@status = "conjecture"]] {
-    $n = `@name`;
-    <Item {
-      @kind = "Regular-Statement";
-      @shape = "Compact-Statement";
-      <Proposition {
-        <Label {
-          @spelling = `concat ($step, "eprover", $n)`;
-        }
-        // apply [*[1]] mode="strip-universal-prefix";
-        apply [*[1]];
-      }
-      <Block {
-        @kind = "Proof";
-        for-each [parent::tstp] {
-          for-each [formula[not(@status = "conjecture")]] {
-            if [@status = "axiom"] {
-              apply [.] (#step = $step) mode="imported-eprover-axiom";
-            }
-            if [@status = "plain"] {
-              apply [.] (#step = $step) mode="imported-eprover-lemma";
-            }
+  for-each [document ($herbrand-proof, /)] {
+    apply [.] (#step = $step) mode="imported-ivy-refutation";
+  }
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Compact-Statement";
+    <Proposition {
+      <Contradiction;
+    }
+    <Straightforward-Justification {
+      <Link;
+      for-each [ancestor::tstp] {
+        for-each [formula[@syntax = "clause" and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]] {
+          $local-name = `@name`;
+          <Local-Reference {
+            @spelling = `concat ($step, "eprover", $local-name)`;
           }
         }
-        <Item {
-          @kind = "Regular-Statement";
-	  @shape = "Diffuse-Statement";
-          <Block {
-            @kind = "Now-Reasoning";
-            for-each [following-sibling::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "assume_negation"]]] {
-              apply [.] (#step = $step) mode="imported-eprover-raa";
-            }
-            for-each [parent::tstp] {
-              for-each [formula[@status = "negated_conjecture" and not(source/non-logical-data[@name = "inference"]/non-logical-data[@name = "assume_negation"])]] {
-                apply [.] (#step = $step) mode="imported-eprover-lemma";
-              }
-            }
-            for-each [document ($herbrand-proof, /)] {
-              apply [.] (#step = $step) mode="imported-ivy-refutation";
-            }
-            <Item {
-              @kind = "Conclusion";
-              @shape = "Compact-Statement";
-              <Proposition {
-                <Contradiction;
-              }
-              <Straightforward-Justification {
-                <Link;
-                for-each [ancestor::tstp] {
-                  for-each [formula[@syntax = "clause" and source/non-logical-data[@name = "inference"]/non-logical-data[@name = "split_conjunct"]]] {
-                    $local-name = `@name`;
-                    <Local-Reference {
-                      @spelling = `concat ($step, "eprover", $local-name)`;
-                    }
-                  }
-                  for-each [formula[@syntax = "formula" and (@status = "plain" or @status = "axiom")]] {
-                    $local-name = `@name`;
-                    <Local-Reference {
-                      @spelling = `concat ($step, "eprover", $local-name)`;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-        <Item {
-          @kind = "Conclusion";
-          @shape = "Compact-Statement";
-          <Proposition {
-            <Thesis;
-          }
-          <Straightforward-Justification {
-            <Link;
+        for-each [formula[@syntax = "formula" and (@status = "plain" or @status = "axiom")]] {
+          $local-name = `@name`;
+          <Local-Reference {
+            @spelling = `$local-name`;
           }
         }
       }
@@ -690,7 +637,7 @@ tpl [formula[@name]] (#linked) mode="lemma" {
               for-each [tstp/formula[@status = "conjecture"]] {
                 $local-name = `@name`;
                 <Local-Reference {
-                  @spelling = `concat ($n, "eprover", $local-name)`;
+                  @spelling = $local-name;
                 }
               }
             }
