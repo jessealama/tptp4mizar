@@ -30,7 +30,8 @@ our @EXPORT_OK = qw(error_message
 		    slurp
 		    run_mizar_tool
 		    normalize_variables
-		    tptp_xmlize);
+		    tptp_xmlize
+		    tptp_fofify);
 
 sub error_message {
     return message_with_colored_prefix ('Error', $ERROR_COLOR, @_);
@@ -227,6 +228,40 @@ sub tptp_xmlize {
     my $tptp4X_errs = $EMPTY_STRING;
     my $tptp4X_out = $EMPTY_STRING;
     my @tptp4X_call = ('tptp4X', '-N', '-V', '-c', '-x', '-fxml', $tptp_file);
+
+    my $tptp4X_harness = harness (\@tptp4X_call,
+				  '>', \$tptp4X_out,
+				  '2>', \$tptp4X_errs);
+
+    $tptp4X_harness->start ();
+    $tptp4X_harness->finish ();
+
+    my $tptp4X_exit_code = ($tptp4X_harness->results)[0];
+
+    if ($tptp4X_exit_code != 0) {
+	confess ('tptp4X did not terminate cleanly when XMLizing', $SP, $tptp_file);
+    }
+
+    if (defined $output_path) {
+	open (my $tptp_fh, '>', $output_path)
+	    or confess 'Unable to open an output filehandle for', $SP, $output_path;
+	say {$tptp_fh} $tptp4X_out
+	    or confess 'Unable to print to the output filehandle for', $SP, $output_path;
+	close $tptp_fh
+	    or confess 'Unable to close the output filehandle for', $SP, $output_path;
+    }
+
+    return $tptp4X_out;
+
+}
+
+sub tptp_fofify {
+    my $tptp_file = shift;
+    my $output_path = shift;
+
+    my $tptp4X_errs = $EMPTY_STRING;
+    my $tptp4X_out = $EMPTY_STRING;
+    my @tptp4X_call = ('tptp4X', '-tfofify', $tptp_file);
 
     my $tptp4X_harness = harness (\@tptp4X_call,
 				  '>', \$tptp4X_out,
