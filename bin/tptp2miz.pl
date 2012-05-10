@@ -32,7 +32,8 @@ use Utils qw(is_readable_file
 	     slurp
 	     normalize_variables
 	     run_mizar_tool
-	     tptp_xmlize);
+	     tptp_xmlize
+	     tptp_fofify);
 use TPTPProblem qw(is_valid_tptp_file);
 use EproverDerivation;
 use VampireDerivation;
@@ -195,6 +196,7 @@ copy ($tptp_file, $tptp_file_in_db)
 
 # XMLize
 my $tptp_xml_in_db = "${db}/problem.xml";
+tptp_fofify ($tptp_file_in_db, $tptp_file_in_db);
 tptp_xmlize ($tptp_file_in_db, $tptp_xml_in_db);
 normalize_variables ($tptp_xml_in_db);
 
