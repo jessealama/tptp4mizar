@@ -425,22 +425,6 @@ foreach my $problem (@problems) {
 
 }
 
-# # Shift the skolem functions
-# my $prefix_skolem_stylesheet = "${EPROVER_STYLESHEET_HOME}/prefix-skolems.xsl";
-# foreach my $problem (@problems) {
-#     my $problem_name = $problem->findvalue ('@name');
-
-#     my $eprover_solution_path = "${repair_dir}/${problem_name}.p.eprover-proof.xml";
-
-#     apply_stylesheet ($prefix_skolem_stylesheet,
-# 		      $eprover_solution_path,
-# 		      $eprover_solution_path,
-# 		  {
-# 		      'prefix' => $problem_name,
-# 		  });
-
-# }
-
 # Repair the proofs
 my @eprover_clausification_xmls = glob "${repair_dir}/*-clausification.xml";
 my @ivy_proof_xmls = glob "${repair_dir}/*-clausified.ivy-proof.xml";
