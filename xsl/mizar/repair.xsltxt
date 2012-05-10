@@ -248,7 +248,7 @@ tpl [Proposition[Label[@spelling]]] mode="axiom" {
       @"name" = strip-prefix (#string = `@spelling`);
     }
     @status = "axiom";
-    @syntax = "clause";
+    @syntax = "formula";
     apply [*[position() = last()]] mode="mizar-to-tptp";
   }
 }
@@ -263,7 +263,7 @@ tpl [Proposition[Label[@spelling]]] mode="conjecture" {
       @"name" = strip-prefix (#string = `@spelling`);
     }
     @status = "conjecture";
-    @syntax = "clause";
+    @syntax = "formula";
     apply [*[position() = last()]] mode="mizar-to-tptp";
   }
 }
