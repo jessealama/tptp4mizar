@@ -9,14 +9,30 @@ output method="xml" indent="yes";
 // The name of the article .dco that we will create
 #only-skolems = { ""; }
 
+// Whether to skip treating all skolems.  The only value recognized is
+// '1'; anything else means that skolems will be considered.
+#no-skolems = { ""; }
+
+// Skolem prefix
+#skolem-prefix = { "esk"; }
+
 //////////////////////////////////////////////////////////////////////
 // Templates
 //////////////////////////////////////////////////////////////////////
 
 tpl [tstp] {
+  $num-skolem-functions
+    = `count(descendant::function[starts-with (@name, $skolem-prefix)
+                                  and not(@name = preceding::function/@name)
+                                  and not(@name = ancestor::function/@name)])`;
+  $num-predicates
+    = `count(descendant::predicate[not(@name = "=")
+             and not(@name = preceding::predicate/@name)])`;
+  $num-functions
+    = `count(descendant::function[not(@name = preceding::function/@name)
+                                  and not(@name = ancestor::function/@name)])`;
+  $article-uc = uc (#s = `$article`);
   if [$only-skolems = "1"] {
-    $num-skolem-functions = `count(descendant::function[starts-with (@name, "esk") and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)])`;
-    $article-uc = uc (#s = `$article`);
     <Constructors {
       <Signature {
         <ArticleID {
@@ -31,7 +47,7 @@ tpl [tstp] {
           }
         }
       }
-      for-each [descendant::function[starts-with (@name, "esk") and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
+      for-each [descendant::function[starts-with (@name, $skolem-prefix) and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
         <Constructor {
           @kind = "K";
           @nr = `position()`;
@@ -56,9 +72,6 @@ tpl [tstp] {
       }
     }
   } else {
-    $num-predicates = `count(descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)])`;
-    $num-functions = `count(descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)])`;
-    $article-uc = uc (#s = `$article`);
     <Constructors {
       <Signature {
         <ArticleID {
