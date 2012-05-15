@@ -300,8 +300,9 @@ tpl [variable[@name]] (#variable-alist) mode="render-definiens" {
   $n = `@name`;
   if [starts-with (@name, "V")] {
     $variable-number = `substring-after ($n, "V")`;
+    // our variables start with 0, but Mizar numbering starts at 1
     <Var {
-      @nr = $variable-number;
+      @nr = `$variable-number + 1`;
     }
   } else {
     apply [.] (#message = "We found a variable whose name does not start with 'V'.") mode="die";
