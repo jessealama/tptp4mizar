@@ -42,35 +42,40 @@ tpl [tstp] {
       }
     }
     <ConstrCounts {
-      if [$num-predicates > 0] {
-        <ConstrCount {
-          @kind = "R";
-          @nr = `$num-predicates`;
-        }
+      <ConstrCount {
+        @kind = "R";
+        @nr = `$num-predicates`;
       }
-      if [$num-functions > 0] {
-        <ConstrCount {
-          @kind = "K";
-          @nr = `$num-functions`;
-        }
-      }
-    }
-    for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
-      <Constructor {
+       <ConstrCount {
         @kind = "K";
-        @nr = `position()`;
-        @aid = `$article-uc`;
-        @relnr = `position()`;
-        @spelling = `@name`;
-        <ArgTypes {
-          for-each [*] {
-            <Typ {
-              @kind = "M";
-              @nr = "1";
-              <Cluster;
-            }
-          }
-        }
+        @nr = `$num-functions`;
+       }
+    }
+    for-each [descendant::function[not(@name = preceding::function/@name)
+                                   and not(@name = ancestor::function/@name)]] {
+      apply [.] (#nr = `position ()`,
+      	    	 #relnr = `position()`,
+		 #aid = $article-uc);
+    }
+    for-each [descendant::predicate[not(@name = "=")
+                                    and not(@name = preceding::predicate/@name)]] {
+      apply [.] (#nr = `position ()`,
+      	    	 #relnr = `position() + 2`,
+		 #aid = $article-uc);
+    }
+
+  }
+}
+
+tpl constructor (#kind, #nr, #relnr, #aid) {
+  <Constructor {
+    @kind = $kind;
+    @nr = $nr;
+    @aid = $aid;
+    @relnr = $relnr;
+    @spelling = `@name`;
+    <ArgTypes {
+      for-each [*] {
         <Typ {
           @kind = "M";
           @nr = "1";
@@ -78,24 +83,24 @@ tpl [tstp] {
         }
       }
     }
-    for-each [descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)]] {
-      <Constructor {
-        @kind = "R";
-        @nr = `position()`;
-        @aid = `$article-uc`;
-        @relnr = `2 + position()`;
-        @spelling = `@name`;
-        <ArgTypes {
-          for-each [*] {
-            <Typ {
-              @kind = "M";
-              @nr = "1";
-              <Cluster;
-            }
-          }
-        }
-      }
+    <Typ {
+      @kind = "M";
+      @nr = "1";
+      <Cluster;
     }
-
   }
+}
+
+tpl [function[@name]] (#nr, #relnr, #aid) {
+  constructor (#kind = "K",
+  	       #nr = $nr,
+	       #relnr = $relnr,
+	       #aid = $aid);
+}
+
+tpl [predicate] (#nr, #relnr, #aid) {
+  constructor (#kind = "R",
+  	       #nr = $nr,
+	       #relnr = $relnr,
+	       #aid = $aid);
 }
