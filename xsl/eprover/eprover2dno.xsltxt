@@ -10,169 +10,174 @@ output omit-xml-declaration="no";
 // Deal only with skolems
 #only-skolems = { ""; }
 
+// Skolems have this prefix.  Any function whose name begins with this
+// prefix will be regarded as a skolem function.
+#skolem-prefix = { "esk"; }
+
+#no-skolems = { ""; }
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
 tpl [tstp] {
-  if [$only-skolems = "1"] {
-    $num-skolem-functions = `count(descendant::function[starts-with (@name, "esk") and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)])`;
-    $article-uc = uc (#s = `$article`);
+  $article-uc = uc (#s = `$article`);
+  $num-predicates
+    = `count(descendant::predicate[not(@name = "=")
+                                   and not(@name = preceding::predicate/@name)])`;
+  $num-functions
+    = `count(descendant::function[not(@name = preceding::function/@name)
+                                  and not(@name = ancestor::function/@name)])`;
+  $num-skolem-functions
+    = `count(descendant::function[starts-with (@name, $skolem-prefix)
+                                  and not(@name = preceding::function/@name)
+                                  and not(@name = ancestor::function/@name)])`;
+  <Notations {
 
-    <Notations {
-      <Signature {
-        <ArticleID {
-          @"name" = "HIDDEN";
+    <Signature {
+      <ArticleID { @"name" = "HIDDEN"; }
+      <ArticleID { @"name" = `$article-uc`; }
+    }
+
+
+    <Vocabularies {
+
+      <Vocabulary {
+        <ArticleID { @"name" = "HIDDEN"; }
+        <SymbolCount { @kind="G"; @nr="0"; }
+        <SymbolCount { @kind="K"; @nr="0"; }
+        <SymbolCount { @kind="L"; @nr="0"; }
+        <SymbolCount { @kind="M"; @nr="0"; }
+        <SymbolCount { @kind="O"; @nr="0"; }
+        <SymbolCount { @kind="R"; @nr="2"; }
+        <SymbolCount { @kind="U"; @nr="0"; }
+        <SymbolCount { @kind="V"; @nr="0"; }
+      }
+
+      <Vocabulary {
+        <ArticleID { @"name" = `$article-uc`; }
+
+        // we don't handle these kinds of symbols (yet)
+        <SymbolCount { @kind = "U"; @nr = "0"; }
+        <SymbolCount { @kind = "V"; @nr = "0"; }
+        <SymbolCount { @kind = "G"; @nr = "0"; }
+        <SymbolCount { @kind = "K"; @nr = "0"; }
+        <SymbolCount { @kind = "L"; @nr = "0"; }
+        <SymbolCount { @kind = "M"; @nr = "0"; }
+
+        <SymbolCount {
+          @kind = "O";
+          if [$only-skolems = "1"] {
+            @nr = $num-skolem-functions;
+          } else {
+            @nr = $num-functions;
+          }
         }
-        <ArticleID {
-          @"name" = `$article-uc`;
+
+        <SymbolCount {
+          @kind = "R";
+          if [$only-skolems = "1"] {
+            @nr = "0";
+          } else {
+            @nr = $num-predicates;
+          }
+        }
+
+      }
+    }
+
+    choose {
+      when [$only-skolems = "1"] {
+        for-each [descendant::function[starts-with (@name, $skolem-prefix)
+                                       and not(@name = preceding::function/@name)
+                                       and not(@name = ancestor::function/@name)]] {
+          apply [.] (#aid = $article-uc,
+                   #nr = `position ()`,
+                   #constrnr = `position ()`);
         }
       }
-      <Vocabularies {
-
-        <Vocabulary {
-          <ArticleID {
-            @"name" = `$article-uc`;
-          }
-          <SymbolCount { @kind="G"; @nr="0"; }
-          <SymbolCount { @kind="K"; @nr="0"; }
-          <SymbolCount { @kind="L"; @nr="0"; }
-          <SymbolCount { @kind="M"; @nr="0"; }
-          <SymbolCount { @kind="O"; @nr=`$num-skolem-functions`; }
-          <SymbolCount { @kind="R"; @nr="0"; }
-          <SymbolCount { @kind="U"; @nr="0"; }
-          <SymbolCount { @kind="V"; @nr="0"; }
-
+      when [$no-skolems = "1"] {
+        for-each [descendant::function[not(starts-with (@name, $skolem-prefix))
+                                       and not(@name = preceding::function/@name)
+                                       and not(@name = ancestor::function/@name)]] {
+          apply [.] (#aid = $article-uc,
+                   #nr = `position ()`,
+                   #constrnr = `position ()`);
         }
       }
-
-      // functions
-      for-each [descendant::function[starts-with (@name, "esk") and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
-        <Pattern {
-          @kind = "K";
-          @nr = `position()`;
-          @aid = `$article-uc`;
-          @constrkind = "K";
-          @constrnr = `position()`;
-          <Format {
-            @kind = "O";
-            @symbolnr = `position()`;
-            @argnr = `count (*)`;
-            @leftargnr = "0";
-          }
-          <ArgTypes {
-            for-each [*] {
-              set ();
-            }
-          }
-          <Visible {
-            for-each [*] {
-              <Int {
-                @x = `position()`;
-              }
-            }
-          }
+      otherwise {
+        for-each [descendant::function[not(@name = preceding::function/@name)
+                                       and not(@name = ancestor::function/@name)]] {
+          apply [.] (#aid = $article-uc,
+                   #nr = `position ()`,
+                   #constrnr = `position ()`);
         }
       }
     }
-  } else {
-    $num-predicates = `count(descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)])`;
-    $num-functions = `count(descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)])`;
-    $article-uc = uc (#s = `$article`);
 
-    <Notations {
-      <Signature {
-        <ArticleID {
-          @"name" = "HIDDEN";
-        }
-        <ArticleID {
-          @"name" = `$article-uc`;
+    if [not($only-skolems = "1")] {
+      for-each [descendant::predicate[not(@name = "=")
+                                      and not(@name = preceding::predicate/@name)]] {
+        apply [.] (#nr = `position ()`,
+                   #constrnr = `position() + 2`,
+                   #aid = $article-uc);
+      }
+    }
+  }
+}
+
+tpl [function] (#nr, #constrnr, #aid) {
+  <Pattern {
+    @kind = "K";
+    @nr = $nr;
+    @aid = $aid;
+    @constrkind = "K";
+    @constrnr = $constrnr;
+    <Format {
+      @kind = "O";
+      @symbolnr = $nr;
+      @argnr = `count (*)`;
+      @leftargnr = "0";
+      @spelling = `@name`;
+    }
+    <ArgTypes {
+      for-each [*] {
+        set ();
+      }
+    }
+    <Visible {
+      for-each [*] {
+        <Int {
+          @x = `position()`;
         }
       }
-      <Vocabularies {
+    }
+  }
+}
 
-        // // import stuff from HIDDEN
-        // <Vocabulary {
-        //   <ArticleID {
-        //     @"name" = "HIDDEN";
-        //   }
-        //   <SymbolCount { @kind="G"; @nr="0"; }
-        //   <SymbolCount { @kind="K"; @nr="3"; }
-        //   <SymbolCount { @kind="L"; @nr="3"; }
-        //   <SymbolCount { @kind="M"; @nr="1"; }
-        //   <SymbolCount { @kind="O"; @nr="0"; }
-        //   <SymbolCount { @kind="R"; @nr="3"; }
-        //   <SymbolCount { @kind="U"; @nr="0"; }
-        //   <SymbolCount { @kind="V"; @nr="1"; }
-        // }
-
-        <Vocabulary {
-          <ArticleID {
-            @"name" = `$article-uc`;
-          }
-          <SymbolCount { @kind="G"; @nr="0"; }
-          <SymbolCount { @kind="K"; @nr="0"; }
-          <SymbolCount { @kind="L"; @nr="0"; }
-          <SymbolCount { @kind="M"; @nr="0"; }
-          <SymbolCount { @kind="O"; @nr=`$num-functions`; }
-          <SymbolCount { @kind="R"; @nr=`$num-predicates`; }
-          <SymbolCount { @kind="U"; @nr="0"; }
-          <SymbolCount { @kind="V"; @nr="0"; }
-
-        }
+tpl [predicate] (#nr, #constrnr, #aid) {
+  <Pattern {
+    @kind = "R";
+    @nr = $nr;
+    @aid = $aid;
+    @constrkind = "R";
+    @constrnr = $constrnr;
+    <Format {
+      @kind = "R";
+      @symbolnr = $nr;
+      @argnr = `count (*)`;
+      @leftargnr = "0";
+      @spelling = `@name`;
+    }
+    <ArgTypes {
+      for-each [*] {
+        set ();
       }
-
-      // predicates
-      for-each [descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)]] {
-        <Pattern {
-          @kind = "R";
-          @nr = `position()`;
-          @aid = `$article-uc`;
-          @constrkind = "R";
-          @constrnr = `2 + position()`;
-          <Format {
-            @kind = "R";
-            @symbolnr = `position()`;
-            @argnr = `count (*)`;
-            @leftargnr = "0";
-          }
-          <ArgTypes {
-            for-each [*] {
-              set ();
-            }
-          }
-          <Visible {
-            for-each [*] {
-              <Int {
-                @x = `position()`;
-              }
-            }
-          }
-        }
-      }
-
-      // functions
-      for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
-        <Pattern {
-          @kind = "K";
-          @nr = `position()`;
-          @aid = `$article-uc`;
-          @constrkind = "K";
-          @constrnr = `position()`;
-          <Format {
-            @kind = "O";
-            @symbolnr = `position()`;
-            @argnr = `count (*)`;
-            @leftargnr = "0";
-          }
-          <ArgTypes {
-            for-each [*] {
-              set ();
-            }
-          }
-          <Visible {
-            for-each [*] {
-              <Int {
-                @x = `position()`;
-              }
-            }
-          }
+    }
+    <Visible {
+      for-each [*] {
+        <Int {
+          @x = `position()`;
         }
       }
     }
