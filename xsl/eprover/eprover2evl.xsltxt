@@ -9,10 +9,6 @@ output method="xml" indent="yes";
 
 #article = { ""; }
 
-// A token list of paths to XMLized TSTP proofs that we may need to
-// insert
-#external-proofs = { ""; }
-
 //////////////////////////////////////////////////////////////////////
 // Templates
 //////////////////////////////////////////////////////////////////////
@@ -37,17 +33,7 @@ tpl [/] {
       msg terminate="yes" "Error: the value of the article stylesheet parameter contains whitespace.";
     }
     when [tstp] {
-      if [$external-proofs = ""] {
-        apply [tstp] (#proofs = ",,");
-      } else {
-        $valid-proofs = is-valid-token-string (#string = $external-proofs);
-        if [$valid-proofs = "1"] {
-          apply [tstp] (#proofs = $external-proofs);
-        } else {
-          $message = `concat ("Error: the value '", $external-proofs, "' supplied for the external-proofs stylesheet parameter is not a valid token string.")`;
-          msg terminate="yes" $message;
-        }
-      }
+      apply [tstp] (#proofs = ",,");
     }
     otherwise {
       msg terminate="yes" "Error: the required tstp document element is missing.";
@@ -55,7 +41,7 @@ tpl [/] {
   }
 }
 
-tpl [tstp] (#proofs) {
+tpl [tstp] {
   $article-uc = uc (#s = $article);
   <Environ {
     @aid = $article-uc;
@@ -64,43 +50,24 @@ tpl [tstp] (#proofs) {
       <Ident {
         @"name" = $article-uc;
       }
-      emit-idents-for-external-proofs (#proofs = $proofs);
     }
     <Directive {
       @"name" = "Notations";
       <Ident {
         @"name" = $article-uc;
       }
-      emit-idents-for-external-proofs (#proofs = $proofs);
     }
     <Directive {
       @"name" = "Constructors";
       <Ident {
         @"name" = $article-uc;
       }
-      emit-idents-for-external-proofs (#proofs = $proofs);
     }
     <Directive {
       @"name" = "Theorems";
       <Ident {
         @"name" = $article-uc;
       }
-      emit-idents-for-external-proofs (#proofs = $proofs);
     }
-  }
-}
-
-tpl emit-idents-for-external-proofs (#proofs) {
-  $empty = token-string-is-empty (#token-string = $proofs);
-  if [$empty = "1"] {
-    // done
-  } else {
-    $problem = token-string-head (#token-string = $proofs);
-    $tail = token-string-tail (#token-string = $proofs);
-    <Ident {
-      $problem-uc = uc (#s = $problem);
-      @"name" = $problem-uc;
-    }
-    emit-idents-for-external-proofs (#proofs = $tail);
   }
 }
