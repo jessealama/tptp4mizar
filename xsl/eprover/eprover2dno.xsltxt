@@ -43,18 +43,6 @@ tpl [tstp] {
     <Vocabularies {
 
       <Vocabulary {
-        <ArticleID { @"name" = "HIDDEN"; }
-        <SymbolCount { @kind="G"; @nr="0"; }
-        <SymbolCount { @kind="K"; @nr="0"; }
-        <SymbolCount { @kind="L"; @nr="0"; }
-        <SymbolCount { @kind="M"; @nr="0"; }
-        <SymbolCount { @kind="O"; @nr="0"; }
-        <SymbolCount { @kind="R"; @nr="2"; }
-        <SymbolCount { @kind="U"; @nr="0"; }
-        <SymbolCount { @kind="V"; @nr="0"; }
-      }
-
-      <Vocabulary {
         <ArticleID { @"name" = `$article-uc`; }
 
         // we don't handle these kinds of symbols (yet)
