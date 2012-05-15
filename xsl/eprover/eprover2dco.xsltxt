@@ -6,6 +6,9 @@ output method="xml" indent="yes";
 // Stylesheet parameters
 //////////////////////////////////////////////////////////////////////
 
+// The article from which some other constructors may come
+#article = { ""; }
+
 // The name of the article .dco that we will create
 #only-skolems = { ""; }
 
@@ -13,7 +16,8 @@ output method="xml" indent="yes";
 // '1'; anything else means that skolems will be considered.
 #no-skolems = { ""; }
 
-// Skolem prefix
+// Skolem prefix.  Any function whose name starts with this prefix
+// will be considered a skolem function.
 #skolem-prefix = { "esk"; }
 
 //////////////////////////////////////////////////////////////////////
@@ -32,105 +36,102 @@ tpl [tstp] {
     = `count(descendant::function[not(@name = preceding::function/@name)
                                   and not(@name = ancestor::function/@name)])`;
   $article-uc = uc (#s = `$article`);
-  if [$only-skolems = "1"] {
-    <Constructors {
-      <Signature {
-        <ArticleID {
-          @"name" = "HIDDEN";
+  <Constructors {
+
+    <Signature {
+      <ArticleID { @"name" = "HIDDEN"; }
+    }
+
+    <ConstrCounts {
+      <ConstrCount {
+        @kind = "R";
+        if [$only-skolems = "1"] {
+          @nr = "0";
+        } else {
+          @nr = `$num-predicates`;
         }
       }
-      <ConstrCounts {
-        if [$num-skolem-functions > 0] {
-          <ConstrCount {
-            @kind = "K";
-            @nr = `$num-skolem-functions`;
-          }
-        }
-      }
-      for-each [descendant::function[starts-with (@name, $skolem-prefix) and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
-        <Constructor {
-          @kind = "K";
-          @nr = `position()`;
-          @aid = `$article-uc`;
-          @relnr = `position()`;
-          @spelling = `@name`;
-          <ArgTypes {
-            for-each [*] {
-              <Typ {
-                @kind = "M";
-                @nr = "1";
-                <Cluster;
-              }
-            }
-          }
-          <Typ {
-            @kind = "M";
-            @nr = "1";
-            <Cluster;
-          }
+      <ConstrCount {
+        @kind = "K";
+        if [$only-skolems = "1"] {
+          @nr = `$num-skolem-functions`;
+        } else {
+          @nr = `$num-functions`;
         }
       }
     }
-  } else {
-    <Constructors {
-      <Signature {
-        <ArticleID {
-          @"name" = "HIDDEN";
+    if [$only-skolems = "1"] {
+      for-each [descendant::function[starts-with (@name, $skolem-prefix)
+                                     and not(@name = preceding::function/@name)
+                                     and not(@name = ancestor::function/@name)]] {
+        apply [.] (#nr = `position ()`,
+	      	   #relnr = `position ()`,
+                   #aid = $article-uc);
+      }
+    } else {
+      for-each [descendant::predicate[not(@name = "=")
+                                      and not(@name = preceding::predicate/@name)]] {
+        apply [.] (#nr = `position() + 2`,
+	           #relnr = `position ()`,
+	      	   #aid = $article-uc);
+      }
+      if [$no-skolems = "1"] {
+        for-each [descendant::function[not(starts-with (@name, $skolem-prefix))
+                                       and not(@name = preceding::function/@name)
+                                       and not(@name = ancestor::function/@name)]] {
+          apply [.] (#nr = `position ()`,
+  	      	   #relnr = `position ()`,
+  	      	   #aid = $article-uc);
+        }
+      } else {
+        for-each [descendant::function[not(@name = preceding::function/@name)
+                                       and not(@name = ancestor::function/@name)]] {
+          apply [.] (#nr = `position ()`,
+  	      	   #relnr = `position ()`,
+  	      	   #aid = $article-uc);
         }
       }
-      <ConstrCounts {
-        if [$num-predicates > 0] {
-          <ConstrCount {
-            @kind = "R";
-            @nr = `$num-predicates`;
-          }
-        }
-        if [$num-functions > 0] {
-          <ConstrCount {
-            @kind = "K";
-            @nr = `$num-functions`;
-          }
-        }
-      }
-      for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
-        <Constructor {
-          @kind = "K";
-          @nr = `position()`;
-          @aid = `$article-uc`;
-          @relnr = `position()`;
-          @spelling = `@name`;
-          <ArgTypes {
-            for-each [*] {
-              <Typ {
-                @kind = "M";
-                @nr = "1";
-                <Cluster;
-              }
-            }
-          }
-          <Typ {
-            @kind = "M";
-            @nr = "1";
-            <Cluster;
-          }
+    }
+  }
+}
+
+tpl [function] (#nr, #relnr, #aid) {
+  <Constructor {
+    @kind = "K";
+    @nr = $nr;
+    @aid = $aid;
+    @relnr = $relnr;
+    @spelling = `@name`;
+    <ArgTypes {
+      for-each [*] {
+        <Typ {
+          @kind = "M";
+          @nr = "1";
+          <Cluster;
         }
       }
-      for-each [descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)]] {
-        <Constructor {
-          @kind = "R";
-          @nr = `position()`;
-          @aid = `$article-uc`;
-          @relnr = `2 + position()`;
-          @spelling = `@name`;
-          <ArgTypes {
-            for-each [*] {
-              <Typ {
-                @kind = "M";
-                @nr = "1";
-                <Cluster;
-              }
-            }
-          }
+    }
+    <Typ {
+      @kind = "M";
+      @nr = "1";
+      <Cluster;
+    }
+  }
+}
+
+tpl [predicate] (#nr, #relnr, #aid) {
+  <Constructor {
+    @kind = "R";
+    @nr = $nr;
+    @aid = $aid;
+    @relnr = $relnr;
+    @spelling = `@name`;
+    <ArgTypes {
+      for-each [*] {
+        <Typ {
+          @kind = "M";
+          @nr = "1";
+          <Cluster;
         }
       }
     }
