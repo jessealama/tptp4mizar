@@ -152,27 +152,21 @@ tpl [quantifier[@type = "universal"]] (#started, #variables, #variable-number, #
           <Cluster;
         }
         apply [.] (#started = "1",
-	      	   #variables = `$variables[position() > 1]`,
-		   #variable-number = `$variable-number + 1`,
-		   #variable-alist = $new-variable-alist) mode="render-definiens";
+                   #variables = `$variables[position() > 1]`,
+                   #variable-number = `$variable-number + 1`,
+                   #variable-alist = $new-variable-alist) mode="render-definiens";
 
       }
     } else {
       apply [*[position() = last()]] (#variable-alist = $variable-alist) mode="render-definiens";
     }
   } else {
-    if [$variable-alist] {
-      $num-variables-bound-so-far = count-items-in-token-string (#token-string = $variable-alist);
-      apply [.] (#started = "1",
-                 #variable-number = `$num-variables-bound-so-far + 1`,
-      	         #variables = `variable`,
-	         #variable-alist = $variable-alist) mode="render-definiens";
-    } else {
-      apply [.] (#started = "1",
-                 #variable-number = "1",
-      	         #variables = `variable`,
-	         #variable-alist = ",,") mode="render-definiens";
-    }
+    $num-variables-bound-so-far
+      = count-items-in-token-string (#token-string = $variable-alist);
+    apply [.] (#started = "1",
+               #variable-number = `$num-variables-bound-so-far + 1`,
+               #variables = `variable`,
+               #variable-alist = $variable-alist) mode="render-definiens";
   }
 }
 
@@ -202,18 +196,12 @@ tpl [quantifier[@type = "existential"]] (#started, #variables, #variable-number,
       apply [*[position() = last()]] (#variable-alist = $variable-alist) mode="render-definiens";
     }
   } else {
-    if [$variable-alist] {
-      $num-variables-bound-so-far = count-items-in-token-string (#token-string = $variable-alist);
-      apply [.] (#started = "1",
-                 #variable-number = `$num-variables-bound-so-far + 1`,
-      	         #variables = `variable`,
-	         #variable-alist = $variable-alist) mode="render-definiens";
-    } else {
-      apply [.] (#started = "1",
-                 #variable-number = "1",
-      	         #variables = `variable`,
-	         #variable-alist = ",,") mode="render-definiens";
-    }
+    $num-variables-bound-so-far
+      = count-items-in-token-string (#token-string = $variable-alist);
+    apply [.] (#started = "1",
+               #variable-number = `$num-variables-bound-so-far + 1`,
+               #variables = `variable`,
+               #variable-alist = $variable-alist) mode="render-definiens";
   }
 }
 
