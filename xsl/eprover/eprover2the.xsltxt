@@ -281,20 +281,22 @@ tpl [predicate[not(@name = "=")]] (#variable-alist) mode="render-definiens" {
         @nr = `$position + 2`;
       }
     }
-    apply [*] mode="render-definiens";
+    apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
   }
 }
 
 tpl [variable[@name]] (#variable-alist) mode="render-definiens" {
   $n = `@name`;
-  if [starts-with (@name, "V")] {
-    $variable-number = `substring-after ($n, "V")`;
-    // our variables start with 0, but Mizar numbering starts at 1
+  $pseudo-token = `concat (",", $n, ":")`;
+  if [contains ($variable-alist, $pseudo-token)] {
+    $after-pseudo-token = `substring-after ($variable-alist, $pseudo-token)`;
+    $variable-number = `substring-before ($after-pseudo-token, ",")`;
     <Var {
-      @nr = `$variable-number + 1`;
+      @nr = $variable-number;
     }
   } else {
-    apply [.] (#message = "We found a variable whose name does not start with 'V'.") mode="die";
+    $message = `concat ("Error: the variable '", $n, "' does not appear in the variable association list '", $variable-alist, "'.")`;
+    apply [.] (#message = $message) mode="die";
   }
 }
 
