@@ -306,10 +306,13 @@ tpl [function[@name]] (#variable-alist) mode="render-definiens" {
     @kind = "K";
     for-each [ancestor::tstp] {
       for-each [descendant::function[@name = $n][1]] {
-        $position = `count (preceding::function[not(@name = preceding::function/@name)]) + 1`;
+        $position
+          = `count (preceding::function[not(@name = preceding::function/@name)
+                                        and not(@name = ancestor::function/@name)])
+             + 1`;
         @nr = $position;
       }
     }
-    apply [*] mode="render-definiens";
+    apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
   }
 }
