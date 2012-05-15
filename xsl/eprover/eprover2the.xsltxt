@@ -18,9 +18,17 @@ output omit-xml-declaration="no";
 // Generate only skolem "definitions"
 #only-skolems = { ""; }
 
+// If '1', ignore all skolem functions
+#no-skolems = { ""; }
+
+#skolem-prefix = { "esk"; }
+
 // Name of a dco file (sans extension) in which we shall look for
 // other functions and predicates.
 #reference-dco = { ""; }
+
+// Where we can find skolem functions
+#skolem-dco = { ""; }
 
 //////////////////////////////////////////////////////////////////////
 // Keys
@@ -77,35 +85,39 @@ tpl [tstp] {
       }
     }
 
-    // "Definitions" for skolem functions
-    $num-functions = `count(descendant::function[starts-with (@name, "esk") and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)])`;
-    for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] {
-      $this-formula-name = `@name`;
-      <Theorem {
-        @kind = "D";
-        @constrkind = "K";
-        @constrnr = `position()`;
-        <Not {
-          <And {
-            for-each [source] {
-              for-each [non-logical-data[@name = "inference"]] {
-                for-each [non-logical-data[position() = last()]] {
-                  for-each [non-logical-data[@name and not(*)] | number[@name]] {
-                    $other-formula-name = `@name`;
-                    if [key ("formulas", $other-formula-name)] {
-                      for-each [key ("formulas", $other-formula-name)] {
-                        apply [*[1]] mode="render-definiens";
+    if [not($no-skolems = "1")] {
+      $num-skolem-functions
+        = `count(descendant::function[starts-with (@name, $skolem-prefix)
+                                      and not(@name = preceding::function/@name)
+                                      and not(@name = ancestor::function/@name)])`;
+      for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] {
+        $this-formula-name = `@name`;
+        <Theorem {
+          @kind = "D";
+          @constrkind = "K";
+          @constrnr = `position()`;
+          <Not {
+            <And {
+              for-each [source] {
+                for-each [non-logical-data[@name = "inference"]] {
+                  for-each [non-logical-data[position() = last()]] {
+                    for-each [non-logical-data[@name and not(*)] | number[@name]] {
+                      $other-formula-name = `@name`;
+                      if [key ("formulas", $other-formula-name)] {
+                        for-each [key ("formulas", $other-formula-name)] {
+                          apply [*[1]] mode="render-definiens";
+                        }
+                      } else {
+                        $message = `concat ("Error: formula ", $this-formula-name, " depends on formula ", $other-formula-name, ", but there appears to be no such formula.")`;
+                        apply [.] (#message = $message) mode="die";
                       }
-                    } else {
-                      $message = `concat ("Error: formula ", $this-formula-name, " depends on formula ", $other-formula-name, ", but there appears to be no such formula.")`;
-                      msg terminate="yes" $message;
                     }
                   }
                 }
               }
-            }
-            <Not {
-              apply [.] mode="render-definiens";
+              <Not {
+                apply [.] mode="render-definiens";
+              }
             }
           }
         }
@@ -270,131 +282,48 @@ tpl [predicate[@name = "="]] (#variable-alist) mode="render-definiens" {
   }
 }
 
-tpl [predicate[@name and not(@name = "=")]] (#variable-alist) mode="render-definiens" {
+tpl [predicate[not(@name = "=")]] (#variable-alist) mode="render-definiens" {
+  $n = `@name`;
   <Pred {
     @kind = "R";
-    // @spelling = `@name`;
-    $n = `@name`;
-    $article-lc = lc (#s = $article);
-    $article-dco = `concat ($prel-directory, "/", $article-lc, ".dco")`;
-    if [$reference-dco = ""] {
-      if [document ($article-dco, /)] {
-        for-each [document ($article-dco, /)] {
-          if [Constructors/Constructor[@kind = "R" and @spelling = $n and @nr]] {
-            for-each [Constructors/Constructor[@kind = "R" and @spelling = $n and @nr]] {
-              @nr = `@nr + 2`; // compensates for equality and membership in HIDDEN
-            }
-          } else {
-            $message = `concat ("Error: unable to find the predicate ", $n, " in ", $article-dco, ".")`;
-            msg terminate="yes" $message;
-          }
-        }
-
-        apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
-
-      } else {
-        $message = `concat ("Error: cannot load predicates becuase we are unable to open ", $article-dco, " (or it is empty, but we assume it is non-empty.)")`;
-        msg terminate="yes" $message;
-      }
-    } else {
-      // We expect to find predicates in the reference dco
-      $reference-dco-path = `concat ($prel-directory, "/", $reference-dco, ".dco")`;
-      if [document ($reference-dco-path, /)] {
-        for-each [document ($reference-dco-path, /)] {
-          if [Constructors/Constructor[@kind = "R" and @spelling = $n and @nr]] {
-            for-each [Constructors/Constructor[@kind = "R" and @spelling = $n and @nr]] {
-              @nr = `@nr + 2`; // compensates for equality and membership in HIDDEN
-            }
-          } else {
-            $message = `concat ("Error: unable to find the predicate ", $n, " in the reference .dco file ", $reference-dco-path, ".")`;
-            msg terminate="yes" $message;
-          }
-        }
-
-        apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
-
-      } else {
-        $message = `concat ("Error: cannot load functions because we are unable to open ", $reference-dco-path, " (or it is empty, but we assume it is non-empty.)")`;
-        msg terminate="yes" $message;
+    for-each [ancestor::tstp] {
+      for-each [descendant::predicate[@name = $n][1]] {
+        $position = `count (preceding::predicate[not(@name = preceding::predicate/@name)]) + 1`;
+        @nr = `$position + 2`;
       }
     }
+    apply [*] mode="render-definiens";
   }
 }
 
 tpl [variable[@name]] (#variable-alist) mode="render-definiens" {
   $n = `@name`;
-  $pseudo-token = `concat (",", $n, ":")`;
-  if [contains ($variable-alist, $pseudo-token)] {
-    $after-pseudo-token = `substring-after ($variable-alist, $pseudo-token)`;
-    $item = `substring-before ($after-pseudo-token, ",")`;
+  if [starts-with (@name, "V")] {
+    $variable-number = `substring-after ($n, "V")`;
     <Var {
-      @nr = $item;
+      @nr = $variable-number;
     }
   } else {
-    $message = `concat ("Error: we tried to look up the variable '", $n, "' in the association list '", $variable-alist, "', but we did not find the variable.")`;
-    apply [.] (#message = $message) mode="die";
+    apply [.] (#message = "We found a variable whose name does not start with 'V'.") mode="die";
   }
 }
 
 tpl [function[@name]] (#variable-alist) mode="render-definiens" {
+  $n = `@name`;
   <Func {
     @kind = "K";
-    // @spelling = `@name`;
-    $n = `@name`;
-    if [$reference-dco = ""] {
-      $article-lc = lc (#s = $article);
-      $article-dco = `concat ($prel-directory, "/", $article-lc, ".dco")`;
-      if [document ($article-dco, /)] {
-        for-each [document ($article-dco, /)] {
-          if [Constructors/Constructor[@kind = "K" and @spelling = $n and @nr]] {
-            for-each [Constructors/Constructor[@kind = "K" and @spelling = $n and @nr]] {
-              @nr = `@nr`;
-            }
-          } else {
-            $message = `concat ("Error: unable to find the function ", $n, " in ", $article-dco, ".")`;
-            msg terminate="yes" $message;
-          }
-        }
-        apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
-      } else {
-        $message = `concat ("Error: unable to load functions because we cannot open ", $article-dco, " (or it is empty, but we assume it is non-empty.)")`;
-        msg terminate="yes" $message;
-      }
+    if [starts-with ($n, $skolem-prefix)] {
+      $num-previous-skolem-functions = `count (preceding::function[starts-with (@name, $skolem-prefix) and not(@name = preceding::function/@name)])`;
+      $num-non-skolem-functions = `count (ancestor::tstp/function[not(@name = preceding::function/@name) and not(@name = ancestor::function/@name)])`;
+      @nr = `$num-non-skolem-functions + $num-previous-skolem-functions`;
     } else {
-      $reference-dco-path = `concat ($prel-directory, "/", $reference-dco, ".dco")`;
-      if [document ($reference-dco-path, /)] {
-        for-each [document ($reference-dco-path, /)] {
-          $num-functions-in-reference-dco = `count (Constructors/Constructor[@kind = "K"])`;
-          if [Constructors/Constructor[@kind = "K" and @spelling = $n and @nr]] {
-            for-each [Constructors/Constructor[@kind = "K" and @spelling = $n and @nr]] {
-              @nr = `@nr`;
-            }
-          } else {
-            $article-lc = lc (#s = $article);
-            $article-dco = `concat ($prel-directory, "/", $article-lc, ".dco")`;
-            if [document ($article-dco, /)] {
-              for-each [document ($article-dco, /)] {
-                if [Constructors/Constructor[@kind = "K" and @spelling = $n and @nr]] {
-                  for-each [Constructors/Constructor[@kind = "K" and @spelling = $n and @nr]] {
-                    $pos = `@nr`;
-                    @nr = `$num-functions-in-reference-dco + $pos`;
-                  }
-                } else {
-                  $message = `concat ("Error: unable to find the function ", $n, " in ", $article-dco, ".")`;
-                  msg terminate="yes" $message;
-                }
-              }
-            } else {
-              $message = `concat ("Error: failed to open ", $article-dco)`;
-              msg terminate="yes" $message;
-            }
-          }
+      for-each [ancestor::tstp] {
+        for-each [descendant::function[@name = $n][1]] {
+          $position = `count (preceding::function[not(@name = preceding::predicate/@name)]) + 1`;
+          @nr = $position;
         }
-        apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
-      } else {
-        $message = `concat ("Error: failed to open ", $reference-dco-path)`;
-        msg terminate="yes" $message;
       }
     }
+    apply [*] mode="render-definiens";
   }
 }
