@@ -85,9 +85,6 @@ tpl [tstp] (#proofs) {
       <Ident {
         @"name" = $article-uc;
       }
-      <Ident {
-        @"name" = "SKOLEM";
-      }
       emit-idents-for-external-proofs (#proofs = $proofs);
     }
   }
