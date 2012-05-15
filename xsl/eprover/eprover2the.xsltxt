@@ -313,16 +313,10 @@ tpl [function[@name]] (#variable-alist) mode="render-definiens" {
   $n = `@name`;
   <Func {
     @kind = "K";
-    if [starts-with ($n, $skolem-prefix)] {
-      $num-previous-skolem-functions = `count (preceding::function[starts-with (@name, $skolem-prefix) and not(@name = preceding::function/@name)])`;
-      $num-non-skolem-functions = `count (ancestor::tstp/function[not(@name = preceding::function/@name) and not(@name = ancestor::function/@name)])`;
-      @nr = `$num-non-skolem-functions + $num-previous-skolem-functions`;
-    } else {
-      for-each [ancestor::tstp] {
-        for-each [descendant::function[@name = $n][1]] {
-          $position = `count (preceding::function[not(@name = preceding::predicate/@name)]) + 1`;
-          @nr = $position;
-        }
+    for-each [ancestor::tstp] {
+      for-each [descendant::function[@name = $n][1]] {
+        $position = `count (preceding::function[not(@name = preceding::function/@name)]) + 1`;
+        @nr = $position;
       }
     }
     apply [*] mode="render-definiens";
