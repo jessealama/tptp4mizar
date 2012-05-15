@@ -80,7 +80,7 @@ tpl [tstp] {
       for-each [formula[@status = "axiom"]] {
         <Theorem {
           @kind = "T";
-          apply [.] mode="render-definiens";
+          apply [.] (#variable-alist = ",,") mode="render-definiens";
         }
       }
     }
@@ -105,7 +105,7 @@ tpl [tstp] {
                       $other-formula-name = `@name`;
                       if [key ("formulas", $other-formula-name)] {
                         for-each [key ("formulas", $other-formula-name)] {
-                          apply [*[1]] mode="render-definiens";
+                          apply [*[1]] (#variable-alist = ",,") mode="render-definiens";
                         }
                       } else {
                         $message = `concat ("Error: formula ", $this-formula-name, " depends on formula ", $other-formula-name, ", but there appears to be no such formula.")`;
@@ -116,7 +116,7 @@ tpl [tstp] {
                 }
               }
               <Not {
-                apply [.] mode="render-definiens";
+                apply [.] (#variable-alist = ",,") mode="render-definiens";
               }
             }
           }
