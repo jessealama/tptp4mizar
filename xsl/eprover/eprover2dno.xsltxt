@@ -74,6 +74,15 @@ tpl [tstp] {
       }
     }
 
+    if [not($only-skolems = "1")] {
+      for-each [descendant::predicate[not(@name = "=")
+                                      and not(@name = preceding::predicate/@name)]] {
+        apply [.] (#nr = `position ()`,
+                   #constrnr = `position() + 2`,
+                   #aid = $article-uc);
+      }
+    }
+
     choose {
       when [$only-skolems = "1"] {
         for-each [descendant::function[starts-with (@name, $skolem-prefix)
@@ -100,15 +109,6 @@ tpl [tstp] {
                    #nr = `position ()`,
                    #constrnr = `position ()`);
         }
-      }
-    }
-
-    if [not($only-skolems = "1")] {
-      for-each [descendant::predicate[not(@name = "=")
-                                      and not(@name = preceding::predicate/@name)]] {
-        apply [.] (#nr = `position ()`,
-                   #constrnr = `position() + 2`,
-                   #aid = $article-uc);
       }
     }
   }
