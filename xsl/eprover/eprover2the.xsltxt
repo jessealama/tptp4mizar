@@ -126,15 +126,15 @@ tpl [tstp] {
   }
 }
 
-tpl [*] mode="render-definiens" {
+tpl [*] (#variable-alist) mode="render-definiens" {
   $n = `name (.)`;
   $message = `concat ("Error: we have arrived at an unhandled ", $n, " node in render-definiens mode.")`;
   apply [.] (#message = $message) mode="die";
 }
 
-tpl [formula] mode="render-definiens" {
+tpl [formula] (#variable-alist) mode="render-definiens" {
   for-each [*[1]] { // the formula proper of the TPTP formula
-    apply [.] mode="render-definiens";
+    apply [.] (#variable-alist = $variable-alist) mode="render-definiens";
   }
 }
 
