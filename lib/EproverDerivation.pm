@@ -32,7 +32,7 @@ my %directory_for_extension = (
     'the' => 'prel',
 );
 
-my @extensions_to_generate = ('voc', 'evl', 'dno', 'dco', 'wsx', 'the');
+my @extensions_to_generate = ('voc', 'evl', 'dno', 'dco', 'the', 'wsx');
 
 sub to_miz {
     my $self = shift;
@@ -53,6 +53,24 @@ sub to_miz {
 
     my $prel_subdir_full = "${directory_full}/prel";
 
+    # # skolem functions
+    # foreach my $extension ('voc', 'the', 'dno', 'dco') {
+
+    # 	my $stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2${extension}.xsl";
+    # 	my $subdir_name = $directory_for_extension{$extension};
+
+    # 	my $result_path = "${directory}/${subdir_name}/skolem.${extension}";
+    # 	apply_stylesheet ($stylesheet,
+    # 			  $path,
+    # 			  $result_path,
+    # 			  {
+    # 			      'article' => 'article',
+    # 			      'only-skolems' => '1',
+    # 			      'skolem-prefix' => 'skolem',
+    # 			      'prel-directory' => $prel_subdir_full,
+    # 			  });
+    # }
+
     foreach my $extension (@extensions_to_generate) {
 	my $subdir_name = $directory_for_extension{$extension};
 	my $subdir = "${directory}/${subdir_name}";
@@ -61,8 +79,9 @@ sub to_miz {
 	    (
 		'article' => 'article',
 		'prel-directory' => $prel_subdir_full,
-		'no-skolems' => '1',
-		'skolem-prefix' => 'skolem',
+		# 'no-skolems' => '1',
+		# 'skolem-prefix' => 'skolem',
+		# 'skolem-dco' => "${prel_subdir_full}/skolem.dco",
 	    );
 
 	if (defined $options{'shape'}) {
@@ -84,23 +103,6 @@ sub to_miz {
 			  $result,
 			  \%parameters);
 
-    }
-
-    # skolem functions
-    foreach my $extension ('voc', 'the') {
-
-	my $stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2voc.xsl";
-
-	my $result_path = "${directory}/dict/skolem.${extension}";
-	apply_stylesheet ($stylesheet,
-			  $path,
-			  $result_path,
-			  {
-			      'article' => 'article',
-			      'only-skolems' => '1',
-			      'skolem-prefix' => 'skolem',
-			      'prel-directory' => $prel_subdir_full,
-			  });
     }
 
     my $pp_stylesheet = "${MIZAR_STYLESHEET_HOME}/pp.xsl";
