@@ -6,21 +6,27 @@ use strict;
 use Carp qw(croak carp confess);
 use IPC::Run qw(harness);
 use Data::Dumper;
-
+use Readonly;
+use charnames qw(:full);
+use Regexp::DefaultFlags;
 use Utils qw(is_readable_file);
 
 our @EXPORT = qw(apply_stylesheet);
+
+Readonly my $LF => "\N{LF}";
+Readonly my $SP => q{ };
+Readonly my $EMPTY_STRING => q{};
 
 sub apply_stylesheet {
 
     my ($stylesheet, $document, $result_path, $parameters_ref) = @_;
 
     if (! defined $stylesheet) {
-	croak ('Error: please supply a stylesheet.');
+	confess ('Error: please supply a stylesheet.');
     }
 
     if (! defined $document) {
-	croak ('Error: please supply a document.');
+	confess ('Error: please supply a document.');
     }
 
     my %parameters = defined $parameters_ref ? %{$parameters_ref}
@@ -29,11 +35,11 @@ sub apply_stylesheet {
 
 
     if (! is_readable_file ($stylesheet)) {
-	croak ('Error: there is no stylesheet at ', $stylesheet, '.');
+	confess ('Error: there is no stylesheet at ', $stylesheet, '.');
     }
 
     if (! is_readable_file ($document)) {
-	croak ('Error: there is no file at ', $document, '.');
+	confess ('Error: there is no file at ', $document, '.');
     }
 
     my @xsltproc_call = ('xsltproc');
@@ -57,7 +63,28 @@ sub apply_stylesheet {
     my $xsltproc_result = ($xsltproc_harness->result)[0];
 
     if ($xsltproc_result != 0) {
-	croak ('Error: xsltproc did not exit cleanly when applying the stylesheet', "\n", "\n", '  ', $stylesheet, "\n", "\n", 'to', "\n", "\n", '  ', $document, ' .  Its exit code was ', $xsltproc_result, '.', "\n", "\n",  'Here is the error output: ', "\n", $xsltproc_err);
+	if (scalar keys %parameters == 0) {
+	    if (defined $result_path) {
+		confess ('Error: xsltproc did not exit cleanly when applying the stylesheet', $LF, $LF, $SP, $SP, $stylesheet, $LF, $LF, 'to', $LF, $SP, $SP, $document, $LF, $LF, 'to generate', $LF, $LF, $SP, $SP, $result_path, $LF, $LF, 'Its exit code was ', $xsltproc_result, '. No stylesheet parameters were given.  Here is the error output: ', "\n", $xsltproc_err);
+	    } else {
+		confess ('Error: xsltproc did not exit cleanly when applying the stylesheet', "\n", "\n", '  ', $stylesheet, $LF, $LF, 'to', $LF, $LF, $SP, $SP, $document, $LF, 'Its exit code was ', $xsltproc_result, '. No stylesheet parameters were given.  Here is the error output: ', "\n", $xsltproc_err);
+	    }
+	} else {
+
+	    my $parameters_message = $EMPTY_STRING;
+	    foreach my $parameter (sort keys %parameters) {
+		my $value = $parameters{$parameter};
+		$parameters_message .= $SP . $SP . "${parameter} ==> ${value}" . $LF;
+	    }
+
+	    if (defined $result_path) {
+		confess ('Error: xsltproc did not exit cleanly when applying the stylesheet', "\n", "\n", '  ', $stylesheet, "\n", "\n", 'to', "\n", "\n", '  ', $document, $LF, $LF, 'so that we could generate', $LF, $LF, $SP, $SP, $result_path, $LF, $LF, 'Its exit code was ', $xsltproc_result, '. These were the stylesheet parameters:', $LF, $LF, $parameters_message, $LF, 'Here is the error output: ', $LF, $LF, $xsltproc_err, $LF);
+	    } else {
+		confess ('Error: xsltproc did not exit cleanly when applying the stylesheet', "\n", "\n", '  ', $stylesheet, "\n", "\n", 'to', "\n", "\n", '  ', $document, $LF, $LF, 'Its exit code was ', $xsltproc_result, '. These were the stylesheet parameters:', $LF, $LF, $parameters_message, $LF, 'Here is the error output: ', $LF, $LF, $xsltproc_err, $LF);
+	    }
+
+	}
+
     }
 
     if (defined $result_path) {
