@@ -186,9 +186,10 @@ tpl [quantifier[@type = "existential"]] (#started, #variables, #variable-number,
           }
           <Not {
             apply [.] (#started = "1",
-  	      	       #variables = `$variables[position() > 1]`,
-		       #variable-number = `$variable-number + 1`,
-		       #variable-alist = $new-variable-alist) mode="render-definiens";
+                       #variables = `$variables[position() > 1]`,
+                       #variable-number = `$variable-number + 1`,
+                       #variable-alist = $new-variable-alist) mode="render-definiens";
+
           }
         }
       }
