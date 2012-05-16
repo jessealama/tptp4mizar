@@ -15,7 +15,8 @@ use Getopt::Long;
 use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
 use Utils qw(is_readable_file
-	     error_message);
+	     error_message
+	     run_harness);
 
 # Strings
 Readonly my $SP => q{ };
@@ -93,28 +94,21 @@ process_commandline ();
 
 ensure_stuff_is_runnable ();
 
-my $tptp2X_out = $EMPTY_STRING;
-my $tptp2X_err = $EMPTY_STRING;
+my $problem_file = $ARGV[0];
+
 my @tptp2X_call = ($TPTP2X, '-tstdfof', '-fprover9', '-q2', '-d-', $problem_file);
-my $tptp2X_harness = harness (\@tptp2X_call,
-			      '>', \$tptp2X_out,
-			      '2>', \$tptp2X_err);
-$tptp2X_harness->start ();
-$tptp2X_harness->finish ();
-
-my $tptp2X_exit_code = ($tptp2X_harness->results)[0];
-
-if ($tptp2X_exit_code != 0) {
-    say {*STDERR} error_message ('tptp2X did not exit cleanly working with', $SP, $problem_file, '.', $LF, 'It was called like this:', $LF, $LF, $SP, $SP, join ($SP, @tptp2X_call), $LF, $LF, 'Its exit code was', $SP, $tptp2X_exit_code, '. Here it its error output:', $tptp2x_err, $LF);
-}
-
 my @prover9_call = ($PROVER9);
-my $prover9_out = $EMPTY_STRING;
-my $prover9_err = $EMPTY_STRING;
-my $prover9_harness = harness (\@prover9_call,
-			       '<', $tptp2X_out,
-			       '>', \$prover9_out,
-			       '2>', \$prover9_err);
+my @prooftrans_expand_call = ($PROOFTRANS, 'expand', 'renumber');
+my @prooftrans_xml_call = ($PROOFTRANS, 'xml');
+my @prooftrans_ivy_call = ($PROOFTRANS, 'ivy');
+
+my $tptp2X_out = run_harness (\@tptp2X_call);
+my $prover9_out = run_harness (\@prover9_call, $tptp2X_out);
+my $prover9_expanded = run_harness (\@prooftrans_expand_call, $prover9_out);
+my $prooftrans_xml = run_harness (\@prooftrans_xml_call, $prover9_expanded);
+my $ivy_proof_object = run_harness (\@prooftrans_ivy_call, $prover9_expanded);
+
+say $prooftrans_xml;
 
 exit 0;
 
