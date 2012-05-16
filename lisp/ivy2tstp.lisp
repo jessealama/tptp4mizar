@@ -1,5 +1,7 @@
 (in-package :cl-user)
 
+(set-syntax-from-char #\| #\a) ;; in case we get disjunctions like (|a b)
+
 (defgeneric ivy2tstp (ivy-thing)
   (:documentation "Transform IVY-THING into a TPTP derivation."))
 
