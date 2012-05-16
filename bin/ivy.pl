@@ -20,6 +20,11 @@ use Utils qw(is_readable_file
 # Strings
 Readonly my $SP => q{ };
 
+# Programs
+Readonly my $TPTP2X => 'tptp2X';
+Readonly my $PROVER9 => 'prover9';
+Readonly my $PROOFTRANS => 'prooftrans';
+
 my $opt_man = 0;
 my $opt_help = 0;
 my $opt_verbose = 0;
@@ -74,7 +79,7 @@ sub process_commandline {
 }
 
 sub ensure_stuff_is_runnable {
-    my @programs = ('prover9', 'prooftrans', 'tptp2X');
+    my @programs = ($PROVER9, $TPTP2X, $PROOFTRANS);
     foreach my $program (@programs) {
 	if (! can_run ($program)) {
 	    say {*STDERR} error_message ('We require', $SP, $program, $SP, 'but it could not be found.');
