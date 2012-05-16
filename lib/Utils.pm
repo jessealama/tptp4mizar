@@ -31,7 +31,8 @@ our @EXPORT_OK = qw(error_message
 		    run_mizar_tool
 		    normalize_variables
 		    tptp_xmlize
-		    tptp_fofify);
+		    tptp_fofify
+		    run_harness);
 
 sub error_message {
     return message_with_colored_prefix ('Error', $ERROR_COLOR, @_);
@@ -286,6 +287,42 @@ sub tptp_fofify {
     }
 
     return $tptp4X_out;
+
+}
+
+sub run_harness {
+    my $call_ref = shift;
+    my $input = shift;
+
+    my $output = $EMPTY_STRING;
+    my $error = $EMPTY_STRING;
+
+    my @call = @{$call_ref};
+
+    my $harness = undef;
+
+    if (defined $input) {
+	$harness = harness (\@call,
+			    '<', \$input,
+			    '>', \$output,
+			    '2>', \$error);
+    } else {
+	$harness = harness (\@call,
+			    '>', \$output,
+			    '2>', \$error);
+    }
+
+    $harness->start ();
+    $harness->finish ();
+
+    my $exit_code = ($harness->results)[0];
+
+    if ($exit_code != 0) {
+	my $program_name = $call[0];
+	confess ($program_name, $SP, 'did not exit cleanly. It was called like this:', $LF, $LF, $SP, $SP, join ($SP, @call), $LF, $LF, 'Its exit code was', $SP, $exit_code, '. Here it its error output:', $error, $LF);
+    }
+
+    return $output;
 
 }
 
