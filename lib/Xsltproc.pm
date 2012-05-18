@@ -17,6 +17,21 @@ Readonly my $LF => "\N{LF}";
 Readonly my $SP => q{ };
 Readonly my $EMPTY_STRING => q{};
 
+sub is_file {
+    my $thing = shift;
+
+    if (index ($thing, $LF)) {
+	return 0;
+    } else {
+	my $test = eval { -e $thing };
+	if (defined $test) {
+	    return (-f $thing ) ? 1 : 0;
+	} else {
+	    return 0;
+	}
+    }
+}
+
 sub apply_stylesheet {
 
     my ($stylesheet, $document, $result_path, $parameters_ref) = @_;
@@ -38,10 +53,6 @@ sub apply_stylesheet {
 	confess ('Error: there is no stylesheet at ', $stylesheet, '.');
     }
 
-    if (! is_readable_file ($document)) {
-	confess ('Error: there is no file at ', $document, '.');
-    }
-
     my @xsltproc_call = ('xsltproc');
     foreach my $parameter (keys %parameters) {
 	my $value = $parameters{$parameter};
@@ -49,14 +60,23 @@ sub apply_stylesheet {
     }
 
     push (@xsltproc_call, $stylesheet);
-    push (@xsltproc_call, $document);
 
     my $xsltproc_out = '';
     my $xsltproc_err = '';
 
-    my $xsltproc_harness = harness (\@xsltproc_call,
-				    '>', \$xsltproc_out,
-				    '2>', \$xsltproc_err);
+    my $xsltproc_harness = undef;
+    if (is_file ($document)) {
+	$xsltproc_harness = harness (\@xsltproc_call,
+				     '<', $document,
+				     '>', \$xsltproc_out,
+				     '2>', \$xsltproc_err);
+    } else {
+	push (@xsltproc_call, '-');
+	$xsltproc_harness = harness (\@xsltproc_call,
+				     '<', \$document,
+				     '>', \$xsltproc_out,
+				     '2>', \$xsltproc_err);
+    }
 
     $xsltproc_harness->start ();
     $xsltproc_harness->finish ();
