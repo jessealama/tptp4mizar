@@ -341,22 +341,36 @@ tpl parse-atomic-formula (#string = $string) {
   }
 }
 
-tpl parse-non-atomic-non-quantified-formula (#string) {
-  choose {
-    when [starts-with ($string, "-")] {
-      $after-negation = `substring-after ($string, "-")`;
-      <negation {
-        parse-ladr-formula (#string = $after-negation);
+tpl parse-composite-non-quantified-formula (#string) {
+  if [contains ($string, " ")] {
+    $first-formula = `substring-before ($string, " ")`;
+    $after-space = `substring-after ($string, " ")`;
+    choose {
+      when [starts-with ($after-space, "|")] {
+        $after-disjunction-sign = `substring-after ($after-space, "|")`;
+        $normalized = `normalize-space ($after-disjunction-sign)`;
+        <disjunction {
+          parse-ladr-formula (#string = $first-formula);
+          parse-ladr-formula (#string = `concat ("(", $normalized, ")")`);
+        }
+      }
+      when [starts-with ($after-space, "&")] {
+        $after-conjunction-sign = `substring-after ($after-space, "&")`;
+        $normalized = `normalize-space ($after-conjunction-sign)`;
+        <conjunction {
+          parse-ladr-formula (#string = $first-formula);
+          parse-ladr-formula (#string = `concat ("(", $normalized, ")")`);
+        }
+      }
+      otherwise {
+        $parse-error-message = `concat ("Error: don't know how to parse '", $string, "' as a composite non-quantified formula.")`;
+        msg terminate="yes" $parse-error-message;
       }
     }
-    otherwise {
-      <defined-predicate {
-        @"name" = "don't know";
-        @original = $string;
-      }
-    }
+  } else {
+    $parse-error-message = `concat ("Error: don't know how to parse '", $string, "' as a composite non-quantified formula.")`;
+    msg terminate="yes" $parse-error-message;
   }
-
 }
 
 tpl parse-ladr-formula (#string) {
@@ -383,10 +397,11 @@ tpl parse-ladr-formula (#string) {
     when [starts-with ($string, "(")] {
       if [contains ($string, "|")
             or contains ($string, "&")] {
-        parse-non-atomic-non-quantified-formula (#string = $string);
+        $sans-outer-parens = drop-enclosing-parentheses (#string = $string);
+        parse-composite-non-quantified-formula (#string = $sans-outer-parens);
       } else {
         $sans-outer-parens = drop-enclosing-parentheses (#string = $string);
-        parse-atomic-formula (#string = $sans-outer-parens);
+        parse-ladr-formula (#string = $sans-outer-parens);
       }
     }
     otherwise {
@@ -400,8 +415,17 @@ tpl [clause[@type = "assumption"]] {
     @"name" = `@id`;
     @syntax = "formula";
     @status = "hypothesis";
-    <disjunction {
-      emit-literals (#literals = `literal`);
+    if [literals[2]] {
+      <disjunction {
+        emit-literals (#literals = `literal`);
+      }
+    } else {
+      for-each [literal] {
+        for-each [text()] {
+          $s = `string (.)`;
+          parse-ladr-formula (#string = `normalize-space ($s)`);
+        }
+      }
     }
     <source;
     <useful-info {
@@ -435,8 +459,17 @@ tpl [clause[@type = "clausify"]] {
     @"name" = `@id`;
     @syntax = "formula";
     @status = "plain";
-    <disjunction {
-      emit-literals (#literals = `literal`);
+    if [literals[2]] {
+      <disjunction {
+        emit-literals (#literals = `literal`);
+      }
+    } else {
+      for-each [literal] {
+        for-each [text()] {
+          $s = `string (.)`;
+          parse-ladr-formula (#string = `normalize-space ($s)`);
+        }
+      }
     }
     <source {
       <non-logical-data {
@@ -484,8 +517,17 @@ tpl [clause[not(@type = "clausify") and not(@type = "assumption")]] {
     @"name" = `@id`;
     @syntax = "formula";
     @status = "plain";
-    <disjunction {
-      emit-literals (#literals = `literal`);
+    if [literals[2]] {
+      <disjunction {
+        emit-literals (#literals = `literal`);
+      }
+    } else {
+      for-each [literal] {
+        for-each [text()] {
+          $s = `string (.)`;
+          parse-ladr-formula (#string = `normalize-space ($s)`);
+        }
+      }
     }
     <source {
       <non-logical-data {
