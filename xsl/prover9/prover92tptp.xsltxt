@@ -499,15 +499,23 @@ tpl [clause[@type = "clausify"]] {
 }
 
 tpl emit-parents (#parents-string) {
-  if [$parents-string = ""] {
-    // we're done
-  } else {
-    $first-parent = `substring-before ($parents-string, " ")`;
-    $tail = `substring-after ($parents-string, " ")`;
-    <non-logical-data {
-      @"name" = $first-parent;
+  choose {
+    when [$parents-string = ""] {
+      // nothing more to do
     }
-    emit-parents (#parents-string = $tail);
+    when [contains ($parents-string, " ")] {
+      $first-parent = `substring-before ($parents-string, " ")`;
+      $tail = `substring-after ($parents-string, " ")`;
+      <non-logical-data {
+        @"name" = $first-parent;
+      }
+      emit-parents (#parents-string = $tail);
+    }
+    otherwise {
+      <non-logical-data {
+        @"name" = $parents-string;
+      }
+    }
   }
 }
 
