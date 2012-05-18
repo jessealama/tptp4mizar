@@ -6,6 +6,7 @@ all:
 	make -C utils
 	make -C vampire
 	make -C ivy
+	make -C prover9
 
 clean:
 	make -C eprover clean
@@ -15,3 +16,4 @@ clean:
 	make -C utils clean
 	make -C vampire clean
 	make -C ivy clean
+	make -C prover9 clean
