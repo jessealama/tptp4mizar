@@ -316,7 +316,6 @@ tpl parse-term (#string) {
 
 tpl parse-argument-list-1 (#string) {
   $message = `concat ("parse-argument-list-1: string = '", $string, "'")`;
-  msg $message;
   if [contains ($string, ",")] {
     $first-term = first-term-of-term-string (#string = $string);
     $tail = `substring-after ($string, $first-term)`;
