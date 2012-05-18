@@ -17,6 +17,7 @@ use lib "$RealBin/../lib";
 use Utils qw(is_readable_file
 	     error_message
 	     run_harness);
+use Xsltproc qw(apply_stylesheet);
 
 # Strings
 Readonly my $SP => q{ };
@@ -108,9 +109,20 @@ my $prover9_expanded = run_harness (\@prooftrans_expand_call, $prover9_out);
 my $prooftrans_xml = run_harness (\@prooftrans_xml_call, $prover9_expanded);
 my $ivy_proof_object = run_harness (\@prooftrans_ivy_call, $prover9_expanded);
 
-say $prooftrans_xml;
+my $prover9_to_tptp_stylesheet = "$RealBin/../xsl/prover9/prover92tptp.xsl";
+my $render_tptp_stylesheet = "$RealBin/../xsl/tptp/render-tptp.xsl";
 
-exit 0;
+my $prover9_tptp_xml = apply_stylesheet ($prover9_to_tptp_stylesheet,
+					 $prooftrans_xml);
+
+my $tptp = apply_stylesheet ($render_tptp_stylesheet,
+			     $prover9_tptp_xml,
+			     undef,
+			 {
+			     'tstp' => '1',
+			 });
+
+print $tptp;
 
 __END__
 
