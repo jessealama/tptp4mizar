@@ -77,7 +77,8 @@
       (call-next-method)))
 
 (defmethod render-formula ((ivy-formula list))
-  (let ((head (first ivy-formula)))
+  (let ((head (first ivy-formula))
+	(tail (rest ivy-formula)))
     (case head
       (or
        (format nil "(~a | ~a)"
@@ -90,6 +91,25 @@
        (format nil "(~a = ~a)"
 	       (render-term (second ivy-formula))
 	       (render-term (third ivy-formula))))
+      ($quantified
+       (destructuring-bind ((quantifier) variable matrix)
+	   tail
+	 (case quantifier
+	   (all
+	    (format nil "(! [~a] : ~a)"
+		    (render-term variable) (render-formula matrix)))
+	   (exists
+	    (format nil "(? [~a] : ~a)"
+		    (render-term variable) (render-formula matrix)))
+	   (otherwise
+	    (error "Unknown quantifier '~a'." quantifier)))))
+      (\|
+       (format nil "(~a | ~a)"
+	       (render-formula (second ivy-formula))
+	       (render-formula (third ivy-formula))))
+      (-
+       (format nil "(~~ ~a)"
+	       (render-formula (second ivy-formula))))
       (otherwise
        (format nil "~(~a~)(~a)"
 	       head
