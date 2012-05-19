@@ -53,24 +53,6 @@ sub to_miz {
 
     my $prel_subdir_full = "${directory_full}/prel";
 
-    # # skolem functions
-    # foreach my $extension ('voc', 'the', 'dno', 'dco') {
-
-    # 	my $stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2${extension}.xsl";
-    # 	my $subdir_name = $directory_for_extension{$extension};
-
-    # 	my $result_path = "${directory}/${subdir_name}/skolem.${extension}";
-    # 	apply_stylesheet ($stylesheet,
-    # 			  $path,
-    # 			  $result_path,
-    # 			  {
-    # 			      'article' => 'article',
-    # 			      'only-skolems' => '1',
-    # 			      'skolem-prefix' => 'skolem',
-    # 			      'prel-directory' => $prel_subdir_full,
-    # 			  });
-    # }
-
     foreach my $extension (@extensions_to_generate) {
 	my $subdir_name = $directory_for_extension{$extension};
 	my $subdir = "${directory}/${subdir_name}";
