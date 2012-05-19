@@ -85,7 +85,7 @@ tpl [non-logical-data[not(@name) and (non-logical-data or number)]] {
 }
 
 tpl [non-logical-data[not(@name) and not(non-logical-data) and not(number)]] {
-  "";
+  "[]";
 }
 
 tpl [source] {
