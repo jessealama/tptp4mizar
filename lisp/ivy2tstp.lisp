@@ -140,7 +140,7 @@
 (defun render-resolve-step (step)
   (destructuring-bind (name-1 disjunct-1 name-2 disjunct-2)
       step
-    (format nil "inference(resolve,[status(thm)],[~a,~a]),disjuncts(~a,~a,~a,~a)"
+    (format nil "inference(resolve,[status(thm)],[~a,~a]),[disjunct(~a,~a),disjunct(~a,~a)]"
 	    name-1
 	    name-2
 	    name-1
@@ -151,28 +151,31 @@
 (defun render-flip-step (step)
   (destructuring-bind (formula-name disjunct-address)
       step
-    (format nil "inference(flip,[~a],[~a])"
-	    (comma-separated-list disjunct-address)
-	    formula-name)))
+    (format nil "inference(flip,[status(thm)],~a),disjunct(~a)"
+	    formula-name
+	    (comma-separated-list disjunct-address))))
 
 (defun render-paramod-step (step)
   (destructuring-bind (name-1 disjunct-1 name-2 disjunct-2)
       step
-    (format nil "inference(paramod,[~a,~a],[~a,~a])"
-	    (render-disjunction-reference disjunct-1)
-	    (render-disjunction-reference disjunct-2)
+    (format nil "inference(paramod,[status(thm)],[~a,~a]),[disjunct(~a,~a),disjunct(~a,~a)]"
 	    name-1
-	    name-2)))
+	    name-2
+	    name-1
+	    (render-disjunction-reference disjunct-1)
+	    name-2
+	    (render-disjunction-reference disjunct-2))))
 
 (defun render-propositional-step (step)
   (destructuring-bind (formula-name)
       step
-    (format nil "inference(propositional,[],[~a])" formula-name)))
+    (format nil "inference(propositional,[status(thm)],[~a])" formula-name)))
 
+;; not officially an Ivy rule of inference
 (defun render-clausify-step (step)
   (destructuring-bind (formula-name)
       step
-    (format nil "inference(clausify,[],[~a])" formula-name)))
+    (format nil "inference(clausify,[status(esa)],[~a])" formula-name)))
 
 (defun render-source (source)
   (let ((rule-name (first source))
