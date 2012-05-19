@@ -14,6 +14,9 @@ use File::Temp qw(tempfile);
 
 use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
+use Utils qw(sort_tstp_solution
+	     tptp_xmlize);
+use Xsltproc qw(apply_stylesheet);
 
 my $opt_man = 0;
 my $opt_help = 0;
