@@ -133,18 +133,20 @@
 (defun render-instantiate-step (step)
   (destructuring-bind (from instantiation)
       step
-    (format nil "inference(instantiate,[~a],[~a])"
-	    (render-instantiation instantiation)
-	    from)))
+    (format nil "inference(instantiate,[status(thm)],[~a]),substitution(~a)"
+	    from
+	    (render-instantiation instantiation))))
 
 (defun render-resolve-step (step)
   (destructuring-bind (name-1 disjunct-1 name-2 disjunct-2)
       step
-    (format nil "inference(resolve,[~a,~a],[~a,~a])"
-	    (render-disjunction-reference disjunct-1)
-	    (render-disjunction-reference disjunct-2)
+    (format nil "inference(resolve,[status(thm)],[~a,~a]),disjuncts(~a,~a,~a,~a)"
 	    name-1
-	    name-2)))
+	    name-2
+	    name-1
+	    (render-disjunction-reference disjunct-1)
+	    name-2
+	    (render-disjunction-reference disjunct-2))))
 
 (defun render-flip-step (step)
   (destructuring-bind (formula-name disjunct-address)
