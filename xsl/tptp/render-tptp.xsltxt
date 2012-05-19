@@ -133,19 +133,19 @@ tpl [useful-info] {
 //////////////////////////////////////////////////////////////////////
 
 tpl [disjunction] {
- "( "; apply [*[1]]; " | "; apply [*[2]]; " )";
+ "("; apply [*[1]]; " | "; apply [*[2]]; ")";
 }
 
 tpl [conjunction] {
- "( "; apply [*[1]]; " & "; apply [*[2]]; " )";
+ "("; apply [*[1]]; " & "; apply [*[2]]; ")";
 }
 
 tpl [implication] {
- "( "; apply [*[1]]; " => "; apply [*[2]]; " )";
+ "("; apply [*[1]]; " => "; apply [*[2]]; ")";
 }
 
 tpl [equivalence] {
- "( "; apply [*[1]]; " <=> "; apply [*[2]]; " )";
+ "("; apply [*[1]]; " <=> "; apply [*[2]]; ")";
 }
 
 tpl [predicate[@name = "="]] {
@@ -165,15 +165,18 @@ tpl [negation] {
 }
 
 tpl [quantifier[@type = "universal"]] {
-  "( ! ";
-  "[";list (#separ = ",", #elems = `variable`); "]";
-  " : "; apply [*[position() = last()]]; ")";
+  "(! ";
+    "[";list (#separ = ",", #elems = `variable`); "]";
+    " : ";
+    apply [*[position() = last()]];
+  ")";
 }
 
 tpl [quantifier[@type = "existential"]] {
-  "( ? ";
-  "[";list (#separ = ",", #elems = `variable`); "]";
-  " : "; apply [*[position() = last()]]; ")";
+  "(? ";
+    "[";list (#separ = ",", #elems = `variable`); "]";
+    " : "; apply [*[position() = last()]];
+  ")";
 }
 
 tpl [defined-predicate[@name = "false"]] {
