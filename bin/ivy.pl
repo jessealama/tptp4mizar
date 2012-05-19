@@ -33,10 +33,12 @@ my $opt_help = 0;
 my $opt_verbose = 0;
 my $opt_debug = 0;
 my $opt_timeout = 60;
+my $opt_format = 'lisp';
 
 sub process_commandline {
     my $options_ok = GetOptions (
 	'timeout=i' => \$opt_timeout,
+	'format=s' => \$opt_format,
 
     );
 
@@ -63,6 +65,13 @@ sub process_commandline {
     if (scalar @ARGV != 1) {
 	pod2usage (
 	    -exitval => 2,
+	);
+    }
+
+    if ($opt_format ne 'lisp' && $opt_format ne 'tptp') {
+	pod2usage (
+	    -message => error_message ('For the format option only two values are acceptable: \'lisp\' and \'tptp\'.'),
+	    -exitval => 1,
 	);
     }
 
@@ -107,8 +116,14 @@ my @prooftrans_ivy_call = ($PROOFTRANS, 'ivy');
 my $tptp2X_out = run_harness (\@tptp2X_call);
 my $prover9_out = run_harness (\@prover9_call, $tptp2X_out);
 my $prover9_expanded = run_harness (\@prooftrans_expand_call, $prover9_out);
-my $prooftrans_xml = run_harness (\@prooftrans_xml_call, $prover9_expanded);
 my $ivy_proof_object = run_harness (\@prooftrans_ivy_call, $prover9_expanded);
+
+if ($opt_format eq 'lisp') {
+    print $ivy_proof_object;
+    exit $?;
+}
+
+my $prooftrans_xml = run_harness (\@prooftrans_xml_call, $prover9_expanded);
 
 my $prover9_to_tptp_stylesheet = "$RealBin/../xsl/prover9/prover92tptp.xsl";
 my $render_tptp_stylesheet = "$RealBin/../xsl/tptp/render-tptp.xsl";
