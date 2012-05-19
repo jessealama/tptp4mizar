@@ -133,9 +133,11 @@
 (defun render-instantiate-step (step)
   (destructuring-bind (from instantiation)
       step
-    (format nil "inference(instantiate,[status(thm)],[~a]),substitution(~a)"
-	    from
-	    (render-instantiation instantiation))))
+    (if (null instantiation)
+	(format nil "inference(instantiate,[status(thm)],[~a]),substitution([])" from)
+	(format nil "inference(instantiate,[status(thm)],[~a]),substitution([~a])"
+		from
+		(render-instantiation instantiation)))))
 
 (defun render-resolve-step (step)
   (destructuring-bind (name-1 disjunct-1 name-2 disjunct-2)
