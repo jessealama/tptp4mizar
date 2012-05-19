@@ -97,7 +97,7 @@ my $db = undef;
 my $verbose = 0;
 my $opt_debug = 0;
 my $opt_nested = 0;
-my $opt_style = 'tptp';
+my $opt_style = 'tstp';
 
 my $options_ok = GetOptions (
     "db=s"     => \$db,
