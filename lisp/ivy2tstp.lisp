@@ -192,9 +192,12 @@
        (error "Unknown rule of inference '~a'" rule-name)))))
 
 (defun tptp-step (step-number formula source)
-  (format nil "fof(~a,plain,~a,~a)." (render-step-number step-number)
-	                             (render-formula formula)
-				     (render-source source)))
+  (if (equal source (list 'input))
+      (format nil "fof(~a,axiom,~a)." (render-step-number step-number)
+	      (render-formula formula))
+      (format nil "fof(~a,plain,~a,~a)." (render-step-number step-number)
+	      (render-formula formula)
+	      (render-source source))))
 
 (defun render-step (ivy-step)
   (destructuring-bind (step-number source formula whatever)
