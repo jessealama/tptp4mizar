@@ -28,7 +28,8 @@ use Utils qw(is_readable_file
 	     run_mizar_tool
 	     normalize_variables
 	     tptp_fofify
-	     tptp_xmlize);
+	     tptp_xmlize
+	     sort_tstp_solution);
 
 # Strings
 Readonly my $EMPTY_STRING => q{};
@@ -61,32 +62,6 @@ sub summarize_styles {
 	$summary .= '  * ' . colored ($style, $STYLE_COLOR);
     }
     return $summary;
-}
-
-my $sort_tstp_stylesheet = "${TSTP_STYLESHEET_HOME}/sort-tstp.xsl";
-my $dependencies_stylesheet = "${TSTP_STYLESHEET_HOME}/tstp-dependencies.xsl";
-
-sub sort_tstp_solution {
-    my $solution = shift;
-
-    # Sort
-    my $dependencies_str = undef;
-    my @xsltproc_deps_call = ('xsltproc', $dependencies_stylesheet, $solution);
-    my @tsort_call = ('tsort');
-    my $sort_harness = harness (\@xsltproc_deps_call,
-				'|',
-				\@tsort_call,
-				'>', \$dependencies_str);
-    $sort_harness->start ();
-    $sort_harness->finish ();
-
-    my @dependencies = split ($LF, $dependencies_str);
-    my $dependencies_token_string = ',' . join (',', @dependencies) . ',';
-
-    apply_stylesheet ($sort_tstp_stylesheet,
-		      $solution,
-		      $solution,
-		      { 'ordering' => $dependencies_token_string });
 }
 
 my $opt_help = 0;
