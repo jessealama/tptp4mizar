@@ -73,6 +73,9 @@ tpl [formula[@status = "axiom" and source]] {
     @"name" = `concat ("ax", $pos)`;
     apply [*[1]] mode="copy";
     apply [source];
+    if [useful-info] {
+      apply [useful-info] mode="copy";
+    }
   }
 }
 
@@ -83,6 +86,9 @@ tpl [formula[not(@status = "axiom") and source]] {
     @"name" = `concat ("step", $pos)`;
     apply [*[1]] mode="copy";
     apply [source];
+    if [useful-info] {
+      apply [useful-info] mode="copy";
+    }
   }
 }
 
