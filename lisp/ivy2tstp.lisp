@@ -193,9 +193,9 @@
 
 (defun tptp-step (step-number formula source)
   (if (equal source (list 'input))
-      (format nil "fof(~a,axiom,~a)." (render-step-number step-number)
+      (format nil "cnf(~a,axiom,~a)." (render-step-number step-number)
 	      (render-formula formula))
-      (format nil "fof(~a,plain,~a,~a)." (render-step-number step-number)
+      (format nil "cnf(~a,plain,~a,~a)." (render-step-number step-number)
 	      (render-formula formula)
 	      (render-source source))))
 
