@@ -119,11 +119,23 @@ my $prover9_tptp_xml = apply_stylesheet ($prover9_to_tptp_stylesheet,
 my $tptp = apply_stylesheet ($render_tptp_stylesheet,
 			     $prover9_tptp_xml,
 			     undef,
-			 {
-			     'tstp' => '1',
-			 });
+			     {
+				 'tstp' => '1',
+			     }
+			 );
 
-print $tptp;
+
+my $ivy_to_tstp_script = "$RealBin/ivy2tstp.pl";
+
+if (! can_run ($ivy_to_tstp_script)) {
+    say {*STDERR} error_message ('Cannot run the Ivy-to-TSTP script (we expected to find it at', $SP, $ivy_to_tstp_script, ')');
+    exit 1;
+}
+
+my @ivy_to_tstp_call = ($ivy_to_tstp_script);
+my $ivy_tstp = run_harness (\@ivy_to_tstp_call, $ivy_proof_object);
+
+print $ivy_tstp;
 
 __END__
 
