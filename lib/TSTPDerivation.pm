@@ -51,7 +51,7 @@ Readonly my $STYLESHEET_HOME => "$RealBin/../xsl";
 Readonly my $TSTP_STYLESHEET_HOME => "${STYLESHEET_HOME}/tstp";
 Readonly my $MIZAR_STYLESHEET_HOME => "${STYLESHEET_HOME}/mizar";
 
-my @extensions_to_generate = ('voc', 'evl', 'dno', 'dco', 'wsx');
+my @extensions_to_generate = ('voc', 'evl', 'dno', 'dco', 'the', 'wsx');
 
 my %directory_for_extension = (
     'voc' => 'dict',
