@@ -9,26 +9,14 @@ use Data::Dumper;
 use Readonly;
 use charnames qw(:full);
 use Regexp::DefaultFlags;
-use Utils qw(is_readable_file);
+use Utils qw(is_readable_file
+	     is_file);
 
 our @EXPORT = qw(apply_stylesheet);
 
 Readonly my $LF => "\N{LF}";
 Readonly my $SP => q{ };
 Readonly my $EMPTY_STRING => q{};
-
-sub is_file {
-    my $thing = shift;
-
-    my $lf_index = index ($thing, $LF);
-
-    if ($lf_index < 0) {
-	return (-f $thing ) ? 1 : 0;
-    } else {
-	return 0;
-    }
-
-}
 
 sub apply_stylesheet {
 
