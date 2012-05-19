@@ -51,12 +51,7 @@ tpl [tstp] {
         @nr = `$num-functions`;
        }
     }
-    for-each [descendant::function[not(@name = preceding::function/@name)
-                                   and not(@name = ancestor::function/@name)]] {
-      apply [.] (#nr = `position ()`,
-      	    	 #relnr = `position()`,
-		 #aid = $article-uc);
-    }
+
     for-each [descendant::predicate[not(@name = "=")
                                     and not(@name = preceding::predicate/@name)]] {
       apply [.] (#nr = `position ()`,
@@ -64,16 +59,27 @@ tpl [tstp] {
 		 #aid = $article-uc);
     }
 
+    for-each [descendant::function[not(@name = preceding::function/@name)
+                                   and not(@name = ancestor::function/@name)]] {
+      apply [.] (#nr = `position ()`,
+      	    	 #relnr = `position()`,
+		 #aid = $article-uc);
+    }
+
   }
 }
 
 tpl constructor (#kind, #nr, #relnr, #aid) {
+
+}
+
+tpl [function[@name]] (#nr, #relnr, #aid) {
   <Constructor {
-    @kind = $kind;
+    @kind = "K";
     @nr = $nr;
     @aid = $aid;
     @relnr = $relnr;
-    @spelling = `@name`;
+    // @spelling = `@name`;
     <ArgTypes {
       for-each [*] {
         <Typ {
@@ -91,16 +97,21 @@ tpl constructor (#kind, #nr, #relnr, #aid) {
   }
 }
 
-tpl [function[@name]] (#nr, #relnr, #aid) {
-  constructor (#kind = "K",
-  	       #nr = $nr,
-	       #relnr = $relnr,
-	       #aid = $aid);
-}
-
 tpl [predicate] (#nr, #relnr, #aid) {
-  constructor (#kind = "R",
-  	       #nr = $nr,
-	       #relnr = $relnr,
-	       #aid = $aid);
+  <Constructor {
+    @kind = "R";
+    @nr = $nr;
+    @aid = $aid;
+    @relnr = $relnr;
+    // @spelling = `@name`;
+    <ArgTypes {
+      for-each [*] {
+        <Typ {
+          @kind = "M";
+          @nr = "1";
+          <Cluster;
+        }
+      }
+    }
+  }
 }
