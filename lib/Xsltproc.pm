@@ -59,6 +59,8 @@ sub apply_stylesheet {
 
     push (@xsltproc_call, $stylesheet);
 
+    push (@xsltproc_call, '-');
+
     my $xsltproc_out = '';
     my $xsltproc_err = '';
 
@@ -69,7 +71,6 @@ sub apply_stylesheet {
 				     '>', \$xsltproc_out,
 				     '2>', \$xsltproc_err);
     } else {
-	push (@xsltproc_call, '-');
 	$xsltproc_harness = harness (\@xsltproc_call,
 				     '<', \$document,
 				     '>', \$xsltproc_out,
