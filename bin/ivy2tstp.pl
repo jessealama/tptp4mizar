@@ -15,8 +15,10 @@ use File::Temp qw(tempfile);
 use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
 use Utils qw(sort_tstp_solution
-	     tptp_xmlize);
-use Xsltproc qw(apply_stylesheet);
+	     tptp_xmlize
+	     apply_stylesheet
+	     sort_tstp_solution
+	     normalize_tstp_steps);
 
 my $opt_man = 0;
 my $opt_help = 0;
@@ -113,7 +115,21 @@ if ($ccl_exit_code != 0) {
     exit 1;
 }
 
-print $ccl_output;
+my $ivy_xml = tptp_xmlize ($ccl_output);
+my $sorted_ivy_xml = sort_tstp_solution ($ivy_xml);
+my $normalized_steps_xml = normalize_tstp_steps ($sorted_ivy_xml);
+
+my $render_tptp_stylesheet = "$RealBin/../xsl/tptp/render-tptp.xsl";
+
+my $rendered = apply_stylesheet ($render_tptp_stylesheet,
+				 $normalized_steps_xml,
+				 undef,
+				 {
+				     'tstp' => '1',
+				 }
+			     );
+
+print $rendered;
 
 __END__
 
