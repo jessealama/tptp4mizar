@@ -10,6 +10,7 @@ use IPC::Cmd qw(can_run);
 use IPC::Run qw(harness);
 use Readonly;
 use Getopt::Long;
+use Pod::Usage;
 
 # Our stuff
 use FindBin qw($RealBin);
