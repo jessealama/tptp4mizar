@@ -88,41 +88,23 @@ tpl [*] mode="full" {
 // Business as usual
 //////////////////////////////////////////////////////////////////////
 
-tpl any-depends-on-conjecture (#formula-names) {
-  if [$formula-names] {
-    $formula-name = `$formula-names[1]`;
-    if [key ("formulas", $formula-name)] {
-      for-each [key ("formulas", $formula-name)] {
-        $depends = depends-on-conjecture ();
-        if [$depends = "1"] {
-          "1";
-        } else {
-          any-depends-on-conjecture (#formula-names = `$formula-names[position() > 1]`);
-        }
-      }
-    } else {
-      $message = `concat ("Error: unknown formula '", $formula-name, "'.")`;
-      apply [.] mode="trace";
-      msg terminate="yes" $message;
+tpl [tstp] {
+  $aid-uc = uc (#s = $article);
+  <Text-Proper {
+    @articleid = $aid-uc;
+    <Item { @kind = "Section-Pragma"; }
+    reserve-variables ();
+    for-each [formula[@status = "axiom"]] {
+      apply [.] mode="axiom";
     }
-  } else {
-    "0";
-  }
-}
-
-tpl depends-on-conjecture {
-  if [self::formula[@status = "conjecture"]] {
-    "1";
-  } else {
-    for-each [source] {
-      if [non-logical-data[@name = "inference"]] {
-        for-each [non-logical-data[@name = "inference"]] {
-          for-each [non-logical-data[position() = last()]] {
-            any-depends-on-conjecture (#formula-names = `number[@name]/@name`);
-          }
+    <Item {
+      @kind = "Regular-Statement";
+      @shape = "Diffuse-Statement";
+      <Block {
+        @kind = "Now-Reasoning";
+        for-each [formula[not(@status = "axiom")]] {
+          apply [.] mode="lemma";
         }
-      } else {
-        "0";
       }
     }
   }
@@ -240,10 +222,7 @@ tpl [formula] mode="conjecture" {
               apply [.] mode="conclusion";
             }
             otherwise {
-              $depends = depends-on-conjecture ();
-              if [$depends = "1"] {
-                apply [.] mode="full";
-              }
+              apply [.] mode="full";
             }
           }
         }
