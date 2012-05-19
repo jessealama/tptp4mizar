@@ -23,6 +23,12 @@ Readonly my $LF => "\N{LF}";
 Readonly my $ERROR_COLOR => 'red';
 Readonly my $WARNING_COLOR => 'yellow';
 
+# Stylesheets
+Readonly my $STYLESHEET_HOME => "../xsl";
+Readonly my $TSTP_STYLESHEET_HOME => "${STYLESHEET_HOME}/tstp";
+Readonly my $SORT_TSTP_STYLESHEET => "${TSTP_STYLESHEET_HOME}/sort-tstp.xsl";
+Readonly my $DEPENDENCIES_STYLESHEET => "${TSTP_STYLESHEET_HOME}/tstp-dependencies.xsl";
+
 use base qw(Exporter);
 our @EXPORT_OK = qw(error_message
 		    warning_message
@@ -34,7 +40,9 @@ our @EXPORT_OK = qw(error_message
 		    normalize_variables
 		    tptp_xmlize
 		    tptp_fofify
-		    run_harness);
+		    run_harness
+		    is_file
+		    sort_tstp_solution);
 
 sub error_message {
     return message_with_colored_prefix ('Error', $ERROR_COLOR, @_);
@@ -326,6 +334,42 @@ sub run_harness {
 
     return $output;
 
+}
+
+sub is_file {
+    my $thing = shift;
+
+    my $lf_index = index ($thing, $LF);
+
+    if ($lf_index < 0) {
+	return (-f $thing ) ? 1 : 0;
+    } else {
+	return 0;
+    }
+
+}
+
+sub sort_tstp_solution {
+    my $solution = shift;
+
+    # Sort
+    my $dependencies_str = undef;
+    my @xsltproc_deps_call = ('xsltproc', $DEPENDENCIES_STYLESHEET, $solution);
+    my @tsort_call = ('tsort');
+    my $sort_harness = harness (\@xsltproc_deps_call,
+				'|',
+				\@tsort_call,
+				'>', \$dependencies_str);
+    $sort_harness->start ();
+    $sort_harness->finish ();
+
+    my @dependencies = split ($LF, $dependencies_str);
+    my $dependencies_token_string = ',' . join (',', @dependencies) . ',';
+
+    apply_stylesheet ($SORT_TSTP_STYLESHEET,
+		      $solution,
+		      $solution,
+		      { 'ordering' => $dependencies_token_string });
 }
 
 1;
