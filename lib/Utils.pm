@@ -13,11 +13,13 @@ use IPC::Run qw(harness);
 use IPC::Cmd qw(can_run);
 use List::MoreUtils qw(first_index);
 
+# Strings
 Readonly my $EMPTY_STRING => q{};
 Readonly my $SP => q{ };
 Readonly my $COLON => q{:};
 Readonly my $LF => "\N{LF}";
 
+# Colors
 Readonly my $ERROR_COLOR => 'red';
 Readonly my $WARNING_COLOR => 'yellow';
 
