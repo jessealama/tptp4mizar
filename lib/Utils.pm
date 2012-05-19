@@ -12,6 +12,7 @@ use charnames qw(:full);
 use IPC::Run qw(harness);
 use IPC::Cmd qw(can_run);
 use List::MoreUtils qw(first_index);
+use FindBin qw($RealBin);
 
 # Strings
 Readonly my $EMPTY_STRING => q{};
@@ -24,10 +25,11 @@ Readonly my $ERROR_COLOR => 'red';
 Readonly my $WARNING_COLOR => 'yellow';
 
 # Stylesheets
-Readonly my $STYLESHEET_HOME => "../xsl";
+Readonly my $STYLESHEET_HOME => "$RealBin/../xsl";
 Readonly my $TSTP_STYLESHEET_HOME => "${STYLESHEET_HOME}/tstp";
 Readonly my $SORT_TSTP_STYLESHEET => "${TSTP_STYLESHEET_HOME}/sort-tstp.xsl";
 Readonly my $DEPENDENCIES_STYLESHEET => "${TSTP_STYLESHEET_HOME}/tstp-dependencies.xsl";
+Readonly my $NORMALIZE_STEPS_STYLESHEET => "${TSTP_STYLESHEET_HOME}/normalize-step-names.xsl";
 
 use base qw(Exporter);
 our @EXPORT_OK = qw(error_message
@@ -40,9 +42,11 @@ our @EXPORT_OK = qw(error_message
 		    normalize_variables
 		    tptp_xmlize
 		    tptp_fofify
+		    apply_stylesheet
 		    run_harness
 		    is_file
-		    sort_tstp_solution);
+		    sort_tstp_solution
+		    normalize_tstp_steps);
 
 sub error_message {
     return message_with_colored_prefix ('Error', $ERROR_COLOR, @_);
@@ -50,6 +54,97 @@ sub error_message {
 
 sub warning_message {
     return message_with_colored_prefix ('Warning', $WARNING_COLOR, @_);
+}
+
+sub apply_stylesheet {
+
+    my ($stylesheet, $document, $result_path, $parameters_ref) = @_;
+
+    if (! defined $stylesheet) {
+	confess ('Error: please supply a stylesheet.');
+    }
+
+    if (! defined $document) {
+	confess ('Error: please supply a document.');
+    }
+
+    my %parameters = defined $parameters_ref ? %{$parameters_ref}
+	                                     : ()
+					     ;
+
+
+    if (! is_readable_file ($stylesheet)) {
+	confess ('Error: there is no stylesheet at ', $stylesheet, '.');
+    }
+
+    my @xsltproc_call = ('xsltproc');
+    foreach my $parameter (keys %parameters) {
+	my $value = $parameters{$parameter};
+	push (@xsltproc_call, '--stringparam', $parameter, $value);
+    }
+
+    push (@xsltproc_call, $stylesheet);
+
+    push (@xsltproc_call, '-');
+
+    my $xsltproc_out = '';
+    my $xsltproc_err = '';
+
+    warn 'document = ', $LF, $document;
+
+    my $xsltproc_harness
+	= harness (\@xsltproc_call,
+		   '<', (is_file ($document) ? $document : \$document),
+		   '>', \$xsltproc_out,
+		   '2>', \$xsltproc_err);
+
+    $xsltproc_harness->start ();
+    $xsltproc_harness->finish ();
+    my $xsltproc_result = ($xsltproc_harness->result)[0];
+
+    if ($xsltproc_result != 0) {
+	if (scalar keys %parameters == 0) {
+	    if (defined $result_path) {
+		confess ('Error: xsltproc did not exit cleanly when applying the stylesheet', $LF, $LF, $SP, $SP, $stylesheet, $LF, $LF, 'to', $LF, $SP, $SP, $document, $LF, $LF, 'to generate', $LF, $LF, $SP, $SP, $result_path, $LF, $LF, 'Its exit code was ', $xsltproc_result, '. No stylesheet parameters were given.  Here is the error output: ', "\n", $xsltproc_err);
+	    } else {
+		confess ('Error: xsltproc did not exit cleanly when applying the stylesheet', "\n", "\n", '  ', $stylesheet, $LF, $LF, 'to', $LF, $LF, $SP, $SP, $document, $LF, 'Its exit code was ', $xsltproc_result, '. No stylesheet parameters were given.  Here is the error output: ', "\n", $xsltproc_err);
+	    }
+	} else {
+
+	    my $parameters_message = $EMPTY_STRING;
+	    foreach my $parameter (sort keys %parameters) {
+		my $value = $parameters{$parameter};
+		$parameters_message .= $SP . $SP . "${parameter} ==> ${value}" . $LF;
+	    }
+
+	    if (defined $result_path) {
+		confess ('Error: xsltproc did not exit cleanly when applying the stylesheet', "\n", "\n", '  ', $stylesheet, "\n", "\n", 'to', "\n", "\n", '  ', $document, $LF, $LF, 'so that we could generate', $LF, $LF, $SP, $SP, $result_path, $LF, $LF, 'Its exit code was ', $xsltproc_result, '. These were the stylesheet parameters:', $LF, $LF, $parameters_message, $LF, 'Here is the error output: ', $LF, $LF, $xsltproc_err, $LF);
+	    } else {
+		confess ('Error: xsltproc did not exit cleanly when applying the stylesheet', "\n", "\n", '  ', $stylesheet, "\n", "\n", 'to', "\n", "\n", '  ', $document, $LF, $LF, 'Its exit code was ', $xsltproc_result, '. These were the stylesheet parameters:', $LF, $LF, $parameters_message, $LF, 'Here is the error output: ', $LF, $LF, $xsltproc_err, $LF);
+	    }
+
+	}
+
+    }
+
+    if (defined $result_path) {
+	open (my $result_fh, '>', $result_path)
+	    or confess 'Unable to open an output filehandle for ', $result_path, '.';
+	print {$result_fh} $xsltproc_out
+	    or confess 'Unable to print to the output filehandle for ', $result_path, '.';
+	close $result_fh
+	    or confess 'Unable to close the output filehandle for ', $result_path, '.';
+	return $xsltproc_out;
+    } elsif (wantarray) {
+	# carp 'HEY: wantarray; xsltproc output is ', $xsltproc_out;
+	chomp $xsltproc_out;
+	my @answer = split (/\n/, $xsltproc_out);
+	return @answer;
+    } else {
+	# carp 'HEY: do not wantarray';
+	return $xsltproc_out;
+    }
+
 }
 
 sub is_readable_file {
@@ -361,24 +456,39 @@ sub is_file {
 sub sort_tstp_solution {
     my $solution = shift;
 
+    my $solution_copy = $solution; # the harness can eat our variable! save a copy
+
     # Sort
     my $dependencies_str = undef;
-    my @xsltproc_deps_call = ('xsltproc', $DEPENDENCIES_STYLESHEET, $solution);
+    my @xsltproc_deps_call = ('xsltproc', $DEPENDENCIES_STYLESHEET, '-');
     my @tsort_call = ('tsort');
-    my $sort_harness = harness (\@xsltproc_deps_call,
-				'|',
-				\@tsort_call,
-				'>', \$dependencies_str);
+
+    my $sort_harness = 	harness (\@xsltproc_deps_call,
+				 '<',
+				 (is_file ($solution) ? $solution : \$solution),
+				 '|',
+				 \@tsort_call,
+				 '>', \$dependencies_str);
+
+
     $sort_harness->start ();
     $sort_harness->finish ();
 
     my @dependencies = split ($LF, $dependencies_str);
     my $dependencies_token_string = ',' . join (',', @dependencies) . ',';
 
-    apply_stylesheet ($SORT_TSTP_STYLESHEET,
-		      $solution,
-		      $solution,
-		      { 'ordering' => $dependencies_token_string });
+    return apply_stylesheet ($SORT_TSTP_STYLESHEET,
+			     $solution_copy,
+			     (is_file ($solution_copy) ? $solution_copy : undef),
+			     { 'ordering' => $dependencies_token_string });
+
+}
+
+sub normalize_tstp_steps {
+    my $solution = shift;
+
+    return scalar apply_stylesheet ($NORMALIZE_STEPS_STYLESHEET,
+				    $solution);
 }
 
 1;
