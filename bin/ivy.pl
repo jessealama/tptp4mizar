@@ -133,6 +133,12 @@ __END__
 
 ivy
 
+=head1 SYNOPSIS
+
+ivy [ --help | --man ]
+
+ivy [ --timeout=N ] TPTP-FILE
+
 =head1 DESCRIPTION
 
 Solve a TPTP problem with Prover9, getting a TPTP-style Ivy derivation
