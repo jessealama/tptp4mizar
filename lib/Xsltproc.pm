@@ -20,16 +20,14 @@ Readonly my $EMPTY_STRING => q{};
 sub is_file {
     my $thing = shift;
 
-    if (index ($thing, $LF)) {
-	return 0;
+    my $lf_index = index ($thing, $LF);
+
+    if ($lf_index < 0) {
+	return (-f $thing ) ? 1 : 0;
     } else {
-	my $test = eval { -e $thing };
-	if (defined $test) {
-	    return (-f $thing ) ? 1 : 0;
-	} else {
-	    return 0;
-	}
+	return 0;
     }
+
 }
 
 sub apply_stylesheet {
