@@ -106,8 +106,20 @@ tpl [source] {
 }
 
 tpl [useful-info] {
-  // handled in the same way as the source part
-  apply [source];
+  choose {
+    when [non-logical-data or number] {
+      ","; "["; list (#separ = ",", #elems = `non-logical-data | number`); "]";
+    }
+    when [non-logical-data[@name]] {
+      ","; apply [non-logical-data[@name]];
+    }
+    when [number] {
+      ","; apply [number];
+    }
+    otherwise {
+      "";
+    }
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
