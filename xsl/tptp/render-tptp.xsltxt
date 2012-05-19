@@ -1,28 +1,10 @@
 stylesheet "1.0";
+include "../utils/die.xsl";
 output method="text";
 
 //////////////////////////////////////////////////////////////////////
 // Utilities
 //////////////////////////////////////////////////////////////////////
-
-tpl [*] mode="trace" {
-  msg "We are about to terminate the XSLT processor.  Here's where we are:";
-  apply [.] mode="trace-recursive";
-}
-
-tpl [*] mode="trace-recursive" {
-  $n = `name (.)`;
-  $position = `count (preceding-sibling::*[name() = $n]) + 1`;
-  if [parent::*] {
-    apply [..] mode="trace-recursive";
-  }
-  `$n`; "["; `$position`; "]"; "\n";
-}
-
-tpl [*] (#message) mode="die" {
-  apply [.] mode="trace";
-  msg terminate="yes" $message;
-}
 
 tpl list (#separ, #elems) {
   for-each [$elems] {
