@@ -238,11 +238,20 @@ sub tptp_xmlize {
 
     my $tptp4X_errs = $EMPTY_STRING;
     my $tptp4X_out = $EMPTY_STRING;
-    my @tptp4X_call = ('tptp4X', '-N', '-V', '-c', '-x', '-fxml', $tptp_file);
+    my @tptp4X_call = ('tptp4X', '-N', '-V', '-c', '-x', '-fxml', '--');
 
-    my $tptp4X_harness = harness (\@tptp4X_call,
-				  '>', \$tptp4X_out,
-				  '2>', \$tptp4X_errs);
+    my $tptp4X_harness = undef;
+    if (is_file ($tptp_file)) {
+	$tptp4X_harness = harness (\@tptp4X_call,
+				   '<', $tptp_file,
+				   '>', \$tptp4X_out,
+				   '2>', \$tptp4X_errs);
+    } else {
+	$tptp4X_harness = harness (\@tptp4X_call,
+				   '<', \$tptp_file,
+				   '>', \$tptp4X_out,
+				   '2>', \$tptp4X_errs);
+    }
 
     $tptp4X_harness->start ();
     $tptp4X_harness->finish ();
