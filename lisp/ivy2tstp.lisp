@@ -44,7 +44,9 @@
       (call-next-method)))
 
 (defun comma-separated-list (list)
-  (format nil "~{~a~#[~:;,~]~}" list))
+  (if (null list)
+      "[]"
+      (format nil "~{~a~#[~:;,~]~}" list)))
 
 (defmethod render-term ((ivy-term list))
   (let ((head (first ivy-term))
