@@ -31,7 +31,7 @@ my %directory_for_extension = (
     'the' => 'prel',
 );
 
-my @extensions_to_generate = ('voc', 'evl', 'dno', 'dco', 'wsx');
+my @extensions_to_generate = ('voc', 'evl', 'dno', 'dco', 'the', 'wsx');
 
 sub to_miz {
     my $self = shift;
