@@ -142,30 +142,26 @@
 (defun render-resolve-step (step)
   (destructuring-bind (name-1 disjunct-1 name-2 disjunct-2)
       step
-    (format nil "inference(resolve,[status(thm)],[~a,~a]),[disjunct(~a,~a),disjunct(~a,~a)]"
+    (format nil "inference(resolve,[status(thm)],[~a,~a]),disjuncts([~a,~a])"
 	    name-1
 	    name-2
-	    name-1
 	    (render-disjunction-reference disjunct-1)
-	    name-2
 	    (render-disjunction-reference disjunct-2))))
 
 (defun render-flip-step (step)
   (destructuring-bind (formula-name disjunct-address)
       step
-    (format nil "inference(flip,[status(thm)],~a),disjunct(~a)"
+    (format nil "inference(flip,[status(thm)],~a),disjuncts(~a)"
 	    formula-name
 	    (comma-separated-list disjunct-address))))
 
 (defun render-paramod-step (step)
   (destructuring-bind (name-1 disjunct-1 name-2 disjunct-2)
       step
-    (format nil "inference(paramod,[status(thm)],[~a,~a]),[disjunct(~a,~a),disjunct(~a,~a)]"
+    (format nil "inference(paramod,[status(thm)],[~a,~a]),disjuncts([~a,~a])"
 	    name-1
 	    name-2
-	    name-1
 	    (render-disjunction-reference disjunct-1)
-	    name-2
 	    (render-disjunction-reference disjunct-2))))
 
 (defun render-propositional-step (step)
