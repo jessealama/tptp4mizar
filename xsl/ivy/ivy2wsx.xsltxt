@@ -2,11 +2,39 @@ stylesheet "1.0";
 include "../tstp/tstp2wsx.xsl";
 output method="xml" indent="yes";
 
-tpl [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "resolve"]]] {
+tpl [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "clausify"]]] mode="lemma" {
   <Item {
     @kind = "Regular-Statement";
     @shape = "Compact-Statement";
     <Proposition {
+      <Label {
+        @spelling = `@name`;
+      }
+      apply [*[1]];
+    }
+    <Straightforward-Justification {
+      // reference for this formula
+      apply [source];
+      // clausification axiom
+      <Definition-Reference {
+        $article-uc = uc (#s = $article);
+        @spelling = $article-uc;
+        @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "clausify"]]) + 1`;
+      }
+    }
+  }
+}
+
+tpl [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "resolve"]]] mode="lemma" {
+  $formula = `.`;
+  $formula-name = `@name`;
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Compact-Statement";
+    <Proposition {
+      <Label {
+        @spelling = $formula-name;
+      }
       apply [*[1]];
     }
     <Block {
