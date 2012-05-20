@@ -1,5 +1,6 @@
 stylesheet "1.0";
 include "../utils/die.xsl";
+include "../utils/strings.xsl";
 output method="xml" indent="yes";
 
 key "clauses" [clause] `@id`;
