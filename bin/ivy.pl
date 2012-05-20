@@ -6,11 +6,15 @@ use warnings;
 require v5.10.0; # for the 'say' feature
 use feature 'say';
 
+use Carp qw(croak confess carp);
+use Data::Dumper;
 use IPC::Cmd qw(can_run);
 use IPC::Run qw(harness);
 use Readonly;
 use Getopt::Long;
 use Pod::Usage;
+use charnames qw(:full);
+use List::MoreUtils qw(pairwise first_index all);
 
 # Our stuff
 use FindBin qw($RealBin);
