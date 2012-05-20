@@ -24,3 +24,12 @@ tpl capitalize-after-underscore (#string) {
     `$string`;
   }
 }
+
+tpl position-in-string (#string, #thing) {
+  if [contains ($string, $thing)] {
+    $before-thing = `substring-before ($string, $thing)`;
+    `string-length ($before-thing)`;
+  } else {
+    "-1";
+  }
+}
