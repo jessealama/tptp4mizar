@@ -12,6 +12,7 @@ use charnames qw(:full);
 use IPC::Run qw(harness);
 use IPC::Cmd qw(can_run);
 use List::MoreUtils qw(first_index);
+use XML::LibXML;
 use FindBin qw($RealBin);
 
 # Strings
