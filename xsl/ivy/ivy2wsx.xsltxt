@@ -1,108 +1,82 @@
 stylesheet "1.0";
-include "../tptp/tptp2wsx.xsl";
+include "../tstp/tstp2wsx.xsl";
 output method="xml" indent="yes";
 
-tpl [/] {
-  choose {
-    when [$article = ""] {
-      msg terminate="yes" "Error: the empty string is not an acceptable value for the article stylesheet parameter.";
-    }
-    when [string-length ($article) > 8] {
-      msg terminate="yes" "Error: the value of the article stylesheet parameter is too long (it must be at most 8 characters).";
-    }
-    when [contains ($article, " ")] {
-      msg terminate="yes" "Error: the value of the article stylesheet parameter contains whitespace.";
-    }
-    // We don't care about the shape stylesheet parameter
-    when [tstp] {
-      apply [tstp];
-    }
-    otherwise {
-      msg terminate="yes" "Error: the required tstp document element is missing.";
-    }
-  }
-}
-
-tpl [tstp] {
-  $aid-uc = uc (#s = $article);
-  <Text-Proper {
-    @articleid = $aid-uc;
-    <Item { @kind = "Section-Pragma"; }
-    reserve-variables ();
-    <Item {
-      @kind = "Regular-Statement";
-      @shape = "Diffuse-Statement";
-      <Block {
-        @kind = "Now-Reasoning";
-        for-each [formula[source/non-logical-data[@name = "input"]]] {
-          apply [.] mode="assumption";
-        }
-        for-each [formula[position() < last() and not(source/non-logical-data[@name = "input"])]] {
-          apply [.] mode="lemma";
-        }
-        for-each [formula[position() = last()]] {
-          apply [.] mode="conclusion";
-        }
-      }
-    }
-  }
-}
-
-tpl [formula[@name]] mode="assumption" {
-  $n = `@name`;
-  <Item {
-    @kind = "Assumption";
-    <Single-Assumption {
-      <Proposition {
-        <Label {
-          @spelling = $n;
-        }
-        apply [*[1]] mode="strip-universal-prefix";
-      }
-    }
-  }
-}
-
-tpl [source] {
-  <Straightforward-Justification {
-    for-each [non-logical-data] {
-      for-each [non-logical-data[position() = last()]] {
-        for-each [non-logical-data[@name]] {
-          <Local-Reference {
-            @spelling = `@name`;
-          }
-        }
-      }
-    }
-  }
-}
-
-tpl [formula[@name]] mode="lemma" {
-  $n = `@name`;
+tpl [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "resolve"]]] {
   <Item {
     @kind = "Regular-Statement";
     @shape = "Compact-Statement";
     <Proposition {
-      <Label {
-        @spelling = $n;
-      }
-      apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
     }
-    apply [source];
-  }
-}
-
-tpl [formula[@name]] mode="conclusion" {
-  $n = `@name`;
-  <Item {
-    @kind = "Conclusion";
-    @shape = "Compact-Statement";
-    <Proposition {
-      <Label {
-        @spelling = $n;
+    <Block {
+      @kind = "Proof";
+      for-each [*[1]] {
+        for-each [descendant::variable[not(@name = preceding::variable/@name)]] {
+          <Item {
+            @kind = "Generalization";
+            <Implicitly-Qualified-Segment {
+              <Variable {
+                @spelling = `@name`;
+              }
+            }
+          }
+        }
       }
-      apply [*[1]] mode="strip-universal-prefix";
+      // Grab the first premise, then conclude from the second
+      for-each [source] {
+        for-each [non-logical-data[@name = "inference"]] {
+          for-each [non-logical-data[position() = last()]] {
+            if [non-logical-data[3]] {
+              apply [.] (#message = "We found a resolution step that refers to more than 2 formulas.") mode="die";
+            }
+            if [not(non-logical-data[2])] {
+              apply [.] (#message = "We found a resolution step that refers to fewer than 2 formulas.") mode="die";
+            }
+            for-each [non-logical-data] {
+              $premise-name = `@name`;
+              choose {
+                when [position() = 1] {
+                  if [not(key ("formulas", $premise-name))] {
+                    $message = `concat ("Error: unable to find the premise '", $premise-name, "'.")`;
+                    apply [.] (#message = $message) mode="die";
+                  }
+                  for-each [key ("formulas", $premise-name)] {
+                    <Item {
+                      @kind = "Regular-Statement";
+                      @shape = "Compact-Statement";
+                      // stripping the entire universal prefix may not be safe...
+                      <Proposition {
+                        apply [*[1]] mode="strip-universal-prefix";
+                      }
+                      <Straightforward-Justification {
+                        <Local-Reference {
+                          @spelling = $premise-name;
+                        }
+                      }
+                    }
+                  }
+                }
+                when [position() = 2] {
+                  <Item {
+                    @kind = "Conclusion";
+                    @shape = "Compact-Statement";
+                    <Proposition {
+                      <Thesis;
+                    }
+                    <Straightforward-Justification {
+                      <Link;
+                      <Local-Reference {
+                        @spelling = $premise-name;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
-    apply [source];
   }
 }
