@@ -17,6 +17,7 @@ use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
 use Utils qw(sort_tstp_solution
 	     tptp_xmlize
+	     tptp_fofify
 	     apply_stylesheet
 	     sort_tstp_solution
 	     normalize_tstp_steps);
@@ -116,7 +117,8 @@ if ($ccl_exit_code != 0) {
     exit 1;
 }
 
-my $ivy_xml = tptp_xmlize ($ccl_output);
+my $fofifed = tptp_fofify ($ccl_output);
+my $ivy_xml = tptp_xmlize ($fofifed);
 my $sorted_ivy_xml = sort_tstp_solution ($ivy_xml);
 my $normalized_steps_xml = normalize_tstp_steps ($sorted_ivy_xml);
 
