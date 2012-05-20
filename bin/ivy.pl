@@ -73,7 +73,7 @@ sub process_commandline {
 	);
     }
 
-    if (scalar @ARGV != 1) {
+    if (scalar @ARGV > 1) {
 	pod2usage (
 	    -exitval => 2,
 	);
@@ -91,10 +91,11 @@ sub process_commandline {
 	$opt_verbose = 1;
     }
 
-    my $problem_file = $ARGV[0];
-
-    if (! is_readable_file ($problem_file)) {
-	die error_message ('The given TPTP problem file', $SP, $problem_file, $SP, 'does not exist or is unreadable.');
+    if (scalar @ARGV == 1) {
+	my $problem_file = $ARGV[0];
+	if (! is_readable_file ($problem_file)) {
+	    die error_message ('The given TPTP problem file', $SP, $problem_file, $SP, 'does not exist or is unreadable.');
+	}
     }
 
     return;
@@ -254,17 +255,23 @@ process_commandline ();
 
 ensure_stuff_is_runnable ();
 
-my $problem_file = $ARGV[0];
+my $problem = undef;
 
-my $problem_xml = tptp_xmlize ($problem_file);
+if (scalar @ARGV == 1) {
+    $problem = slurp ($ARGV[0]);
+} else {
+    $problem = slurp (\*ARGV);
+}
 
-my @tptp2X_call = ($TPTP2X, '-tstdfof', '-fprover9', '-q2', '-d-', $problem_file);
+my $problem_xml = tptp_xmlize ($problem);
+
+my @tptp2X_call = ($TPTP2X, '-tstdfof', '-fprover9', '-q2', '-d-', '-');
 my @prover9_call = ($PROVER9);
 my @prooftrans_expand_call = ($PROOFTRANS, 'expand', 'renumber');
 my @prooftrans_xml_call = ($PROOFTRANS, 'xml');
 my @prooftrans_ivy_call = ($PROOFTRANS, 'ivy');
 
-my $tptp2X_out = run_harness (\@tptp2X_call);
+my $tptp2X_out = run_harness (\@tptp2X_call, $problem);
 my $prover9_out = run_harness (\@prover9_call, $tptp2X_out);
 my $prover9_expanded = run_harness (\@prooftrans_expand_call, $prover9_out);
 my $ivy_proof_object = run_harness (\@prooftrans_ivy_call, $prover9_expanded);
