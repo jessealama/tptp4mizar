@@ -149,7 +149,8 @@ tpl [formula] (#label) mode="reiterate" {
           @spelling = $label;
         }
       }
-      apply [*[1]] mode="strip-universal-prefix";
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
     }
     <Straightforward-Justification {
       <Local-Reference {
@@ -187,7 +188,8 @@ tpl [formula[@name and source/non-logical-data[@name = "inference"]]] mode="lemm
       <Label {
         @spelling = `@name`;
       }
-      apply [*[1]] mode="strip-universal-prefix";
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
     }
     <Straightforward-Justification {
       for-each [source] {
@@ -281,7 +283,8 @@ tpl [formula[@name and not(@name = "")]] mode="full" {
       <Label {
         @spelling = `@name`;
       }
-      apply [*[1]] mode="strip-universal-prefix";
+      // apply [*[1]] mode="strip-universal-prefix";
+      apply [*[1]];
     }
     <Straightforward-Justification {
       for-each [source] {
