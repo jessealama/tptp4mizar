@@ -424,6 +424,8 @@ if ($opt_style eq 'vampire') {
     $repair_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/repair-vampire.xsl";
 } elsif ($opt_style eq 'eprover') {
     $repair_stylesheet = "${EPROVER_STYLESHEET_HOME}/repair-eprover.xsl";
+} elsif ($opt_style eq 'tstp') {
+    $repair_stylesheet = "${TSTP_STYLESHEET_HOME}/repair-tstp.xsl";
 } else {
     die error_message ('Unsuported proof style "', $opt_style, '".');
 }
