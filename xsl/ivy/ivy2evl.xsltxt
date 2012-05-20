@@ -1,5 +1,6 @@
 stylesheet "1.0";
 include "../utils/strings.xsl";
+include "../utils/token-strings.xsl";
 output method="xml" indent="yes";
 
 //////////////////////////////////////////////////////////////////////
@@ -32,7 +33,7 @@ tpl [/] {
       msg terminate="yes" "Error: the value of the article stylesheet parameter contains whitespace.";
     }
     when [tstp] {
-      apply [tstp];
+      apply [tstp] (#proofs = ",,");
     }
     otherwise {
       msg terminate="yes" "Error: the required tstp document element is missing.";
@@ -58,6 +59,12 @@ tpl [tstp] {
     }
     <Directive {
       @"name" = "Constructors";
+      <Ident {
+        @"name" = $article-uc;
+      }
+    }
+    <Directive {
+      @"name" = "Theorems";
       <Ident {
         @"name" = $article-uc;
       }
