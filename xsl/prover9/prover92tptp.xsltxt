@@ -272,10 +272,69 @@ tpl string-is-constant (#string) {
   }
 }
 
+tpl balance-parens (#string, #solution, #counter) {
+  $diagnostic-message = `concat ("balance-parens: string = '", $string, "', solution = '", $solution, "', counter = ", $counter)`;
+  msg $diagnostic-message;
+  choose {
+    when [$counter = ""] {
+      $message = `concat ("Error: balance-parens is in a state where the count is the empty string (the current string is '", $string, "').")`;
+      msg terminate="yes" $message;
+    }
+    when [$counter < "0"] {
+      $message = `concat ("Error: balance-parens is in a state where the count is negative (the current string is '", $string, "').")`;
+      msg terminate="yes" $message;
+    }
+    when [$counter = "0"] {
+      $solution;
+    }
+    when [contains ($string, "(") or contains ($string, ")")] {
+      $pos-of-left = position-in-string (#string = $string, #thing = "(");
+      $pos-of-right = position-in-string (#string = $string, #thing = ")");
+      choose {
+        when [$pos-of-left = "-1"] {
+          $before-first-right-paren = `substring-before ($string, ")")`;
+          balance-parens (#string = `substring-after ($string, ")")`,
+                          #solution = `concat ($solution, $before-first-right-paren, ")")`,
+                          #counter = `$counter - 1`);
+        }
+        when [$pos-of-right = "-1"] {
+          $message = `concat ("Cannot balance the string '", $string, "' because the counter is positive, and there are no right parentheses.")`;
+          msg terminate="yes" $message;
+        }
+        otherwise {
+          $before-first-left-paren = `substring-before ($string, "(")`;
+          $before-first-right-paren = `substring-before ($string, ")")`;
+          if [$pos-of-left < $pos-of-right] {
+            balance-parens (#string = `substring-after ($string, "(")`,
+                            #solution = `concat ($solution, $before-first-left-paren, "(")`,
+                            #counter = `$counter + 1`);
+          } else {
+            balance-parens (#string = `substring-after ($string, ")")`,
+                            #solution = `concat ($solution, $before-first-right-paren, ")")`,
+                            #counter = `$counter - 1`);
+          }
+        }
+      }
+    }
+    otherwise {
+      $message = `concat ("Error: we cannot balance the parentheses of a string that contains neither a left nor a right parenthesis.")`;
+      msg terminate="yes" $message;
+    }
+  }
+}
+
 tpl first-term-of-term-string (#string) {
   choose {
     when [$string = ""] {
       msg terminate="yes" "Error: from the empty string we cannot extract the first term.";
+    }
+    when [contains ($string, "(")] {
+      $before-first-paren = `substring-before ($string, "(")`;
+      $after-head = `substring-after ($string, "(")`;
+      $balanced-parens = balance-parens (#string = $after-head,
+                                         #solution = "(",
+                                         #counter = "1");
+      `concat ($before-first-paren, $balanced-parens)`;
     }
     when [contains ($string, ",")] {
       `substring-before ($string, ",")`;
@@ -287,6 +346,7 @@ tpl first-term-of-term-string (#string) {
 }
 
 tpl parse-term (#string) {
+  msg `concat ("Parsing the term '", $string, "'")`;
   $is-variable = string-is-variable (#string = $string);
   $is-constant = string-is-constant (#string = $string);
   choose {
@@ -317,24 +377,32 @@ tpl parse-term (#string) {
 }
 
 tpl parse-argument-list-1 (#string) {
-  $message = `concat ("parse-argument-list-1: string = '", $string, "'")`;
-  if [contains ($string, ",")] {
-    $first-term = first-term-of-term-string (#string = $string);
-    $tail = `substring-after ($string, $first-term)`;
-    $after-comma-tail = `substring-after ($tail, ",")`;
-    parse-term (#string = $first-term);
-    parse-argument-list-1 (#string = $after-comma-tail);
-  } else {
-    parse-term (#string = $string);
+  choose {
+    when [$string = ""] {
+      // done
+    }
+    when [contains ($string, ",")] {
+      $first-term = first-term-of-term-string (#string = $string);
+      msg `concat ("First term of the argument list '", $string, "' is '", $first-term, "'")`;
+      $tail = `substring-after ($string, $first-term)`;
+      $after-comma-tail = `substring-after ($tail, ",")`;
+      parse-term (#string = $first-term);
+      parse-argument-list-1 (#string = $after-comma-tail);
+    }
+    otherwise {
+      parse-term (#string = $string);
+    }
   }
 }
 
 tpl parse-argument-list (#string) {
+  msg `concat ("Parsing the argument list '", $string, "'")`;
   $sans-outer-parens = drop-enclosing-parentheses (#string = $string);
   parse-argument-list-1 (#string = $sans-outer-parens);
 }
 
 tpl parse-atomic-formula (#string = $string) {
+  msg `concat ("Parsing the atomic formula '", $string, "'")`;
   $predicate-name = `substring-before ($string, "(")`;
   <predicate {
     @"name" = $predicate-name;
@@ -375,7 +443,7 @@ tpl parse-composite-non-quantified-formula (#string) {
 }
 
 tpl parse-ladr-formula (#string) {
-  msg `concat ("Parsing '", $string, "'")`;
+  msg `concat ("Parsing the formula '", $string, "'")`;
   choose {
     when [$string = "$F"] {
       <defined-predicate {
