@@ -7,6 +7,7 @@ require v5.10.0; # for the 'say' feature
 use feature 'say';
 
 use Getopt::Long;
+use Pod::Usage;
 use IPC::Cmd qw(can_run);
 use IPC::Run qw(harness);
 use Readonly;
