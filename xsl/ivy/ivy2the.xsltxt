@@ -1,50 +1,7 @@
 stylesheet "1.0";
-include "../utils/strings.xsl";
-include "../utils/token-strings.xsl";
-include "../utils/die.xsl";
+include "../tstp/tstp2the.xsl";
 output method="xml" indent="yes";
 output omit-xml-declaration="no";
-
-//////////////////////////////////////////////////////////////////////
-// Stylesheet parameters
-//////////////////////////////////////////////////////////////////////
-
-// The name of the article .def that we will create
-#article = { ""; }
-
-// The directory in which we will look for the dco file
-#prel-directory = { ""; }
-
-// Name of a dco file (sans extension) in which we shall look for
-// other functions and predicates.
-#reference-dco = { ""; }
-
-//////////////////////////////////////////////////////////////////////
-// Keys
-//////////////////////////////////////////////////////////////////////
-
-key "formulas" [formula[@name]] `@name`;
-
-//////////////////////////////////////////////////////////////////////
-// Templates
-//////////////////////////////////////////////////////////////////////
-
-tpl [/] {
-  choose {
-    when [$article = ""] {
-      apply [.] (#message = "Error: a value for the article stylesheet parameter was not supplied (or the empty string was supplied).") mode="die";
-    }
-    when [not(tstp)] {
-      apply [.] (#message = "Error: this does not appear to be a TSTP XML document, because it lacks a 'tstp' root element.") mode="die";
-    }
-    when [tstp[2]] {
-      apply [.] (#message = "Error: this does not appear to be a TSTP XML document, because it has multiple 'tstp' root elements.") mode="die";
-    }
-    otherwise {
-      apply [tstp];
-    }
-  }
-}
 
 tpl [tstp] {
   $article-uc = uc (#s = `$article`);
@@ -72,196 +29,35 @@ tpl [tstp] {
       }
     }
 
-  }
-}
-
-tpl [*] (#variable-alist) mode="render-definiens" {
-  $n = `name (.)`;
-  $message = `concat ("Error: we have arrived at an unhandled ", $n, " node in render-definiens mode.")`;
-  apply [.] (#message = $message) mode="die";
-}
-
-tpl [formula] (#variable-alist) mode="render-definiens" {
-  for-each [*[1]] { // the formula proper of the TPTP formula
-    apply [.] (#variable-alist = $variable-alist) mode="render-definiens";
-  }
-}
-
-tpl [quantifier[@type = "universal"]] (#started, #variables, #variable-number, #variable-alist) mode="render-definiens" {
-  if [$started = "1"] {
-    if [$variables] {
-      $variable = `$variables[1]`;
-      $variable-name = `$variable/@name`;
-      $item = `concat ($variable-name, ":", $variable-number)`;
-      $new-variable-alist = add-to-token-string (#item = $item, #token-string = $variable-alist);
-      <For {
-        <Typ {
-          @kind = "M";
-          @nr = "1";
-          <Cluster;
-        }
-        apply [.] (#started = "1",
-                   #variables = `$variables[position() > 1]`,
-                   #variable-number = `$variable-number + 1`,
-                   #variable-alist = $new-variable-alist) mode="render-definiens";
-
-      }
-    } else {
-      apply [*[position() = last()]] (#variable-alist = $variable-alist) mode="render-definiens";
-    }
-  } else {
-    $num-variables-bound-so-far
-      = count-items-in-token-string (#token-string = $variable-alist);
-    apply [.] (#started = "1",
-               #variable-number = `$num-variables-bound-so-far + 1`,
-               #variables = `variable`,
-               #variable-alist = $variable-alist) mode="render-definiens";
-  }
-}
-
-tpl [quantifier[@type = "existential"]] (#started, #variables, #variable-number, #variable-alist) mode="render-definiens" {
-  if [$started = "1"] {
-    if [$variables] {
-      $variable = `$variables[1]`;
-      $variable-name = `$variable/@name`;
-      $item = `concat ($variable-name, ":", $variable-number)`;
-      $new-variable-alist = add-to-token-string (#item = $item, #token-string = $variable-alist);
-      <Not {
-        <For {
-          <Typ {
-            @kind = "M";
-            @nr = "1";
-            <Cluster;
-          }
-          <Not {
-            apply [.] (#started = "1",
-                       #variables = `$variables[position() > 1]`,
-                       #variable-number = `$variable-number + 1`,
-                       #variable-alist = $new-variable-alist) mode="render-definiens";
-
+    // Clausification
+    for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "clausify"]]] {
+      <Theorem {
+        @kind = "D";
+        <Not {
+          <And {
+            for-each [source] {
+              for-each [non-logical-data[@name = "inference"]] {
+                for-each [*[position() = last()]] {
+                  for-each [*[@name][1]] {
+                    $n = `@name`;
+                    if [not(key ("formulas", $n))] {
+                      $message = `concat ("Error: unable to look up the formula called '", $n, "'.")`;
+                      apply [.] (#message = $message) mode="die";
+                    }
+                    for-each [key ("formulas", $n)] {
+                      apply [.] (#variable-alist = ",,") mode="render-definiens";
+                    }
+                  }
+                }
+              }
+            }
+            <Not {
+              apply [.] (#variable-alist = ",,") mode="render-definiens";
+            }
           }
         }
       }
-    } else {
-      apply [*[position() = last()]] (#variable-alist = $variable-alist) mode="render-definiens";
+
     }
-  } else {
-    $num-variables-bound-so-far
-      = count-items-in-token-string (#token-string = $variable-alist);
-    apply [.] (#started = "1",
-               #variable-number = `$num-variables-bound-so-far + 1`,
-               #variables = `variable`,
-               #variable-alist = $variable-alist) mode="render-definiens";
-  }
-}
-
-tpl [conjunction] (#variable-alist) mode="render-definiens" {
-  <And {
-    apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
-  }
-}
-
-tpl [disjunction] (#variable-alist) mode="render-definiens" {
-  <Not {
-    <And {
-      <Not {
-        apply [*[1]] (#variable-alist = $variable-alist) mode="render-definiens";
-      }
-      <Not {
-        apply [*[2]] (#variable-alist = $variable-alist) mode="render-definiens";
-      }
-    }
-  }
-}
-
-tpl [negation] (#variable-alist) mode="render-definiens" {
-  <Not {
-    apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
-  }
-}
-
-tpl [implication] (#variable-alist) mode="render-definiens" {
-  <Not {
-    <And {
-      apply [*[1]] (#variable-alist = $variable-alist) mode="render-definiens";
-      <Not {
-        apply [*[2]] (#variable-alist = $variable-alist) mode="render-definiens";
-      }
-    }
-  }
-}
-
-tpl [equivalence] (#variable-alist) mode="render-definiens" {
-  <And {
-    <Not {
-      <And {
-        apply [*[1]] (#variable-alist = $variable-alist) mode="render-definiens";
-        <Not {
-          apply [*[2]] (#variable-alist = $variable-alist) mode="render-definiens";
-        }
-      }
-    }
-    <Not {
-      <And {
-        apply [*[2]] (#variable-alist = $variable-alist) mode="render-definiens";
-        <Not {
-          apply [*[1]] (#variable-alist = $variable-alist) mode="render-definiens";
-        }
-      }
-    }
-  }
-}
-
-tpl [predicate[@name = "="]] (#variable-alist) mode="render-definiens" {
-  <Pred {
-    @kind = "R";
-    @nr = "1";  // magic constant: equality is the very first relation in HIDDEN
-    apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
-  }
-}
-
-tpl [predicate[not(@name = "=")]] (#variable-alist) mode="render-definiens" {
-  $n = `@name`;
-  <Pred {
-    @kind = "R";
-    for-each [ancestor::tstp] {
-      for-each [descendant::predicate[@name = $n][1]] {
-        $position = `count (preceding::predicate[not(@name = preceding::predicate/@name)]) + 1`;
-        @nr = `$position + 2`;
-      }
-    }
-    apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
-  }
-}
-
-tpl [variable[@name]] (#variable-alist) mode="render-definiens" {
-  $n = `@name`;
-  $pseudo-token = `concat (",", $n, ":")`;
-  if [contains ($variable-alist, $pseudo-token)] {
-    $after-pseudo-token = `substring-after ($variable-alist, $pseudo-token)`;
-    $variable-number = `substring-before ($after-pseudo-token, ",")`;
-    <Var {
-      @nr = $variable-number;
-    }
-  } else {
-    $message = `concat ("Error: the variable '", $n, "' does not appear in the variable association list '", $variable-alist, "'.")`;
-    apply [.] (#message = $message) mode="die";
-  }
-}
-
-tpl [function[@name]] (#variable-alist) mode="render-definiens" {
-  $n = `@name`;
-  <Func {
-    @kind = "K";
-    for-each [ancestor::tstp] {
-      for-each [descendant::function[@name = $n][1]] {
-        $position
-          = `count (preceding::function[not(@name = preceding::function/@name)
-                                        and not(@name = ancestor::function/@name)])
-             + 1`;
-        @nr = $position;
-      }
-    }
-    apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
   }
 }
