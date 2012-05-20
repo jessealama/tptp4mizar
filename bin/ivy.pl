@@ -33,7 +33,7 @@ my $opt_help = 0;
 my $opt_verbose = 0;
 my $opt_debug = 0;
 my $opt_timeout = 60;
-my $opt_format = 'lisp';
+my $opt_format = 'tptp';
 
 sub process_commandline {
     my $options_ok = GetOptions (
