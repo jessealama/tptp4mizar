@@ -27,6 +27,7 @@ Readonly my $SP => q{ };
 Readonly my $TPTP2X => 'tptp2X';
 Readonly my $PROVER9 => 'prover9';
 Readonly my $PROOFTRANS => 'prooftrans';
+Readonly my $XSLTPROC => 'xsltproc';
 
 my $opt_man = 0;
 my $opt_help = 0;
@@ -91,7 +92,7 @@ sub process_commandline {
 }
 
 sub ensure_stuff_is_runnable {
-    my @programs = ($PROVER9, $TPTP2X, $PROOFTRANS);
+    my @programs = ($PROVER9, $TPTP2X, $PROOFTRANS, $XSLTPROC);
     foreach my $program (@programs) {
 	if (! can_run ($program)) {
 	    say {*STDERR} error_message ('We require', $SP, $program, $SP, 'but it could not be found.');
