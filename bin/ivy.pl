@@ -21,11 +21,16 @@ use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
 use Utils qw(is_readable_file
 	     error_message
-	     run_harness);
-use Xsltproc qw(apply_stylesheet);
+	     run_harness
+	     tptp_xmlize
+	     tptp_fofify
+	     apply_stylesheet
+	     normalize_variables);
 
 # Strings
 Readonly my $SP => q{ };
+Readonly my $LF => "\N{LF}";
+Readonly my $EMPTY_STRING => q{};
 
 # Programs
 Readonly my $TPTP2X => 'tptp2X';
