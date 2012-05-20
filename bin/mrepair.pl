@@ -54,7 +54,7 @@ Readonly my %STYLES => (
     'eprover' => 0,
     'tstp' => 0,
     # 'tstp' => 0,
-    # 'ivy' => 0,
+    'ivy' => 0,
 );
 
 sub summarize_styles {
