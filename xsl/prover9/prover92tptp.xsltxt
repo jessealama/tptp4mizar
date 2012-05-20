@@ -415,6 +415,65 @@ tpl parse-composite-non-quantified-formula (#string) {
     $first-formula = `substring-before ($string, " ")`;
     $after-space = `substring-after ($string, " ")`;
     choose {
+      when [starts-with ($after-space, "=")] {
+        $before-equality-sign = `substring-before ($after-space, "=")`;
+        $after-equality-sign = `substring-after ($after-space, "=")`;
+        $normalized = `normalize-space ($after-equality-sign)`;
+        if [contains ($normalized, " ")] {
+           $equality-rhs = `substring-before ($normalized, " ")`;
+           $after-second-space = `substring-after ($normalized, " ")`;
+           $normalized-after-second-space = `normalize-space ($after-second-space)`;
+           $next-formula = `substring-after ($normalized-after-second-space, " ")`;
+          // ugh
+          choose {
+            when [starts-with ($normalized-after-second-space, "&")] {
+              <conjunction {
+                <predicate {
+                  @"name" = "=";
+                  parse-term (#string = $first-formula);
+      	          parse-term (#string = $equality-rhs);
+                }
+                parse-ladr-formula (#string = `concat ("(", $next-formula, ")")`);
+              }
+            }
+            when [starts-with ($normalized-after-second-space, "|")] {
+              <disjunction {
+                <predicate {
+                  @"name" = "=";
+                  parse-term (#string = $first-formula);
+      	          parse-term (#string = $equality-rhs);
+                }
+                parse-ladr-formula (#string = `concat ("(", $next-formula, ")")`);
+              }
+            }
+            when [starts-with ($normalized-after-second-space, "->")] {
+              <implication {
+                <predicate {
+                  @"name" = "=";
+                  parse-term (#string = $first-formula);
+      	          parse-term (#string = $equality-rhs);
+                }
+                parse-ladr-formula (#string = `concat ("(", $next-formula, ")")`);
+              }
+            }
+            otherwise {
+              $message = `concat ("Unable to parse the composite formula '", $string, "' because we don't know how to deal with the part '", $normalized, "' after the first equation.")`;
+              msg terminate="yes" $message;
+            }
+          }
+        } else {
+          // this is an equation
+          <predicate {
+            @"name" = "=";
+            parse-term (#string = $before-equality-sign);
+	    parse-term (#string = $normalized);
+          }
+        }
+        <disjunction {
+          parse-ladr-formula (#string = $first-formula);
+          parse-ladr-formula (#string = `concat ("(", $normalized, ")")`);
+        }
+      }
       when [starts-with ($after-space, "|")] {
         $after-disjunction-sign = `substring-after ($after-space, "|")`;
         $normalized = `normalize-space ($after-disjunction-sign)`;
@@ -427,6 +486,14 @@ tpl parse-composite-non-quantified-formula (#string) {
         $after-conjunction-sign = `substring-after ($after-space, "&")`;
         $normalized = `normalize-space ($after-conjunction-sign)`;
         <conjunction {
+          parse-ladr-formula (#string = $first-formula);
+          parse-ladr-formula (#string = `concat ("(", $normalized, ")")`);
+        }
+      }
+      when [starts-with ($after-space, "->")] {
+        $after-implication-sign = `substring-after ($after-space, "->")`;
+        $normalized = `normalize-space ($after-implication-sign)`;
+        <implication {
           parse-ladr-formula (#string = $first-formula);
           parse-ladr-formula (#string = `concat ("(", $normalized, ")")`);
         }
@@ -450,6 +517,10 @@ tpl parse-ladr-formula (#string) {
         @"name" = "false";
       }
     }
+    when [starts-with ($string, "((")] {
+      $sans-outer-parens = drop-enclosing-parentheses (#string = $string);
+      parse-ladr-formula (#string = $sans-outer-parens);
+    }
     when [starts-with ($string, "(all ")] {
       $sans-outer-parens = drop-enclosing-parentheses (#string = $string);
       parse-quantifier-prefix (#string = $sans-outer-parens);
@@ -466,7 +537,8 @@ tpl parse-ladr-formula (#string) {
     }
     when [starts-with ($string, "(")] {
       if [contains ($string, "|")
-            or contains ($string, "&")] {
+            or contains ($string, "&")
+            or contains ($string, "->")] {
         $sans-outer-parens = drop-enclosing-parentheses (#string = $string);
         parse-composite-non-quantified-formula (#string = $sans-outer-parens);
       } else {
