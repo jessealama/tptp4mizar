@@ -304,7 +304,8 @@ sub normalize_tptp_formula_node {
 sub normalize_variables {
     my $tptp_file = shift;
     my $parser = XML::LibXML->new ();
-    my $tptp_document = $parser->parse_file ($tptp_file);
+    my $tptp_document = is_file ($tptp_file) ? $parser->parse_file ($tptp_file)
+	: $parser->parse_string ($tptp_file);
     my $normalized_tptp_document = XML::LibXML::Document->createDocument ();
     my $normalized_tptp_root = XML::LibXML::Element->new ('tstp');
     $normalized_tptp_document->setDocumentElement ($normalized_tptp_root);
