@@ -24,6 +24,7 @@ use Utils qw(sort_tstp_solution
 
 my $opt_man = 0;
 my $opt_help = 0;
+my $opt_format = 'tptp';
 
 Readonly my $EMPTY_STRING => q{};
 
@@ -32,6 +33,7 @@ sub process_commandline {
     my $options_ok = GetOptions (
 	'help' => \$opt_help,
 	'man' => \$opt_man,
+	'format=s' => \$opt_format,
     );
 
     if (! $options_ok) {
@@ -58,6 +60,13 @@ sub process_commandline {
 	pod2usage (
 	    -exitval => 1,
 	);
+    }
+
+    if ($opt_format ne 'tptp' && $opt_format ne 'xml') {
+	pod2usage (
+	    -message => error_message ('The only acceptable values for the format option are \'tptp\' and \'xml\'.'),
+	    -exitval => 1,
+	    );
     }
 
     return;
@@ -122,6 +131,11 @@ my $ivy_xml = tptp_xmlize ($fofifed);
 my $sorted_ivy_xml = sort_tstp_solution ($ivy_xml);
 my $normalized_steps_xml = normalize_tstp_steps ($sorted_ivy_xml);
 
+if ($opt_format eq 'xml') {
+    print $normalized_steps_xml;
+    exit $?;
+}
+
 my $render_tptp_stylesheet = "$RealBin/../xsl/tptp/render-tptp.xsl";
 
 my $rendered = apply_stylesheet ($render_tptp_stylesheet,
@@ -133,6 +147,8 @@ my $rendered = apply_stylesheet ($render_tptp_stylesheet,
 			     );
 
 print $rendered;
+
+exit $?;
 
 __END__
 
