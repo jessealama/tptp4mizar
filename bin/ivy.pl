@@ -15,6 +15,7 @@ use Getopt::Long;
 use Pod::Usage;
 use charnames qw(:full);
 use List::MoreUtils qw(pairwise first_index all);
+use Perl6::Slurp;
 
 # Our stuff
 use FindBin qw($RealBin);
