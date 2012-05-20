@@ -40,7 +40,7 @@ tpl [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name
     <Block {
       @kind = "Proof";
       for-each [*[1]] {
-        for-each [descendant::variable[not(@name = preceding::variable/@name)]] {
+        for-each [self::quantifier[@type = "universal"]/variable | descendant::quantifier[@type = "universal"]/variable] {
           <Item {
             @kind = "Generalization";
             <Implicitly-Qualified-Segment {
