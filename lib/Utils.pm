@@ -316,12 +316,14 @@ sub normalize_variables {
 
     my $tptp_document_as_string = $normalized_tptp_document->toString (1);
 
-    open (my $tptp_fh, '>', $tptp_file)
-	or die error_message ('Unable to open an output filehandle for', $SP, $tptp_file);
-    say {$tptp_fh} $tptp_document_as_string
-	or die error_message ('Unable to write the normalized contents of', $SP, $tptp_file);
-    close $tptp_fh
-	or die error_message ('Unable to close the output filehandle for', $SP, $tptp_file);
+    if (is_file ($tptp_file)) {
+	open (my $tptp_fh, '>', $tptp_file)
+	    or die error_message ('Unable to open an output filehandle for', $SP, $tptp_file);
+	say {$tptp_fh} $tptp_document_as_string
+	    or die error_message ('Unable to write the normalized contents of', $SP, $tptp_file);
+	close $tptp_fh
+	    or die error_message ('Unable to close the output filehandle for', $SP, $tptp_file);
+    }
 
     return $tptp_document_as_string;
 }
@@ -375,11 +377,20 @@ sub tptp_fofify {
 
     my $tptp4X_errs = $EMPTY_STRING;
     my $tptp4X_out = $EMPTY_STRING;
-    my @tptp4X_call = ('tptp4X', '-tfofify', $tptp_file);
+    my @tptp4X_call = ('tptp4X', '-tfofify', '--');
 
-    my $tptp4X_harness = harness (\@tptp4X_call,
-				  '>', \$tptp4X_out,
-				  '2>', \$tptp4X_errs);
+    my $tptp4X_harness = undef;
+    if (is_file ($tptp_file)) {
+	$tptp4X_harness = harness (\@tptp4X_call,
+				   '<', $tptp_file,
+				   '>', \$tptp4X_out,
+				   '2>', \$tptp4X_errs);
+    } else {
+	$tptp4X_harness = harness (\@tptp4X_call,
+				   '<', \$tptp_file,
+				   '>', \$tptp4X_out,
+				   '2>', \$tptp4X_errs);
+    }
 
     $tptp4X_harness->start ();
     $tptp4X_harness->finish ();
