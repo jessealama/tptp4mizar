@@ -90,8 +90,6 @@ sub apply_stylesheet {
     my $xsltproc_out = '';
     my $xsltproc_err = '';
 
-    warn 'document = ', $LF, $document;
-
     my $xsltproc_harness
 	= harness (\@xsltproc_call,
 		   '<', (is_file ($document) ? $document : \$document),
