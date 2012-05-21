@@ -317,7 +317,7 @@ tpl balance-parens (#string, #solution, #counter) {
       }
     }
     otherwise {
-      $message = `concat ("Error: we cannot balance the parentheses of a string that contains neither a left nor a right parenthesis.")`;
+      $message = `concat ("Error: we cannot balance the parentheses of a string ('", $string, "') that contains neither a left nor a right parenthesis.")`;
       msg terminate="yes" $message;
     }
   }
