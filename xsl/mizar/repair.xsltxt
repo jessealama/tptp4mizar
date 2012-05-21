@@ -168,9 +168,6 @@ tpl [Text-Proper] (#errs) {
           for-each [*[@spelling]] {
             $n = `@spelling`;
             choose {
-              when [$n = "SKOLEM"] {
-                // ignore; not sure how to deal with this now
-              }
               when [key ("formulas", $n)] {
                 for-each [key ("formulas", $n)] {
                   apply [.] mode="axiom";
