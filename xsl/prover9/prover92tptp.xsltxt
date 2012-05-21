@@ -537,7 +537,7 @@ tpl parse-composite-formula (#string) {
           $after-first-space = `substring-after ($after-negation-sign, " ")`;
           choose {
             when [starts-with ($after-first-space, "& ")] {
-              $after-conjunction-sign = `substring-after ($before-first-space, "& ")`;
+              $after-conjunction-sign = `substring-after ($after-first-space, "& ")`;
               <conjunction {
                 <negation {
                   parse-ladr-formula (#string = $before-first-space);
@@ -546,7 +546,7 @@ tpl parse-composite-formula (#string) {
               }
             }
             when [starts-with ($after-first-space, "| ")] {
-              $after-disjunction-sign = `substring-after ($before-first-space, "| ")`;
+              $after-disjunction-sign = `substring-after ($after-first-space, "| ")`;
               <disjunction {
                 <negation {
                   parse-ladr-formula (#string = $before-first-space);
@@ -555,7 +555,7 @@ tpl parse-composite-formula (#string) {
               }
             }
             when [starts-with ($after-first-space, "-> ")] {
-              $after-implication-sign = `substring-after ($before-first-space, "-> ")`;
+              $after-implication-sign = `substring-after ($after-first-space, "-> ")`;
               <implication {
                 <negation {
                   parse-ladr-formula (#string = $before-first-space);
@@ -564,7 +564,7 @@ tpl parse-composite-formula (#string) {
               }
             }
             when [starts-with ($after-first-space, "<-> ")] {
-              $after-biconditional-sign = `substring-after ($before-first-space, "<-> ")`;
+              $after-biconditional-sign = `substring-after ($after-first-space, "<-> ")`;
               <equivalence {
                 <negation {
                   parse-ladr-formula (#string = $before-first-space);
