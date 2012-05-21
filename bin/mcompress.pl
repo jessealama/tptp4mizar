@@ -152,25 +152,6 @@ sub process_commandline {
     return $article_miz;
 }
 
-sub slurp {
-    my $path_or_fh = shift;
-
-    open( my $fh, '<', $path_or_fh )
-        or die error_message ('Unable to open the file (or filehandle) ', $path_or_fh, $FS);
-
-    my $contents;
-    { local $/; $contents = <$fh>; }
-
-    close $fh
-        or die error_message ('Unable to close the file (or filehandle) ', $path_or_fh,$FS);
-
-    if (wantarray) {
-	return split ("\N{LF}", $contents);
-    } else {
-	return $contents;
-    }
-}
-
 sub sensible_err_file {
     my $article_err = shift;
 
