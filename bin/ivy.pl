@@ -267,14 +267,18 @@ my $problem_xml = tptp_xmlize ($problem);
 
 
 my @prover9_call = ($PROVER9);
-my @prooftrans_expand_call = ($PROOFTRANS, 'expand', 'renumber');
+my @prooftrans_expand_call = ($PROOFTRANS);
 my @prooftrans_xml_call = ($PROOFTRANS, 'xml');
-my @prooftrans_ivy_call = ($PROOFTRANS, 'ivy');
+my @prooftrans_ivy_call = ($PROOFTRANS, 'renumber', 'ivy');
 
 my $tptp_to_prover9_stylesheet = "$RealBin/../xsl/prover9/tptp2prover9.xsl";
 
 my $prover9_problem = apply_stylesheet ($tptp_to_prover9_stylesheet,
 					$problem_xml);
+
+if ($opt_debug) {
+    warn 'prover9 problem =', $LF, $prover9_problem;
+}
 
 my $prover9_out = run_harness (\@prover9_call, $prover9_problem);
 my $prover9_expanded = run_harness (\@prooftrans_expand_call, $prover9_out);
@@ -287,7 +291,13 @@ if ($opt_format eq 'lisp') {
 
 # Extract the clausification part of the proof
 
-my $prooftrans_xml = run_harness (\@prooftrans_xml_call, $prover9_expanded);
+my $prooftrans_xml = run_harness (\@prooftrans_xml_call, $prover9_out);
+
+if ($opt_debug) {
+    warn 'prover9 output =', $LF, $prover9_out;
+    warn 'prooftrans xml =', $LF, $prooftrans_xml;
+}
+
 my $prover9_to_tptp_stylesheet = "$RealBin/../xsl/prover9/prover92tptp.xsl";
 my $clausification_stylesheet = "$RealBin/../xsl/prover9/clausification.xsl";
 my $clausification_prooftrans_xml = apply_stylesheet ($clausification_stylesheet,
@@ -299,7 +309,9 @@ my $clausification_tptp_xml = apply_stylesheet ($prover9_to_tptp_stylesheet,
 my $clausification_tptp = apply_stylesheet ($render_tptp_stylesheet,
 					    $clausification_tptp_xml);
 
-# warn 'clausification tptp = ', $clausification_tptp;
+if ($opt_debug) {
+    warn 'clausification tptp xml = ', $LF, $clausification_tptp_xml;
+}
 
 $clausification_tptp = tptp_fofify ($clausification_tptp);
 $clausification_tptp_xml = tptp_xmlize ($clausification_tptp);
