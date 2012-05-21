@@ -1,5 +1,6 @@
 stylesheet "1.0";
 include "../utils/token-strings.xsl";
+include "../utils/die.xsl";
 output method="xml" indent="yes";
 
 //////////////////////////////////////////////////////////////////////
@@ -20,53 +21,6 @@ key "labelled-formulas"
 //////////////////////////////////////////////////////////////////////
 // Utilities
 //////////////////////////////////////////////////////////////////////
-
-tpl [*] mode="trace" {
-  msg "We are about to terminate the XSLT processor.  Here's where we are:";
-  apply [.] mode="trace-recursive";
-}
-
-tpl [*] mode="trace-recursive" {
-  $n = `name (.)`;
-  $position = `count (preceding-sibling::*[name() = $n]) + 1`;
-  if [parent::*] {
-    apply [..] mode="trace-recursive";
-  }
-  `$n`; "["; `$position`; "]"; "\n";
-}
-
-tpl [*] (#message) mode="die" {
-  apply [.] mode="trace";
-  msg terminate="yes" $message;
-}
-
-//////////////////////////////////////////////////////////////////////
-// Templates
-//////////////////////////////////////////////////////////////////////
-
-tpl [/] {
-  if [Text-Proper] {
-    apply [Text-Proper] (#ignore-inacc = "0");
-  } else {
-    msg terminate="yes" "Error: the Text-Proper root element is missing.";
-  }
-}
-
-tpl [*] (#ignore-inacc) {
-  $n = `name (.)`;
-  <$n {
-    for-each [@*] { copy-of `.`; }
-    apply [*] (#ignore-inacc = $ignore-inacc);
-  }
-}
-
-tpl [*] mode="copy" {
-  $n = `name (.)`;
-  <$n {
-    for-each [@*] { copy-of `.`; }
-    apply [*];
-  }
-}
 
 tpl fragile-recommendation-applied-to-any (#candidates) {
   if [$candidates] {
