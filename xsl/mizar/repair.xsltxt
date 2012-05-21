@@ -17,7 +17,9 @@ output method="xml" indent="yes";
 // Keys
 //////////////////////////////////////////////////////////////////////
 
-key "formulas" [Item[Proposition/Label[@spelling]]] `Proposition/Label[@spelling]/@spelling`;
+key "formulas"
+    [Item[Proposition/Label[@spelling]]]
+    `Proposition/Label[@spelling]/@spelling`;
 
 //////////////////////////////////////////////////////////////////////
 // Utilities
