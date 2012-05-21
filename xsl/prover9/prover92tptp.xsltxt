@@ -49,7 +49,7 @@ tpl drop-enclosing-parentheses (#string) {
 tpl parse-quantifier-prefix (#string) {
   choose {
     when [starts-with ($string, "(")] {
-      parse-ladr-formula (#string = $string);
+      parse-ladr-formula (#string = `concat ("(", $string, ")")`);
     }
     when [starts-with ($string, "exists")] {
       $after-first-space = `substring-after ($string, " ")`;
