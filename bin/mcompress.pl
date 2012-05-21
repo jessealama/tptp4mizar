@@ -32,6 +32,7 @@ Readonly my $EMPTY_STRING => q{};
 Readonly my $SP => q{ };
 Readonly my $COLON => q{:};
 Readonly my $FS => q{.};
+Readonly my $LF => "\N{LF}";
 
 # Programs
 Readonly my @CORE_PROGRAMS => (
