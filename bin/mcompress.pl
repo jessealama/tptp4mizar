@@ -406,7 +406,13 @@ if ($opt_debug) {
 }
 
 while ($compression_recommendations ne ',,'
-	   && ! defined $applied_recommendations{$compression_recommendations}) {
+	   && ( ! defined $applied_recommendations{$compression_recommendations}
+		    || $applied_recommendations{$compression_recommendations} < 2)) {
+#              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# permit looking at a recommentation 2 times, in case we are able to
+# perform some compresisons that don't trigger errors (and hence may
+# lead to identical recommendations coming up)
 
     # Save our work
     if (-e $fresh_article_wsx) {
@@ -415,7 +421,13 @@ while ($compression_recommendations ne ',,'
     copy ($fresh_article, $fresh_article_old);
 
     apply_recommendations ($fresh_article, $compression_recommendations);
-    $applied_recommendations{$compression_recommendations} = 0;
+    if (defined $applied_recommendations{$compression_recommendations}) {
+	my $old_val = $applied_recommendations{$compression_recommendations};
+	$applied_recommendations{$compression_recommendations} = $old_val + 1;
+    } else {
+	$applied_recommendations{$compression_recommendations} = 0;
+    }
+
     $compression_recommendations = recommend_compressions ($fresh_article);
 
     if ($opt_debug) {
