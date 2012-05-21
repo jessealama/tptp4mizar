@@ -224,7 +224,7 @@ sub is_compressible {
 		$compressible = 1;
 		last;
 	    } else {
-		die error_message ('It appears that', $SP, $program, $SP, 'did not work correctly on', $SP, $article, $FS);
+		die error_message ('It appears that', $SP, $program, $SP, 'did not work correctly on', $SP, $article, $FS, 'Here is the .err file:', $LF, slurp ($article_err));
 	    }
 	}
     }
