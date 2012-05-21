@@ -450,26 +450,18 @@ tpl parse-atomic-formula (#string = $string) {
 }
 
 tpl parse-composite-formula (#string) {
+  msg `concat ("Parsing the composite formula '", $string, "'")`;
   $sans-outer-parens = drop-enclosing-parentheses (#string = $string);
   choose {
-    when [starts-with ($sans-outer-parens, "&(")] {
-      $after-conjunction-sign = `substring-after ($sans-outer-parens, "&")`;
-      $sans-parens = drop-enclosing-parentheses (#string = $after-conjunction-sign);
-      $first-formula = first-term-of-term-string (#string = $sans-parens);
-      $after-first-term = `substring-after ($sans-parens, $first-formula)`;
-      <conjunction {
-        parse-ladr-formula (#string = $first-formula);
-        parse-ladr-formula (#string = `substring-after ($after-first-term, ",")`);
-      }
-    }
     when [starts-with ($sans-outer-parens, "(")] {
       $balanced = balance-parens (#string = `substring-after ($sans-outer-parens, "(")`,
-      	      		        #solution = "(",
-  				#counter = "1");
+      	      		          #solution = "(",
+  				  #counter = "1");
       $after-balanced = `substring-after ($sans-outer-parens, $balanced)`;
+      msg `concat ("$after-balenced = '", $after-balanced, "'")`;
       choose {
-        when [substring-after ($sans-outer-parens, $after-balanced) = ""] {
-          parse-ladr-formula (#string = $sans-outer-parens);
+        when [$after-balanced = ""] {
+          parse-ladr-formula (#string = $balanced);
         }
         when [starts-with ($after-balanced, " & ")] {
           $after-conjunction-sign = `substring-after ($after-balanced, " & ")`;
@@ -492,10 +484,38 @@ tpl parse-composite-formula (#string) {
             parse-ladr-formula (#string = $after-implication-sign);
           }
         }
+        when [starts-with ($after-balanced, " <-> ")] {
+          $after-biconditional-sign = `substring-after ($after-balanced, " <-> ")`;
+          <equivalence {
+            parse-ladr-formula (#string = $balanced);
+            parse-ladr-formula (#string = $after-biconditional-sign);
+          }
+        }
         otherwise {
           $message = `concat ("Error: don't know how to parse '", $string, "' as a composite formula.")`;
           msg terminate="yes" $message;
         }
+      }
+    }
+    when [starts-with ($sans-outer-parens, "implies(")] {
+      $after-implication-symbol = `substring-after ($sans-outer-parens, "implies")`;
+      $sans-parens = drop-enclosing-parentheses (#string = $after-implication-symbol);
+      $first-formula = first-term-of-term-string (#string = $sans-parens);
+      $after-first-term = `substring-after ($sans-parens, $first-formula)`;
+      $next-formula = `substring-after ($after-first-term, ",")`;
+      <implication {
+        parse-ladr-formula (#string = $first-formula);
+        parse-ladr-formula (#string = `concat ("(", $next-formula, ")")`);
+      }
+    }
+    when [starts-with ($sans-outer-parens, "&(")] {
+      $after-conjunction-sign = `substring-after ($sans-outer-parens, "&")`;
+      $sans-parens = drop-enclosing-parentheses (#string = $after-conjunction-sign);
+      $first-formula = first-term-of-term-string (#string = $sans-parens);
+      $after-first-term = `substring-after ($sans-parens, $first-formula)`;
+      <conjunction {
+        parse-ladr-formula (#string = $first-formula);
+        parse-ladr-formula (#string = `substring-after ($after-first-term, ",")`);
       }
     }
     when [starts-with ($sans-outer-parens, "-")] {
@@ -632,14 +652,20 @@ tpl parse-composite-formula (#string) {
               parse-ladr-formula (#string = $after-implication-sign);
             }
           }
+          when [starts-with ($after-first-space, "<-> ")] {
+            $after-biconditional-sign = `substring-after ($after-first-space, "<-> ")`;
+            <equivalence {
+              parse-atomic-formula (#string = $before-first-space);
+              parse-ladr-formula (#string = $after-biconditional-sign);
+            }
+          }
           otherwise {
             $message = `concat ("Error: don't know how to parse '", $string, "' as a composite formula.")`;
             msg terminate="yes" $message;
           }
         }
       } else {
-        $message = `concat ("Error: don't know how to parse '", $string, "' as a composite formula.")`;
-        msg terminate="yes" $message;
+        parse-atomic-formula (#string = $sans-outer-parens);
       }
     }
   }
