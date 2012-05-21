@@ -6,6 +6,7 @@ use warnings;
 require v5.10.0; # for the 'say' feature
 use feature 'say';
 
+use Carp qw(croak confess);
 use Data::Dumper;
 use Pod::Usage;
 use Getopt::Long;
