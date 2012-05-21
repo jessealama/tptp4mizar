@@ -29,11 +29,15 @@ tpl fragile-recommendation-applied-to-any (#candidates) {
     $candidate-col = `$candidate/@col`;
     $token-1 = `concat (",", $candidate-line, ":", $candidate-col, ":", "604", ",")`;
     $token-2 = `concat (",", $candidate-line, ":", $candidate-col, ":", "602", ",")`;
+    $token-3 = `concat (",", $candidate-line, ":", $candidate-col, ":", "605", ",")`;
     choose {
       when [contains ($recommendations, $token-1)] {
         "1";
       }
       when [contains ($recommendations, $token-2)] {
+        "1";
+      }
+      when [contains ($recommendations, $token-3)] {
         "1";
       }
       otherwise {
