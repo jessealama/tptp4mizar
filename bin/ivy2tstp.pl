@@ -12,6 +12,7 @@ use IPC::Cmd qw(can_run);
 use IPC::Run qw(harness);
 use Readonly;
 use File::Temp qw(tempfile);
+use charnames qw(:full);
 
 use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
@@ -26,7 +27,9 @@ my $opt_man = 0;
 my $opt_help = 0;
 my $opt_format = 'tptp';
 
+# Strings
 Readonly my $EMPTY_STRING => q{};
+Readonly my $LF => "\N{LF}";
 
 sub process_commandline {
 
