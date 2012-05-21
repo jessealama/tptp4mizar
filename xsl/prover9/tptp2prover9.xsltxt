@@ -1,0 +1,126 @@
+stylesheet "1.0";
+include "../utils/die.xsl";
+output method="text";
+
+//////////////////////////////////////////////////////////////////////
+// Utilities
+//////////////////////////////////////////////////////////////////////
+
+tpl list (#separ, #elems) {
+  for-each [$elems] {
+    apply[.];
+    if [not(position()=last())] {
+      copy-of $separ;
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+tpl [*] {
+  $n = `name (.)`;
+  $message = `concat ("We have arrived at an unhandled ", $n, " node.")`;
+  apply [.] (#message = $message) mode="die";
+}
+
+tpl [/] {
+  if [tstp] {
+    apply [tstp];
+  } else {
+    msg terminate="yes" "Error: the required tstp document element is missing.";
+  }
+}
+
+tpl [tstp] {
+  "set(prolog_style_variables)."; "\n";
+  "op(400,infix,\"&\")."; "\n";
+  "op(400,infix,\"|\")."; "\n";
+  "op(400,infix,\"->\")."; "\n";
+  "op(ordinary,[\"=\"])."; "\n";
+  "formulas(sos)."; "\n";
+  if [formula[@status = "conjecture"]] {
+    for-each [formula[@status = "conjecture"]] {
+      apply [.] mode="negate"; "\n";
+    }
+  }
+  if [formula[not(@status = "conjecture")]] {
+    for-each [formula[not(@status = "conjecture")]] {
+      apply [.]; "\n";
+    }
+  }
+  "end_of_list."; "\n";
+}
+
+tpl [formula] mode="negate" {
+  "-("; apply [*[1]]; ")"; "\n";
+  "# label("; `@name`; ") # label("; `@status`; ").";
+}
+
+tpl [formula] {
+  apply [*[1]]; "\n";
+  "# label("; `@name`; ") # label("; `@status`; ").";
+}
+
+//////////////////////////////////////////////////////////////////////
+// Rendering TPTP formulas
+//////////////////////////////////////////////////////////////////////
+
+tpl [implication] {
+  "("; apply [*[1]]; " -> "; apply [*[2]]; ")";
+}
+
+tpl [equivalence] {
+  "("; apply [*[1]]; " <-> "; apply [*[2]]; ")";
+}
+
+tpl [conjunction] {
+  "("; apply [*[1]]; " & "; apply [*[2]]; ")";
+}
+
+tpl [disjunction] {
+  "("; apply [*[1]]; " | "; apply [*[2]]; ")";
+}
+
+tpl [negation] {
+  "-("; apply [*[1]]; ")";
+}
+
+tpl [quantifier[@type = "universal"]] {
+  "(";
+  for-each [variable] {
+    "all"; " "; apply [.]; " ";
+  }
+  "("; apply [*[position() = last()]]; ")";
+  ")";
+}
+
+tpl [quantifier[@type = "existential"]] {
+  "(";
+  for-each [variable] {
+    "exists"; " "; apply [.]; " ";
+  }
+  "("; apply [*[position() = last()]]; ")";
+  ")";
+}
+
+tpl [predicate] {
+  if [*] {
+    `@name`; "("; list (#separ = ",", #elems = `*`); ")";
+  } else {
+    `@name`;
+  }
+}
+
+tpl [function] {
+  if [*] {
+    `@name`; "("; list (#separ = ",", #elems = `*`); ")";
+  } else {
+    `@name`;
+  }
+}
+
+tpl [variable] {
+  `@name`;
+}
