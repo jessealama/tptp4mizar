@@ -265,14 +265,20 @@ if (scalar @ARGV == 1) {
 
 my $problem_xml = tptp_xmlize ($problem);
 
-my @tptp2X_call = ($TPTP2X, '-tstdfof', '-fprover9', '-q2', '-d-', '-');
+
 my @prover9_call = ($PROVER9);
 my @prooftrans_expand_call = ($PROOFTRANS, 'expand', 'renumber');
 my @prooftrans_xml_call = ($PROOFTRANS, 'xml');
 my @prooftrans_ivy_call = ($PROOFTRANS, 'ivy');
 
-my $tptp2X_out = run_harness (\@tptp2X_call, $problem);
-my $prover9_out = run_harness (\@prover9_call, $tptp2X_out);
+my $tptp_to_prover9_stylesheet = "$RealBin/../xsl/prover9/tptp2prover9.xsl";
+
+my $prover9_problem = apply_stylesheet ($tptp_to_prover9_stylesheet,
+					$problem_xml);
+
+warn 'prover9 problem:', $LF, $prover9_problem;
+
+my $prover9_out = run_harness (\@prover9_call, $prover9_problem);
 my $prover9_expanded = run_harness (\@prooftrans_expand_call, $prover9_out);
 my $ivy_proof_object = run_harness (\@prooftrans_ivy_call, $prover9_expanded);
 
