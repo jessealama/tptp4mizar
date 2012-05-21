@@ -1,4 +1,5 @@
 stylesheet "1.0";
+include "../utils/strings.xsl";
 output method="xml" indent="yes";
 
 //////////////////////////////////////////////////////////////////////
