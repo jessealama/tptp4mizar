@@ -40,6 +40,7 @@ Readonly my $SP => q{ };
 # Stylesheets
 Readonly my $STYLESHEET_HOME => "$RealBin/../xsl";
 Readonly my $TSTP_STYLESHEET_HOME => "${STYLESHEET_HOME}/tstp";
+Readonly my $IVY_STYLESHEET_HOME => "${STYLESHEET_HOME}/ivy";
 Readonly my $TPTP_STYLESHEET_HOME => "${STYLESHEET_HOME}/tptp";
 Readonly my $MIZAR_STYLESHEET_HOME => "${STYLESHEET_HOME}/mizar";
 Readonly my $EPROVER_STYLESHEET_HOME => "${STYLESHEET_HOME}/eprover";
@@ -202,7 +203,7 @@ apply_stylesheet (
     }
 );
 
-# Extract the problems
+# Extract the problems, render them as TPTP files, solve with Prover9
 my $xml_parser = XML::LibXML->new ();
 my $problems_doc = $xml_parser->parse_file ($repair_problems);
 
@@ -213,27 +214,9 @@ my $num_problems = $problems_root->findvalue ('count (*)');
 my @problems = $problems_root->findnodes ('*');
 
 my $render_tptp_stylesheet = "${TPTP_STYLESHEET_HOME}/render-tptp.xsl";
-foreach my $problem (@problems) {
-    my $problem_name = $problem->exists ('@name') ? $problem->findvalue ('@name') : undef;
-    if (! defined $problem_name) {
-	die error_message ('We found a problem without a name.');
-    }
-
-    my $problem_path = "${repair_dir}/${problem_name}.p.xml";
-
-    my $node_string = $problem->toString ();
-
-    open (my $problem_fh, '>', $problem_path)
-	or die error_message ('Cannot open an output filehandle for', $SP, $problem_path, ':', $SP, $!);
-    say {$problem_fh} '<?xml version="1.0" ?>';
-    say {$problem_fh} $node_string;
-    close $problem_fh
-	or die error_message ('Unable to close the output filehandle for', $SP, $problem_path);
-}
-
-
-
-# Render the problems as plain text TPTP files
+my $ivy_script = "$RealBin/ivy.pl";
+my $tptp_to_mizar_script = "$RealBin/tptp2miz.pl";
+my $compress_mizar_script = "$RealBin/mcompress.pl";
 foreach my $problem (@problems) {
     my $problem_name = $problem->exists ('@name') ? $problem->findvalue ('@name') : undef;
     if (! defined $problem_name) {
@@ -241,12 +224,18 @@ foreach my $problem (@problems) {
     }
 
     my $problem_xml_path = "${repair_dir}/${problem_name}.p.xml";
+
+    my $node_string = $problem->toString ();
+
+    open (my $problem_fh, '>', $problem_xml_path)
+	or die error_message ('Cannot open an output filehandle for', $SP, $problem_xml_path, ':', $SP, $!);
+    say {$problem_fh} '<?xml version="1.0" ?>';
+    say {$problem_fh} $node_string;
+    close $problem_fh
+	or die error_message ('Unable to close the output filehandle for', $SP, $problem_xml_path);
+
     my $problem_path = "${repair_dir}/${problem_name}.p";
     my $problem_tmp_path = "${repair_dir}/${problem_name}.p.tmp";
-
-    if (! is_readable_file ($problem_xml_path)) {
-	die error_message ('We failed to generate the XML TPTP representation for', $SP, $problem_name);
-    }
 
     normalize_variables ($problem_xml_path);
 
@@ -258,276 +247,77 @@ foreach my $problem (@problems) {
     tptp_fofify ($problem_path, $problem_path);
     tptp_xmlize ($problem_path, $problem_xml_path);
 
-}
+    my $ivy_solution_path = "${repair_dir}/${problem_name}.ivy.tptp";
 
-# Solve each of the problems with E
-my $skolemized_problem_stylesheet = "${EPROVER_STYLESHEET_HOME}/skolemized-problem.xsl";
-my $existential_stylesheet = "${TPTP_STYLESHEET_HOME}/existential.xsl";
-my $eprover_normalize_step_names_stylesheet
-    = "${EPROVER_STYLESHEET_HOME}/normalize-step-names.xsl";
-my $prefix_skolem_stylesheet = "${EPROVER_STYLESHEET_HOME}/prefix-skolems.xsl";
-foreach my $problem (@problems) {
-    my $problem_name = $problem->exists ('@name') ? $problem->findvalue ('@name') : undef;
-    if (! defined $problem_name) {
-	die error_message ('We found a problem without a name.');
-    }
+    my @ivy_call = ($ivy_script, $problem_path);
 
-    my $problem_path = "${repair_dir}/${problem_name}.p";
-
-    if (! is_readable_file ($problem_path)) {
-	die error_message ('We failed to generate a plain text TPTP representation for', $SP, $problem_name);
-    }
-
-    my $eprover_solution_path = "${repair_dir}/${problem_name}.p.eprover-proof";
-    my $eprover_xml_solution_path = "${repair_dir}/${problem_name}.p.eprover-proof.xml";
-
-    my @eprove_call = ('eprove', $problem_path);
-    my @epclextract_call = ('epclextract', '--tstp-out');
-
-    my $eprover_harness = harness (\@eprove_call,
-				   '|',
-				   \@epclextract_call,
-				   '>', $eprover_solution_path);
-
-    $eprover_harness->start ();
-    $eprover_harness->finish ();
-
-    # XMLize the E proof
-    my @tptp4X_call = ('tptp4X', '-fxml', $eprover_solution_path);
-    my $tptp4X_harness = harness (\@tptp4X_call,
-				  '>', $eprover_xml_solution_path);
-    $tptp4X_harness->start ();
-    $tptp4X_harness->finish ();
-
-
-    # Sort
-    sort_tstp_solution ($eprover_xml_solution_path);
-    normalize_variables ($eprover_xml_solution_path);
-    apply_stylesheet ($eprover_normalize_step_names_stylesheet,
-    		      $eprover_xml_solution_path,
-    		      $eprover_xml_solution_path);
-    apply_stylesheet ($prefix_skolem_stylesheet,
-		      $eprover_xml_solution_path,
-		      $eprover_xml_solution_path,
-		  {
-		      'prefix' => $problem_name,
-		  });
-
-    # Now extract a clausified problem that we will later give to prover9
-    my $skolemized_xml_problem = "${repair_dir}/${problem_name}-clausified.p.xml";
-    apply_stylesheet ($skolemized_problem_stylesheet,
-		      $eprover_xml_solution_path,
-		      $skolemized_xml_problem,
-		      {
-			  'skolem-prefix' => $problem_name,
-		      });
-
-    normalize_variables ($skolemized_xml_problem);
-
-    # Sanity check: there had better not be any existential
-    # quantifiers in the TPTP problem we just created
-    my $exists_existential = eval { apply_stylesheet ($existential_stylesheet,
-    						      $skolemized_xml_problem) };
-    if (! defined $exists_existential) {
-    	die error_message ('There is at least one existential quantifier appearing in ', $skolemized_xml_problem, ', but to proceed there cannot be any.');
-    }
-
-    my $skolemized_problem = "${repair_dir}/${problem_name}-clausified.p";
-    apply_stylesheet ($render_tptp_stylesheet,
-		      $skolemized_xml_problem,
-		      $skolemized_problem);
-
-    # Now extract the initial part of E's proof consisting just of the
-    # clausification part
-    my $clausification_subproof_xml = "${repair_dir}/${problem_name}-clausification.xml";
-    apply_stylesheet ($skolemized_problem_stylesheet,
-		      $eprover_xml_solution_path,
-		      $clausification_subproof_xml,
-		      {
-			  'only-skolemized-part' => '1',
-			  'tstp' => '1',
-			  'skolem-prefix' => $problem_name,
-		      });
-    sort_tstp_solution ($clausification_subproof_xml);
-    normalize_variables ($clausification_subproof_xml);
-    my $clausification_subproof = "${repair_dir}/${problem_name}-clausification.p";
-    apply_stylesheet ($render_tptp_stylesheet,
-		      $clausification_subproof_xml,
-		      $clausification_subproof);
-
-}
-
-# Now solve each of the problems with Prover9, and get an Ivy proof object
-my $ivy_to_tstp_script = "$RealBin/ivy2tstp.pl";
-foreach my $problem (@problems) {
-    my $problem_name = $problem->findvalue ('@name');
-    my $skolemized_problem_path = "${repair_dir}/${problem_name}-clausified.p";
-    my $ivy_solution_path = "${repair_dir}/${problem_name}-clausified.ivy-proof";
-    my $ivy_xml_solution_path = "${repair_dir}/${problem_name}-clausified.ivy-proof.xml";
     my $ivy_errs = $EMPTY_STRING;
+    my $ivy_harness = harness (\@ivy_call,
+			       '>', $ivy_solution_path,
+			       '2>', \$ivy_errs);
 
-    my @fofify_call = ('tptp4X', '-tfofify', $skolemized_problem_path);
-    my @tptp2X_call = ('tptp2X', '-tstdfof', '-fprover9', '-q2', '-d-', '-');
-    my @prover9_call = ('prover9');
-    my @prooftrans_expand_call = ('prooftrans', 'expand', 'renumber');
-    my @prooftrans_ivy_call = ('prooftrans', 'ivy');
+    print 'Repairing', $SP, $problem_name, $SP, 'with Prover9...';
 
-    my $prover9_harness = harness (\@fofify_call,
-				   '|',
-				   \@tptp2X_call,
-				   '|',
-				   \@prover9_call,
-				   '|',
-				   \@prooftrans_expand_call,
-				   '|',
-				   \@prooftrans_ivy_call,
-				   '>', $ivy_solution_path,
-				   '2>', \$ivy_errs);
+    $ivy_harness->start ();
+    $ivy_harness->finish ();
 
-    $prover9_harness->start ();
-    $prover9_harness->finish ();
+    my $ivy_exit_code = ($ivy_harness->results)[0];
 
-    my @ivy_to_tstp_call = ($ivy_to_tstp_script);
-    my @tptp4X_call = ('tptp4X', '-tfofify', '-fxml', '--');
+    if ($ivy_exit_code != 0) {
+	confess error_message ('The Ivy script did not terminate cleanly when working with', $SP, $problem_path);
+    }
 
-    my $ivy_to_tstp_harness = harness (\@ivy_to_tstp_call,
-				       '<', $ivy_solution_path,
-				       '|',
-				       \@tptp4X_call,
-				       '>', $ivy_xml_solution_path);
+    say 'done.';
+    print 'Mizarizing Prover9\'s refutation...';
 
-    $ivy_to_tstp_harness->start ();
-    $ivy_to_tstp_harness->finish ();
+    $ivy_solution_path = File::Spec->rel2abs ($ivy_solution_path);
+    my $repaired_db = "${repair_dir}/${problem_name}";
 
+    my @tptp_to_miz_call = ($tptp_to_mizar_script,
+			    '--style=ivy',
+			    "--db=${repaired_db}",
+			    $ivy_solution_path);
 
-}
+    my $tptp_to_miz_out = $EMPTY_STRING;
+    my $tptp_to_miz_errs = $EMPTY_STRING;
+    my $tptp_to_miz_harness = harness (\@tptp_to_miz_call,
+				       '>', \$tptp_to_miz_out,
+				       '2>', \$tptp_to_miz_errs);
 
-# Repair the proofs
-my @eprover_clausification_xmls = glob "${repair_dir}/*-clausification.xml";
-my @ivy_proof_xmls = glob "${repair_dir}/*-clausified.ivy-proof.xml";
+    $tptp_to_miz_harness->start ();
+    $tptp_to_miz_harness->finish ();
 
-# warn 'eprover clausification xmls:', $LF, Dumper (@eprover_clausification_xmls);
-# warn 'ivy proof xmls:', $LF, Dumper (@ivy_proof_xmls);
+    my $tptp_to_miz_exit_code = ($tptp_to_miz_harness->results)[0];
 
-my @solution_names = map { $_->findvalue ('@name') } @problems;
+    if ($tptp_to_miz_exit_code != 0) {
+	confess error_message ('The TPTP-to-Mizar script did not terminate cleanly when working with', $SP, $ivy_solution_path);
+    }
 
-my %solution_names = ();
-foreach my $name (@solution_names) {
-    $solution_names{$name} = 0;
-}
+    say 'done.';
 
-@solution_names = sort keys %solution_names;
+    print 'Compressing the Mizarization of', $SP, $problem_name, '...';
 
-my $solutions_token_string = ',' . join (',', @solution_names) . ',';
+    my @compress_call = ($compress_mizar_script, 'text/article.miz');
 
-my $repair_stylesheet = undef;
-if ($opt_style eq 'vampire') {
-    $repair_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/repair-vampire.xsl";
-} elsif ($opt_style eq 'eprover') {
-    $repair_stylesheet = "${EPROVER_STYLESHEET_HOME}/repair-eprover.xsl";
-} elsif ($opt_style eq 'tstp') {
-    $repair_stylesheet = "${TSTP_STYLESHEET_HOME}/repair-tstp.xsl";
-} else {
-    die error_message ('Unsuported proof style "', $opt_style, '".');
-}
+    my $compress_out = $EMPTY_STRING;
+    my $compress_errs = $EMPTY_STRING;
+    my $compress_harness = harness (\@compress_call);
 
-if (! is_readable_file ($repair_stylesheet)) {
-    die error_message ('The repair stylesheet does not exist at the expected location (', $repair_stylesheet, '), or it is unreadable.');
-}
+    chdir $repaired_db
+	or confess error_message ('Unable to change to the directory', $SP, $repaired_db, ':', $SP, $!);
+    $compress_harness->start ();
+    $compress_harness->finish ();
+    chdir $cwd;
 
-my $eprover_to_voc_stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2voc.xsl";
-my $eprover_to_dco_stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2dco.xsl";
-my $eprover_to_dno_stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2dno.xsl";
-my $eprover_to_the_stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2the.xsl";
-foreach my $problem (@problems) {
-    my $problem_name = $problem->findvalue ('@name');
-    my $solution_path = "${repair_dir}/${problem_name}.p.eprover-proof.xml";
-    my $solution_voc = "dict/${problem_name}.voc";
-    my $solution_dco = "prel/${problem_name}.dco";
-    my $solution_dno = "prel/${problem_name}.dno";
-    my $solution_the = "prel/${problem_name}.the";
+    my $compress_exit_code = ($compress_harness->results)[0];
 
-    apply_stylesheet ($eprover_to_voc_stylesheet,
-		      $solution_path,
-		      $solution_voc,
-		      {
-			  'only-skolems' => '1',
-		      }
-		  );
+    if ($compress_exit_code != 0) {
+	confess error_message ('The Mizar compressor script did not terminate cleanly when working with', $SP, $problem_name, '.  Here is its error output:', $LF, $compress_errs);
+    }
 
-    apply_stylesheet ($eprover_to_dco_stylesheet,
-		      $solution_path,
-		      $solution_dco,
-		      {
-			  'only-skolems' => '1',
-			  'article' => $problem_name,
-		      }
-		  );
-
-    apply_stylesheet ($eprover_to_dno_stylesheet,
-		      $solution_path,
-		      $solution_dno,
-		      {
-			  'only-skolems' => '1',
-			  'article' => $problem_name,
-		      }
-		  );
-
-    apply_stylesheet ($eprover_to_the_stylesheet,
-		      $solution_path,
-		      $solution_the,
-		      {
-			  'prel-directory' => File::Spec->rel2abs ('prel'),
-			  'article' => $problem_name,
-			  'only-skolems' => '1',
-			  'reference-dco' => 'article',
-		      }
-		  );
+    say 'done.';
 
 }
-
-# Normalize varibles in the original problem
-normalize_variables ('problem.xml');
-
-# Let's try the evl
-my $repaired_wsx = 'text/repaired.wsx';
-my $clausifications_token_string = ',' . join (',', map { basename ($_, '-clausification.xml') . ':' . File::Spec->rel2abs ($_) } @eprover_clausification_xmls) . ',';
-my $herbrand_proofs_token_string = ',' . join (',', map { basename ($_, '-clausified.ivy-proof.xml') . ':' . File::Spec->rel2abs ($_) } @ivy_proof_xmls) . ',';
-my $eprover_to_evl_stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2evl.xsl";
-apply_stylesheet ($eprover_to_evl_stylesheet,
-		  'problem.xml',
-		  'text/repaired.evl',
-		  {
-		      'external-proofs' => $solutions_token_string,
-		      'article' => 'ARTICLE',
-		  });
-
-
-if ($opt_debug) {
-    warn 'clausifications:', $LF, $clausifications_token_string;
-    warn 'herbrand-proofs:', $LF, $herbrand_proofs_token_string;
-}
-
-apply_stylesheet ($repair_stylesheet,
-		  'problem.xml',
-		  $repaired_wsx,
-		  {
-		      'clausifications' => $clausifications_token_string,
-		      'herbrand-proofs' => $herbrand_proofs_token_string,
-		      'article' => 'ARTICLE',
-		  });
-
-# Generate the .miz for the repaired .wsx
-my $repaired_miz = 'text/repaired.miz';
-my $pp_stylesheet = "${MIZAR_STYLESHEET_HOME}/pp.xsl";
-apply_stylesheet ($pp_stylesheet,
-		  $repaired_wsx,
-		  $repaired_miz,
-		  {
-		      'evl' => File::Spec->rel2abs ('text/repaired.evl'),
-		      'indenting' => '1',
-		  });
-
 
 __END__
 
