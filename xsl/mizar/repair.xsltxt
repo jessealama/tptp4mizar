@@ -26,20 +26,6 @@ key "formulas"
 // Utilities
 //////////////////////////////////////////////////////////////////////
 
-tpl strip-prefix (#string) {
-  choose {
-    when [starts-with ($string, "Step")] {
-      `substring-after ($string, "Step")`;
-    }
-    when [starts-with ($string, "Axiom")] {
-      `substring-after ($string, "Axiom")`;
-    }
-    otherwise {
-      `$string`;
-    }
-  }
-}
-
 tpl all-errors-present-in-text (#errs) {
   $empty = token-string-is-empty (#token-string = $errs);
   if [$empty = "1"] {
@@ -174,7 +160,7 @@ tpl [Text-Proper] (#errs) {
           }
           for-each [ancestor::Item[@kind = "Regular-Statement" and @shape = "Compact-Statement" and Proposition/Label[@spelling]]] {
             for-each [Proposition/Label[@spelling]] {
-              @"name" = strip-prefix (#string = `@spelling`);
+              @"name" = `@spelling`;
             }
           }
 
@@ -230,7 +216,7 @@ tpl [Item[@kind = "Regular-Statement" and @shape = "Compact-Statement"]] mode="a
 tpl [Proposition[Label[@spelling]]] mode="axiom" {
   <formula {
     for-each [Label[@spelling]] {
-      @"name" = strip-prefix (#string = `@spelling`);
+      @"name" = `@spelling`;
     }
     @status = "axiom";
     @syntax = "formula";
@@ -245,7 +231,7 @@ tpl [Item[@kind = "Regular-Statement" and @shape = "Compact-Statement" and Propo
 tpl [Proposition[Label[@spelling]]] mode="conjecture" {
   <formula {
     for-each [Label[@spelling]] {
-      @"name" = strip-prefix (#string = `@spelling`);
+      @"name" = `@spelling`;
     }
     @status = "conjecture";
     @syntax = "formula";
@@ -319,7 +305,7 @@ tpl [Conjunctive-Formula] mode="mizar-to-tptp" {
 
 tpl [Predicative-Formula[@spelling and Arguments]] mode="mizar-to-tptp" {
   <predicate {
-    @"name" = strip-prefix (#string = `@spelling`);
+    @"name" = `@spelling`;
     for-each [Arguments] {
       apply [*] mode="mizar-to-tptp";
     }
