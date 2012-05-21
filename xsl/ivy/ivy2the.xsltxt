@@ -1,0 +1,63 @@
+stylesheet "1.0";
+include "../tstp/tstp2the.xsl";
+output method="xml" indent="yes";
+output omit-xml-declaration="no";
+
+tpl [tstp] {
+  $article-uc = uc (#s = `$article`);
+  $reference-dco-uc = uc (#s = `$reference-dco`);
+  <Theorems {
+    <Signature {
+      <ArticleID {
+        @"name" = "HIDDEN";
+      }
+      if [not($reference-dco = "")] {
+        <ArticleID {
+          @"name" = $reference-dco-uc;
+        }
+      }
+      <ArticleID {
+        @"name" = $article-uc;
+      }
+    }
+
+    // Generate the axioms
+    for-each [formula[@status = "axiom"]] {
+      <Theorem {
+        @kind = "T";
+        apply [.] (#variable-alist = ",,") mode="render-definiens";
+      }
+    }
+
+    // Clausification
+    for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "clausify"]]] {
+      <Theorem {
+        @kind = "D";
+        <Not {
+          <And {
+            for-each [source] {
+              for-each [non-logical-data[@name = "inference"]] {
+                for-each [*[position() = last()]] {
+                  for-each [*[@name][1]] {
+                    $n = `@name`;
+                    if [not(key ("formulas", $n))] {
+                      $message = `concat ("Error: unable to look up the formula called '", $n, "'.")`;
+                      apply [.] (#message = $message) mode="die";
+                    }
+                    for-each [key ("formulas", $n)] {
+                      apply [.] (#variable-alist = ",,") mode="render-definiens";
+                    }
+                  }
+                }
+              }
+            }
+            <Not {
+              apply [.] (#variable-alist = ",,") mode="render-definiens";
+            }
+          }
+        }
+      }
+
+    }
+  }
+}

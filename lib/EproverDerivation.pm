@@ -13,6 +13,7 @@ use File::Spec;
 use File::Temp qw(tempfile);
 use IPC::Run qw(harness);
 
+use Xsltproc qw(apply_stylesheet);
 use Utils qw(error_message);
 
 extends 'TSTPDerivation';
@@ -31,7 +32,7 @@ my %directory_for_extension = (
     'the' => 'prel',
 );
 
-my @extensions_to_generate = ('voc', 'evl', 'dno', 'dco', 'wsx', 'the');
+my @extensions_to_generate = ('voc', 'evl', 'dno', 'dco', 'the', 'wsx');
 
 sub to_miz {
     my $self = shift;
@@ -56,63 +57,48 @@ sub to_miz {
 	my $subdir_name = $directory_for_extension{$extension};
 	my $subdir = "${directory}/${subdir_name}";
 
-	my @xsltproc_call = ('xsltproc',
-			     '--stringparam', 'article', 'article',
-			     '--stringparam', 'prel-directory', $prel_subdir_full);
+	my %parameters =
+	    (
+		'article' => 'article',
+		'prel-directory' => $prel_subdir_full,
+		# 'no-skolems' => '1',
+		# 'skolem-prefix' => 'skolem',
+		# 'skolem-dco' => "${prel_subdir_full}/skolem.dco",
+	    );
 
 	if (defined $options{'shape'}) {
 	    my $shape = $options{'shape'};
 	    if ($shape eq 'nested') {
-		push (@xsltproc_call, '--stringparam', 'shape', 'nested');
+		$parameters{'shape'} = 'nested';
 	    } elsif ($shape eq 'flat') {
-		push (@xsltproc_call, '--stringparam', 'shape', 'flat');
+		$parameters{'shape'} = 'flat';
 	    } else {
 		confess error_message ('Unknown proof shape \'', $shape, '\'.');
 	    }
 	} else {
-	    push (@xsltproc_call, '--stringparam', 'shape', 'flat');
+	    $parameters{'shape'} = 'flat';
 	}
-
-	push (@xsltproc_call, "${EPROVER_STYLESHEET_HOME}/eprover2${extension}.xsl");
-	push (@xsltproc_call, $path);
-
-	my $xsltproc_err = $EMPTY_STRING;
-	my $xsltproc_harness = harness (\@xsltproc_call,
-					'>', "${subdir}/article.${extension}",
-					'2>', \$xsltproc_err);
-
-	$xsltproc_harness->start ();
-	$xsltproc_harness->finish ();
-
-	my $xsltproc_exit_code = ($xsltproc_harness->results)[0];
-
-	if ($xsltproc_exit_code != 0) {
-	    confess error_message ('xsltproc did not exit cleanly when generating the .', $extension, ' file for', "\n", "\n", '  ', $path, "\n", "\n", 'The exit code was ', $xsltproc_exit_code, '. The error message was:',  "\n", "\n", '  ', $xsltproc_err);
-	}
-    }
-
-    # skolem functions
-    my @skolem_extensions = ('the');
-    foreach my $extension (@skolem_extensions) {
 	my $stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2${extension}.xsl";
-	my $skolem_path = "${directory}/prel/skolem.${extension}";
-	my $xsltproc_status = system ("xsltproc --stringparam article 'article' --stringparam prel-directory '${prel_subdir_full}' $stylesheet ${path} > $skolem_path");
-    my $xsltproc_exit_code = $xsltproc_status >> 8;
-	if ($xsltproc_exit_code != 0) {
-	    croak ('Error: xsltproc did not exit cleanly when generating skolem.', $extension, ' for', "\n", "\n", '  ', $path, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);
-	}
+	my $result = "${subdir}/article.${extension}";
+	apply_stylesheet ($stylesheet,
+			  $path,
+			  $result,
+			  \%parameters);
+
     }
 
     my $pp_stylesheet = "${MIZAR_STYLESHEET_HOME}/pp.xsl";
+    my $evl_path = "${directory}/text/article.evl";
     my $wsx_path = "${directory}/text/article.wsx";
     my $miz_path = "${directory}/text/article.miz";
-    my $xsltproc_status = system ("xsltproc $pp_stylesheet $wsx_path > $miz_path");
-    my $xsltproc_exit_code = $xsltproc_status >> 8;
-    if ($xsltproc_exit_code != 0) {
-	croak ('Error: xsltproc did not exit cleanly when generating the .miz file for', "\n", "\n", '  ', $path, "\n", "\n", 'The exit code was ', $xsltproc_exit_code);
-    }
 
-    return;
+    return apply_stylesheet ($pp_stylesheet,
+			     $wsx_path,
+			     $miz_path,
+			     {
+				 'evl' => $evl_path,
+			     }
+			 );
 
 }
 

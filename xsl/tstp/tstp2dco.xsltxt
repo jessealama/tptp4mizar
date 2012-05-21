@@ -1,6 +1,6 @@
 stylesheet "1.0";
 include "../utils/strings.xsl";
-output method="xml" encoding="utf-8" indent="yes";
+output method="xml" indent="yes";
 output omit-xml-declaration="no";
 
 //////////////////////////////////////////////////////////////////////
@@ -9,6 +9,10 @@ output omit-xml-declaration="no";
 
 // The name of the article .dco that we will create
 #article = { ""; }
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
 
 tpl [/] {
   choose {
@@ -38,35 +42,46 @@ tpl [tstp] {
       }
     }
     <ConstrCounts {
-      if [$num-predicates > 0] {
-        <ConstrCount {
-          @kind = "R";
-          @nr = `$num-predicates`;
-        }
+      <ConstrCount {
+        @kind = "R";
+        @nr = `$num-predicates`;
       }
-      if [$num-functions > 0] {
-        <ConstrCount {
-          @kind = "K";
-          @nr = `$num-functions`;
-        }
-      }
-    }
-    for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
-      <Constructor {
+       <ConstrCount {
         @kind = "K";
-        @nr = `position()`;
-        @aid = `$article-uc`;
-        @relnr = `position()`;
-        @spelling = `@name`;
-        <ArgTypes {
-          for-each [*] {
-            <Typ {
-              @kind = "M";
-              @nr = "1";
-              <Cluster;
-            }
-          }
-        }
+        @nr = `$num-functions`;
+       }
+    }
+
+    for-each [descendant::predicate[not(@name = "=")
+                                    and not(@name = preceding::predicate/@name)]] {
+      apply [.] (#nr = `position ()`,
+      	    	 #relnr = `position() + 2`,
+		 #aid = $article-uc);
+    }
+
+    for-each [descendant::function[not(@name = preceding::function/@name)
+                                   and not(@name = ancestor::function/@name)]] {
+      apply [.] (#nr = `position ()`,
+      	    	 #relnr = `position()`,
+		 #aid = $article-uc);
+    }
+
+  }
+}
+
+tpl constructor (#kind, #nr, #relnr, #aid) {
+
+}
+
+tpl [function[@name]] (#nr, #relnr, #aid) {
+  <Constructor {
+    @kind = "K";
+    @nr = $nr;
+    @aid = $aid;
+    @relnr = $relnr;
+    // @spelling = `@name`;
+    <ArgTypes {
+      for-each [*] {
         <Typ {
           @kind = "M";
           @nr = "1";
@@ -74,24 +89,29 @@ tpl [tstp] {
         }
       }
     }
-    for-each [descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)]] {
-      <Constructor {
-        @kind = "R";
-        @nr = `position()`;
-        @aid = `$article-uc`;
-        @relnr = `2 + position()`;
-        @spelling = `@name`;
-        <ArgTypes {
-          for-each [*] {
-            <Typ {
-              @kind = "M";
-              @nr = "1";
-              <Cluster;
-            }
-          }
+    <Typ {
+      @kind = "M";
+      @nr = "1";
+      <Cluster;
+    }
+  }
+}
+
+tpl [predicate] (#nr, #relnr, #aid) {
+  <Constructor {
+    @kind = "R";
+    @nr = $nr;
+    @aid = $aid;
+    @relnr = $relnr;
+    // @spelling = `@name`;
+    <ArgTypes {
+      for-each [*] {
+        <Typ {
+          @kind = "M";
+          @nr = "1";
+          <Cluster;
         }
       }
     }
-
   }
 }

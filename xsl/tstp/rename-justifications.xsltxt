@@ -1,0 +1,74 @@
+stylesheet "1.0";
+include "../utils/token-strings.xsl";
+output method="xml" indent="yes";
+
+//////////////////////////////////////////////////////////////////////
+// Stylesheet parameters
+//////////////////////////////////////////////////////////////////////
+
+// A token string each token of which is a colon-separated item
+//
+//   <formula-name>:<replacement-formula-name>
+//
+// indicating that if a justification refers to <formula-name>, it
+// will be rewritten to refer to <replacement-formula-name>.
+#replacements = { ""; }
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+tpl [*] {
+  $n = `name (.)`;
+  <$n {
+    for-each [@*] { copy-of `.`; }
+    apply [*];
+  }
+}
+
+tpl [*] mode="copy" {
+  $n = `name (.)`;
+  <$n {
+    for-each [@*] { copy-of `.`; }
+    apply [*] mode="copy";
+  }
+}
+
+tpl [/] {
+  if [tstp] {
+    apply [tstp];
+  } else {
+    msg terminate="yes" "Error: the required tstp root element is missing.";
+  }
+}
+
+tpl [source[non-logical-data]] {
+  <source {
+    <non-logical-data {
+      for-each [non-logical-data] {
+        for-each [@*] { copy-of `.`; }
+        for-each [non-logical-data] {
+          if [position() < 3] {
+            apply [.];
+          } else {
+            <non-logical-data {
+              for-each [non-logical-data | number] {
+                $n = `@name`;
+                $pseudo-token = `concat (",", $n, ":")`;
+                if [contains ($replacements, $pseudo-token)] {
+                  $after-pseudo-token = `substring-after ($replacements, $pseudo-token)`;
+                  $replacement = `substring-before ($after-pseudo-token, ",")`;
+                  <non-logical-data {
+                    @"name" = $replacement;
+                  }
+                } else {
+                  apply [.] mode="copy";
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

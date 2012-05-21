@@ -97,7 +97,7 @@ my $db = undef;
 my $verbose = 0;
 my $opt_debug = 0;
 my $opt_nested = 0;
-my $opt_style = 'tptp';
+my $opt_style = 'tstp';
 
 my $options_ok = GetOptions (
     "db=s"     => \$db,
@@ -203,7 +203,6 @@ normalize_variables ($tptp_xml_in_db);
 my $sort_tstp_stylesheet = "${TSTP_STYLESHEET_HOME}/sort-tstp.xsl";
 my $dependencies_stylesheet = "${TSTP_STYLESHEET_HOME}/tstp-dependencies.xsl";
 
-my $sorted_tptp_xml_in_db = "${db}/problem.xml.sorted";
 if ($opt_style ne 'tptp') {
 
     # Sort
@@ -220,19 +219,24 @@ if ($opt_style ne 'tptp') {
     my @dependencies = split ($LF, $dependencies_str);
     my $dependencies_token_string = ',' . join (',', @dependencies) . ',';
 
-    my $xsltproc_sort_status = system ("xsltproc --stringparam ordering '${dependencies_token_string}' ${sort_tstp_stylesheet} ${tptp_xml_in_db} > ${sorted_tptp_xml_in_db}");
-    my $xsltproc_sort_exit_code = $xsltproc_sort_status >> 8;
-    if ($xsltproc_sort_exit_code != 0) {
-	say {*STDERR} error_message ('xsltproc did not exit cleanly sorting', $SP, $tptp_xml_in_db);
-	exit 1;
-    }
-    move ($sorted_tptp_xml_in_db, $tptp_xml_in_db)
-	or die error_message ('Unable to overwrite', $SP, $tptp_xml_in_db, $SP, 'by', $SP, $sorted_tptp_xml_in_db);
+    apply_stylesheet ($sort_tstp_stylesheet,
+		      $tptp_xml_in_db,
+		      $tptp_xml_in_db,
+		      {
+			  'ordering' => $dependencies_token_string,
+		      });
+
 }
 
 # Normalize names
 my $normalize_step_names_stylesheet = "${TSTP_STYLESHEET_HOME}/normalize-step-names.xsl";
 apply_stylesheet ($normalize_step_names_stylesheet,
+		  $tptp_xml_in_db,
+		  $tptp_xml_in_db);
+
+# Nomalize the skolems
+my $normalize_skolems_stylesheet = "${EPROVER_STYLESHEET_HOME}/normalize-skolems.xsl";
+apply_stylesheet ($normalize_skolems_stylesheet,
 		  $tptp_xml_in_db,
 		  $tptp_xml_in_db);
 
@@ -264,7 +268,7 @@ my $repair_script = "$RealBin/mrepair.pl";
 my $repair_status = system ($repair_script,
 			    "--style=${opt_style}",
 			    '--debug',
-			    "--tptp-proof=${sorted_tptp_xml_in_db}",
+			    "--tptp-proof=${tptp_xml_in_db}",
 			    "${db}/text/article.miz");
 my $repair_exit_code = $repair_status >> 8;
 if ($repair_exit_code != 0) {

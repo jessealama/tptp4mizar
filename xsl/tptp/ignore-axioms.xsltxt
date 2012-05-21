@@ -1,0 +1,30 @@
+stylesheet "1.0";
+output method="xml" indent="yes";
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+tpl [*] {
+  $n = `name (.)`;
+  <$n {
+    for-each [@*] { copy-of `.`; }
+    apply [*];
+  }
+}
+
+tpl [/] {
+  if [tstp] {
+    apply [tstp];
+  } else {
+    msg terminate="yes" "Error: the required tstp root element is missing.";
+  }
+}
+
+tpl [tstp] {
+  <tstp {
+    for-each [formula[not(@status = "axiom")]] {
+      apply [.];
+    }
+  }
+}

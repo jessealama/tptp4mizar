@@ -58,7 +58,12 @@ tpl [tstp] {
 }
 
 tpl [formula[not(source)]] {
-  msg terminate="yes" "Error: we encountered a formula without a source.  Is this stylesheet being applied to a TPTP derivation?";
+  $pos = `count (preceding-sibling::formula[@status = "axiom"]) + 1`;
+  <formula {
+    for-each [@*] { copy-of `.`; }
+    @"name" = `concat ("ax", $pos)`;
+    apply [*[1]] mode="copy";
+  }
 }
 
 tpl [formula[@status = "axiom" and source]] {
@@ -68,6 +73,9 @@ tpl [formula[@status = "axiom" and source]] {
     @"name" = `concat ("ax", $pos)`;
     apply [*[1]] mode="copy";
     apply [source];
+    if [useful-info] {
+      apply [useful-info] mode="copy";
+    }
   }
 }
 
@@ -78,6 +86,9 @@ tpl [formula[not(@status = "axiom") and source]] {
     @"name" = `concat ("step", $pos)`;
     apply [*[1]] mode="copy";
     apply [source];
+    if [useful-info] {
+      apply [useful-info] mode="copy";
+    }
   }
 }
 

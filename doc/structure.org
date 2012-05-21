@@ -1,0 +1,20 @@
+* Components
+** mcompress
+** tptp2miz
+   Convert a TPTP derivation into a corresponding Mizar article.
+
+   May call mreprair, if the generated article has verifier errors.
+** mrepair
+   Given a Mizar article with some verifier errors, generate new Mizar
+   articles (or Mizar text fragments) containing proofs that fill in
+   the gaps reported by verifier.
+** clausify
+   Given a TPTP problem, extract a TSTP solution recording a
+   clausification of the problem.  (*Not* the solution of the whole
+   problem -- just the clausification.)
+** ivy2tstp
+   Concert an Ivy proof object into a TSTP derivation.
+** ivy
+   Given a TPTP problem, produce a TSTP solution with Ivy.
+
+   Calls ivy2tstp and clausify.

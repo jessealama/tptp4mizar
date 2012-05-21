@@ -1,0 +1,69 @@
+stylesheet "1.0";
+output method="xml" indent="yes";
+
+// Rename variables according to the scheme
+//
+// V0, V1, ...
+
+tpl [*] {
+  $n = `name (.)`;
+  <$n {
+    for-each [@*] { copy-of `.`; }
+    apply [*];
+  }
+}
+
+tpl [/] {
+  if [tstp] {
+    apply [tstp]
+  } else {
+    msg terminate="yes" "Error: the required tstp document element is missing.";
+  }
+}
+
+tpl [tstp] {
+  <tstp
+    apply [formula];
+  }
+}
+
+tpl [formula] {
+  for-each [*[1]] {
+    apply [.];
+  }
+  if [source] {
+    apply [source];
+  }
+  if [useful-info] {
+    apply [useful-info];
+  }
+}
+
+tpl position-of-variable-in-formula {
+  choose {
+    when [parent::quantifier] {
+      for-each [parent::quantifier] {
+        $pos = position-of-quantifier ();
+        `$pos + 1`;
+      }
+    }
+    when [] {
+
+    }
+    otherwise {
+      apply [.] (#message = "Don't know how to determine the position of the current variable."
+    }
+  }
+}
+
+tpl [variable] {
+  $n = `@name`;
+  $variable = `.`;
+  for-each [ancestor::formula] {
+    $formula = `.`;
+    $pos = position-of-variable-in-formula ();
+    <variable {
+      @"name" = $pos;
+    }
+  }
+}

@@ -28,7 +28,8 @@ use Utils qw(is_readable_file
 	     run_mizar_tool
 	     normalize_variables
 	     tptp_fofify
-	     tptp_xmlize);
+	     tptp_xmlize
+	     sort_tstp_solution);
 
 # Strings
 Readonly my $EMPTY_STRING => q{};
@@ -49,10 +50,11 @@ Readonly my $STYLE_COLOR => 'blue';
 # Derivation styles
 Readonly my %STYLES => (
     # 'tptp' => 0,
-    'vampire' => 0,
+    # 'vampire' => 0,
     'eprover' => 0,
+    'tstp' => 0,
     # 'tstp' => 0,
-    # 'ivy' => 0,
+    'ivy' => 0,
 );
 
 sub summarize_styles {
@@ -61,32 +63,6 @@ sub summarize_styles {
 	$summary .= '  * ' . colored ($style, $STYLE_COLOR);
     }
     return $summary;
-}
-
-my $sort_tstp_stylesheet = "${TSTP_STYLESHEET_HOME}/sort-tstp.xsl";
-my $dependencies_stylesheet = "${TSTP_STYLESHEET_HOME}/tstp-dependencies.xsl";
-
-sub sort_tstp_solution {
-    my $solution = shift;
-
-    # Sort
-    my $dependencies_str = undef;
-    my @xsltproc_deps_call = ('xsltproc', $dependencies_stylesheet, $solution);
-    my @tsort_call = ('tsort');
-    my $sort_harness = harness (\@xsltproc_deps_call,
-				'|',
-				\@tsort_call,
-				'>', \$dependencies_str);
-    $sort_harness->start ();
-    $sort_harness->finish ();
-
-    my @dependencies = split ($LF, $dependencies_str);
-    my $dependencies_token_string = ',' . join (',', @dependencies) . ',';
-
-    apply_stylesheet ($sort_tstp_stylesheet,
-		      $solution,
-		      $solution,
-		      { 'ordering' => $dependencies_token_string });
 }
 
 my $opt_help = 0;
@@ -425,22 +401,6 @@ foreach my $problem (@problems) {
 
 }
 
-# # Shift the skolem functions
-# my $prefix_skolem_stylesheet = "${EPROVER_STYLESHEET_HOME}/prefix-skolems.xsl";
-# foreach my $problem (@problems) {
-#     my $problem_name = $problem->findvalue ('@name');
-
-#     my $eprover_solution_path = "${repair_dir}/${problem_name}.p.eprover-proof.xml";
-
-#     apply_stylesheet ($prefix_skolem_stylesheet,
-# 		      $eprover_solution_path,
-# 		      $eprover_solution_path,
-# 		  {
-# 		      'prefix' => $problem_name,
-# 		  });
-
-# }
-
 # Repair the proofs
 my @eprover_clausification_xmls = glob "${repair_dir}/*-clausification.xml";
 my @ivy_proof_xmls = glob "${repair_dir}/*-clausified.ivy-proof.xml";
@@ -464,6 +424,8 @@ if ($opt_style eq 'vampire') {
     $repair_stylesheet = "${VAMPIRE_STYLESHEET_HOME}/repair-vampire.xsl";
 } elsif ($opt_style eq 'eprover') {
     $repair_stylesheet = "${EPROVER_STYLESHEET_HOME}/repair-eprover.xsl";
+} elsif ($opt_style eq 'tstp') {
+    $repair_stylesheet = "${TSTP_STYLESHEET_HOME}/repair-tstp.xsl";
 } else {
     die error_message ('Unsuported proof style "', $opt_style, '".');
 }

@@ -17,14 +17,7 @@ tpl position-of-skolem {
   $n = `@name`;
   for-each [ancestor::tstp] {
     for-each [descendant::function[@name = $n][1]] {
-      if [preceding::function[starts-with (@name, "esk")]] {
-        for-each [preceding::function[starts-with (@name, "esk")][1]] {
-          $pos-previous = position-of-skolem ();
-          `$pos-previous + 1`;
-        }
-      } else {
-        "1";
-      }
+      `count (preceding::function[starts-with (@name, "esk") and not(@name = preceding::function[starts-with (@name, "esk")]/@name)]) + 1`;
     }
   }
 }

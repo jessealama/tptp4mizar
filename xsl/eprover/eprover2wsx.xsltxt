@@ -157,8 +157,9 @@ tpl [source] {
       }
     }
     if [non-logical-data[@name = "skolemize"]] {
+      $aid-uc = uc (#s = $article);
       <Definition-Reference {
-        @spelling = "SKOLEM";
+        @spelling = $aid-uc;
         @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]) + 1`;
       }
     }

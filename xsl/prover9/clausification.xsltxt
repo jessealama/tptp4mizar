@@ -1,0 +1,46 @@
+stylesheet "1.0";
+output method="xml" indent="yes";
+
+tpl [*] {
+  $n = `name (.)`;
+  <$n {
+    for-each [@*] { copy-of `.`; }
+    apply [child::node ()];
+  }
+}
+
+tpl [text()] {
+  `.`;
+}
+
+tpl [/] {
+  if [proofs] {
+    <proofs {
+      apply [proofs];
+    }
+  } else {
+    msg terminate="yes" "Error: the required proofs root element is missing.";
+  }
+}
+
+tpl [proofs] {
+  choose {
+    when [proof[2]] {
+      msg terminate="yes" "Error: there are multiple proof children of the proofs root element; don't know what to do.";
+    }
+    when [proof] {
+      <proof {
+        apply [proof];
+      }
+    }
+    otherwise {
+      msg terminate="yes" "Error: no proof children were found under the proofs root element.";
+    }
+  }
+}
+
+tpl [proof] {
+  for-each [clause[@type]] {
+    apply [.];
+  }
+}

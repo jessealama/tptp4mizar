@@ -1,0 +1,903 @@
+stylesheet "1.0";
+include "../utils/die.xsl";
+include "../utils/strings.xsl";
+output method="xml" indent="yes";
+
+key "clauses" [clause] `@id`;
+key "assumptions" [clause[@type = "assumption"]] `@id`;
+
+tpl [*] {
+  $n = `name (.)`;
+  $message = `concat ("We have arrived at an unhandled ", $n, "node.")`;
+  apply [.] (#message = $message) mode="die";
+}
+
+tpl [/] {
+  if [proofs] {
+    apply [proofs];
+  } else {
+    msg terminate="yes" "Error: the required proofs root element is missing.";
+  }
+}
+
+tpl [proofs] {
+  choose {
+    when [proof[2]] {
+      msg terminate="yes" "Error: there are multiple proof children of the proofs root element; don't know what to do.";
+    }
+    when [proof] {
+      <tstp {
+        apply [proof];
+      }
+    }
+    otherwise {
+      msg terminate="yes" "Error: no proof children were found under the proofs root element.";
+    }
+  }
+}
+
+tpl [proof] {
+  apply [clause];
+}
+
+tpl drop-enclosing-parentheses (#string) {
+  $length = `string-length ($string)`;
+  $truncated-length = `$length - 2`;
+  `substring ($string, 2, $truncated-length)`;
+}
+
+tpl parse-quantifier-prefix (#string) {
+  msg `concat ("Parsing the quantifier prefix '", $string, "'")`;
+  choose {
+    when [starts-with ($string, "exists")] {
+      $after-first-space = `substring-after ($string, " ")`;
+      $variable = `substring-before ($after-first-space, " ")`;
+      $remaining = `substring-after ($after-first-space, " ")`;
+      <quantifier {
+        @type = "existential";
+        <variable {
+          @"name" = $variable;
+        }
+        parse-quantifier-prefix (#string = $remaining);
+      }
+    }
+    when [starts-with ($string, "all")] {
+      $after-first-space = `substring-after ($string, " ")`;
+      $variable = `substring-before ($after-first-space, " ")`;
+      $remaining = `substring-after ($after-first-space, " ")`;
+      <quantifier {
+        @type = "universal";
+        <variable {
+          @"name" = $variable;
+        }
+        parse-quantifier-prefix (#string = $remaining);
+      }
+    }
+    otherwise {
+      parse-ladr-formula (#string = `concat ("(", $string, ")")`);
+    }
+  }
+}
+
+tpl string-is-variable (#string) {
+  choose {
+    when [contains ($string, " ")] {
+      "0";
+    }
+    when [contains ($string, "(")] {
+      "0";
+    }
+    when [contains ($string, ",")] {
+      "0";
+    }
+    when [starts-with ($string, "A")] {
+      "1";
+    }
+    when [starts-with ($string, "B")] {
+      "1";
+    }
+    when [starts-with ($string, "C")] {
+      "1";
+    }
+    when [starts-with ($string, "D")] {
+      "1";
+    }
+    when [starts-with ($string, "E")] {
+      "1";
+    }
+    when [starts-with ($string, "F")] {
+      "1";
+    }
+    when [starts-with ($string, "G")] {
+      "1";
+    }
+    when [starts-with ($string, "H")] {
+      "1";
+    }
+    when [starts-with ($string, "I")] {
+      "1";
+    }
+    when [starts-with ($string, "J")] {
+      "1";
+    }
+    when [starts-with ($string, "K")] {
+      "1";
+    }
+    when [starts-with ($string, "L")] {
+      "1";
+    }
+    when [starts-with ($string, "M")] {
+      "1";
+    }
+    when [starts-with ($string, "N")] {
+      "1";
+    }
+    when [starts-with ($string, "O")] {
+      "1";
+    }
+    when [starts-with ($string, "P")] {
+      "1";
+    }
+    when [starts-with ($string, "Q")] {
+      "1";
+    }
+    when [starts-with ($string, "R")] {
+      "1";
+    }
+    when [starts-with ($string, "S")] {
+      "1";
+    }
+    when [starts-with ($string, "T")] {
+      "1";
+    }
+    when [starts-with ($string, "U")] {
+      "1";
+    }
+    when [starts-with ($string, "V")] {
+      "1";
+    }
+    when [starts-with ($string, "W")] {
+      "1";
+    }
+    when [starts-with ($string, "X")] {
+      "1";
+    }
+    when [starts-with ($string, "Y")] {
+      "1";
+    }
+    when [starts-with ($string, "Z")] {
+      "1";
+    }
+    otherwise {
+      "0";
+    }
+  }
+}
+
+tpl string-is-constant (#string) {
+  choose {
+    when [contains ($string, " ")] {
+      "0";
+    }
+    when [contains ($string, "(")] {
+      "0";
+    }
+    when [contains ($string, ",")] {
+      "0";
+    }
+    when [starts-with ($string, "a")] {
+      "1";
+    }
+    when [starts-with ($string, "b")] {
+      "1";
+    }
+    when [starts-with ($string, "c")] {
+      "1";
+    }
+    when [starts-with ($string, "d")] {
+      "1";
+    }
+    when [starts-with ($string, "e")] {
+      "1";
+    }
+    when [starts-with ($string, "f")] {
+      "1";
+    }
+    when [starts-with ($string, "g")] {
+      "1";
+    }
+    when [starts-with ($string, "h")] {
+      "1";
+    }
+    when [starts-with ($string, "i")] {
+      "1";
+    }
+    when [starts-with ($string, "j")] {
+      "1";
+    }
+    when [starts-with ($string, "k")] {
+      "1";
+    }
+    when [starts-with ($string, "l")] {
+      "1";
+    }
+    when [starts-with ($string, "m")] {
+      "1";
+    }
+    when [starts-with ($string, "n")] {
+      "1";
+    }
+    when [starts-with ($string, "o")] {
+      "1";
+    }
+    when [starts-with ($string, "p")] {
+      "1";
+    }
+    when [starts-with ($string, "q")] {
+      "1";
+    }
+    when [starts-with ($string, "r")] {
+      "1";
+    }
+    when [starts-with ($string, "s")] {
+      "1";
+    }
+    when [starts-with ($string, "t")] {
+      "1";
+    }
+    when [starts-with ($string, "u")] {
+      "1";
+    }
+    when [starts-with ($string, "v")] {
+      "1";
+    }
+    when [starts-with ($string, "w")] {
+      "1";
+    }
+    when [starts-with ($string, "x")] {
+      "1";
+    }
+    when [starts-with ($string, "y")] {
+      "1";
+    }
+    when [starts-with ($string, "z")] {
+      "1";
+    }
+    otherwise {
+      "0";
+    }
+  }
+}
+
+tpl balance-parens (#string, #solution, #counter) {
+  $diagnostic-message = `concat ("balance-parens: string = '", $string, "', solution = '", $solution, "', counter = ", $counter)`;
+  // msg $diagnostic-message;
+  choose {
+    when [$counter = ""] {
+      $message = `concat ("Error: balance-parens is in a state where the count is the empty string (the current string is '", $string, "').")`;
+      msg terminate="yes" $message;
+    }
+    when [$counter < "0"] {
+      $message = `concat ("Error: balance-parens is in a state where the count is negative (the current string is '", $string, "').")`;
+      msg terminate="yes" $message;
+    }
+    when [$counter = "0"] {
+      $solution;
+    }
+    when [contains ($string, "(") or contains ($string, ")")] {
+      $pos-of-left = position-in-string (#string = $string, #thing = "(");
+      $pos-of-right = position-in-string (#string = $string, #thing = ")");
+      choose {
+        when [$pos-of-left = "-1"] {
+          $before-first-right-paren = `substring-before ($string, ")")`;
+          balance-parens (#string = `substring-after ($string, ")")`,
+                          #solution = `concat ($solution, $before-first-right-paren, ")")`,
+                          #counter = `$counter - 1`);
+        }
+        when [$pos-of-right = "-1"] {
+          $message = `concat ("Cannot balance the string '", $string, "' because the counter is positive, and there are no right parentheses.")`;
+          msg terminate="yes" $message;
+        }
+        otherwise {
+          $before-first-left-paren = `substring-before ($string, "(")`;
+          $before-first-right-paren = `substring-before ($string, ")")`;
+          if [$pos-of-left < $pos-of-right] {
+            balance-parens (#string = `substring-after ($string, "(")`,
+                            #solution = `concat ($solution, $before-first-left-paren, "(")`,
+                            #counter = `$counter + 1`);
+          } else {
+            balance-parens (#string = `substring-after ($string, ")")`,
+                            #solution = `concat ($solution, $before-first-right-paren, ")")`,
+                            #counter = `$counter - 1`);
+          }
+        }
+      }
+    }
+    otherwise {
+      $message = `concat ("Error: we cannot balance the parentheses of a string ('", $string, "') that contains neither a left nor a right parenthesis.")`;
+      msg terminate="yes" $message;
+    }
+  }
+}
+
+tpl first-term-of-term-string (#string) {
+  if [$string = ""] {
+    msg terminate="yes" "Error: from the empty string we cannot extract the first term.";
+  } else {
+    $pos-of-first-left-paren = position-in-string (#string = $string, #thing = "(");
+    $pos-of-first-comma = position-in-string (#string = $string, #thing = ",");
+    choose {
+      when [$pos-of-first-left-paren < "0" and $pos-of-first-comma < "0"] {
+        $string;
+      }
+      when [$pos-of-first-left-paren < "0"] {
+        `substring-before ($string, ",")`;
+      }
+      when [$pos-of-first-left-paren < "0"] {
+        $string;
+      }
+      when [$pos-of-first-left-paren < $pos-of-first-comma] {
+        $before-first-paren = `substring-before ($string, "(")`;
+        $after-head = `substring-after ($string, "(")`;
+        $balanced-parens = balance-parens (#string = $after-head,
+                                           #solution = "(",
+                                           #counter = "1");
+        `concat ($before-first-paren, $balanced-parens)`;
+      }
+      otherwise {
+        `substring-before ($string, ",")`;
+      }
+    }
+  }
+}
+
+tpl parse-term (#string) {
+  msg `concat ("Parsing the term '", $string, "'")`;
+  $is-variable = string-is-variable (#string = $string);
+  $is-constant = string-is-constant (#string = $string);
+  choose {
+    when [$is-variable = "1"] {
+      <variable {
+        @"name" = $string;
+      }
+    }
+    when [$is-constant = "1"] {
+      <function {
+        @"name" = $string;
+      }
+    }
+    when [contains ($string, "(")] {
+      $function-name = `substring-before ($string, "(")`;
+      $rest = `substring-after ($string, $function-name)`;
+      <function {
+        @"name" = $function-name;
+        parse-argument-list (#string = $rest);
+      }
+    }
+    otherwise {
+      $parse-error-message = `concat ("Error: don't know how to parse the term '", $string, "'.")`;
+      msg terminate="yes" $parse-error-message;
+    }
+  }
+
+}
+
+tpl parse-argument-list-1 (#string) {
+  choose {
+    when [$string = ""] {
+      // done
+    }
+    when [contains ($string, ",")] {
+      $first-term = first-term-of-term-string (#string = $string);
+      msg `concat ("First term of the argument list '", $string, "' is '", $first-term, "'")`;
+      $tail = `substring-after ($string, $first-term)`;
+      $after-comma-tail = `substring-after ($tail, ",")`;
+      parse-term (#string = $first-term);
+      parse-argument-list-1 (#string = $after-comma-tail);
+    }
+    otherwise {
+      parse-term (#string = $string);
+    }
+  }
+}
+
+tpl parse-argument-list (#string) {
+  msg `concat ("Parsing the argument list '", $string, "'")`;
+  $sans-outer-parens = drop-enclosing-parentheses (#string = $string);
+  parse-argument-list-1 (#string = $sans-outer-parens);
+}
+
+tpl parse-atomic-formula (#string = $string) {
+  msg `concat ("Parsing the atomic formula '", $string, "'")`;
+  $predicate-name = `substring-before ($string, "(")`;
+  choose {
+    when [$string = "$F"] {
+      <defined-predicate {
+        @"name" = "false";
+      }
+    }
+    when [$string = "false"] {
+      <defined-predicate {
+        @"name" = "false";
+      }
+    }
+    when [$string = "$T"] {
+      <defined-predicate {
+        @"name" = "true";
+      }
+    }
+    when [$string = "true"] {
+      <defined-predicate {
+        @"name" = "true";
+      }
+    }
+    // kludge redeclaration of negated_equatlity
+    when [$predicate-name = "@"] {
+      <negation {
+        <predicate {
+          @"name" = "=";
+          parse-argument-list (#string = `substring-after ($string, $predicate-name)`);
+        }
+      }
+    }
+    otherwise {
+      <predicate {
+        @"name" = $predicate-name;
+        parse-argument-list (#string = `substring-after ($string, $predicate-name)`);
+      }
+    }
+  }
+}
+
+tpl parse-composite-formula (#string) {
+  $sans-outer-parens = drop-enclosing-parentheses (#string = $string);
+  choose {
+    when [starts-with ($sans-outer-parens, "&(")] {
+      $after-conjunction-sign = `substring-after ($sans-outer-parens, "&")`;
+      $sans-parens = drop-enclosing-parentheses (#string = $after-conjunction-sign);
+      $first-formula = first-term-of-term-string (#string = $sans-parens);
+      $after-first-term = `substring-after ($sans-parens, $first-formula)`;
+      <conjunction {
+        parse-ladr-formula (#string = $first-formula);
+        parse-ladr-formula (#string = `substring-after ($after-first-term, ",")`);
+      }
+    }
+    when [starts-with ($sans-outer-parens, "(")] {
+      $balanced = balance-parens (#string = `substring-after ($sans-outer-parens, "(")`,
+      	      		        #solution = "(",
+  				#counter = "1");
+      $after-balanced = `substring-after ($sans-outer-parens, $balanced)`;
+      choose {
+        when [substring-after ($sans-outer-parens, $after-balanced) = ""] {
+          parse-ladr-formula (#string = $sans-outer-parens);
+        }
+        when [starts-with ($after-balanced, " & ")] {
+          $after-conjunction-sign = `substring-after ($after-balanced, " & ")`;
+          <conjunction {
+            parse-ladr-formula (#string = $balanced);
+            parse-ladr-formula (#string = $after-conjunction-sign);
+          }
+        }
+        when [starts-with ($after-balanced, " | ")] {
+          $after-disjunction-sign = `substring-after ($after-balanced, " | ")`;
+          <disjunction {
+            parse-ladr-formula (#string = $balanced);
+            parse-ladr-formula (#string = $after-disjunction-sign);
+          }
+        }
+        when [starts-with ($after-balanced, " -> ")] {
+          $after-implication-sign = `substring-after ($after-balanced, " -> ")`;
+          <implication {
+            parse-ladr-formula (#string = $balanced);
+            parse-ladr-formula (#string = $after-implication-sign);
+          }
+        }
+        otherwise {
+          $message = `concat ("Error: don't know how to parse '", $string, "' as a composite formula.")`;
+          msg terminate="yes" $message;
+        }
+      }
+    }
+    when [starts-with ($sans-outer-parens, "-")] {
+      $after-negation-sign = `substring-after ($sans-outer-parens, "-")`;
+      if [starts-with ($after-negation-sign, "(")] {
+        $balanced = balance-parens (#string = `substring-after ($after-negation-sign, "(")`,
+		    		    #counter = "1",
+				    #solution = "(");
+        $after-balanced = `substring-after ($sans-outer-parens, $balanced)`;
+        choose {
+          when [$after-balanced = ""] {
+            <negation {
+              parse-ladr-formula (#string = $balanced);
+            }
+          }
+          when [starts-with ($after-balanced, " & ")] {
+            $after-conjunction-sign = `substring-after ($after-balanced, " & ")`;
+            <conjunction {
+              <negation {
+                parse-ladr-formula (#string = $balanced);
+              }
+              parse-ladr-formula (#string = $after-conjunction-sign);
+            }
+          }
+          when [starts-with ($after-balanced, " | ")] {
+            $after-disjunction-sign = `substring-after ($after-balanced, " | ")`;
+            <disjunction {
+              <negation {
+                parse-ladr-formula (#string = $balanced);
+              }
+              parse-ladr-formula (#string = $after-disjunction-sign);
+            }
+          }
+          when [starts-with ($after-balanced, " -> ")] {
+            $after-implication-sign = `substring-after ($after-balanced, " -> ")`;
+            <implication {
+              <negation {
+                parse-ladr-formula (#string = $balanced);
+              }
+              parse-ladr-formula (#string = $after-implication-sign);
+            }
+          }
+          when [starts-with ($after-balanced, " <-> ")] {
+            $after-biconditional-sign = `substring-after ($after-balanced, " -> ")`;
+            <equivalence {
+              <negation {
+                parse-ladr-formula (#string = $balanced);
+              }
+              parse-ladr-formula (#string = $after-biconditional-sign);
+            }
+          }
+          otherwise {
+            $message = `concat ("Error: don't know how to parse '", $string, "' as a composite formula.")`;
+            msg terminate="yes" $message;
+          }
+        }
+      } else {
+        // negated atomic formula, maybe followed by some binary connective
+        if [contains ($after-negation-sign, " ")] {
+          $before-first-space = `substring-before ($after-negation-sign, " ")`;
+          $after-first-space = `substring-after ($after-negation-sign, " ")`;
+          choose {
+            when [starts-with ($after-first-space, "& ")] {
+              $after-conjunction-sign = `substring-after ($after-first-space, "& ")`;
+              <conjunction {
+                <negation {
+                  parse-ladr-formula (#string = $before-first-space);
+                }
+                parse-ladr-formula (#string = $after-conjunction-sign);
+              }
+            }
+            when [starts-with ($after-first-space, "| ")] {
+              $after-disjunction-sign = `substring-after ($after-first-space, "| ")`;
+              <disjunction {
+                <negation {
+                  parse-ladr-formula (#string = $before-first-space);
+                }
+                parse-ladr-formula (#string = $after-disjunction-sign);
+              }
+            }
+            when [starts-with ($after-first-space, "-> ")] {
+              $after-implication-sign = `substring-after ($after-first-space, "-> ")`;
+              <implication {
+                <negation {
+                  parse-ladr-formula (#string = $before-first-space);
+                }
+                parse-ladr-formula (#string = $after-implication-sign);
+              }
+            }
+            when [starts-with ($after-first-space, "<-> ")] {
+              $after-biconditional-sign = `substring-after ($after-first-space, "<-> ")`;
+              <equivalence {
+                <negation {
+                  parse-ladr-formula (#string = $before-first-space);
+                }
+                parse-ladr-formula (#string = $after-biconditional-sign);
+              }
+            }
+            otherwise {
+              $message = `concat ("Error: don't know how to parse '", $string, "' as a composite formula.")`;
+              msg terminate="yes" $message;
+            }
+          }
+        } else {
+          <negation {
+            parse-ladr-formula (#string = $after-negation-sign);
+          }
+        }
+      }
+    }
+    otherwise { // atomic first argument
+      if [contains ($sans-outer-parens, " ")] {
+        $before-first-space = `substring-before ($sans-outer-parens, " ")`;
+        $after-first-space = `substring-after ($sans-outer-parens, " ")`;
+        choose {
+          when [starts-with ($after-first-space, "& ")] {
+            $after-conjunction-sign = `substring-after ($after-first-space, "& ")`;
+            <conjunction {
+              parse-atomic-formula (#string = $before-first-space);
+              parse-ladr-formula (#string = $after-conjunction-sign);
+            }
+          }
+          when [starts-with ($after-first-space, "| ")] {
+            $after-disjunction-sign = `substring-after ($after-first-space, "| ")`;
+            <disjunction {
+              parse-atomic-formula (#string = $before-first-space);
+              parse-ladr-formula (#string = $after-disjunction-sign);
+            }
+          }
+          when [starts-with ($after-first-space, "-> ")] {
+            $after-implication-sign = `substring-after ($after-first-space, "-> ")`;
+            <implication {
+              parse-atomic-formula (#string = $before-first-space);
+              parse-ladr-formula (#string = $after-implication-sign);
+            }
+          }
+          otherwise {
+            $message = `concat ("Error: don't know how to parse '", $string, "' as a composite formula.")`;
+            msg terminate="yes" $message;
+          }
+        }
+      } else {
+        $message = `concat ("Error: don't know how to parse '", $string, "' as a composite formula.")`;
+        msg terminate="yes" $message;
+      }
+    }
+  }
+}
+
+tpl parse-ladr-formula (#string) {
+  msg `concat ("Parsing the formula '", $string, "'")`;
+  choose {
+    when [starts-with ($string, "(all ")] {
+      $sans-outer-parens = drop-enclosing-parentheses (#string = $string);
+      parse-quantifier-prefix (#string = $sans-outer-parens);
+    }
+    when [starts-with ($string, "(exists ")] {
+      $sans-outer-parens = drop-enclosing-parentheses (#string = $string);
+      parse-quantifier-prefix (#string = $sans-outer-parens);
+    }
+    when [starts-with ($string, "-")] {
+      $after-negation = `substring-after ($string, "-")`;
+      <negation {
+        parse-ladr-formula (#string = $after-negation);
+      }
+    }
+    when [starts-with ($string, "&(")] {
+      $after-conjunction-sign = `substring-after ($string, "&")`;
+      $sans-parens = drop-enclosing-parentheses (#string = $after-conjunction-sign);
+      $first-formula = first-term-of-term-string (#string = $sans-parens);
+      $after-first-term = `substring-after ($sans-parens, $first-formula)`;
+      <conjunction {
+        parse-ladr-formula (#string = $first-formula);
+        parse-ladr-formula (#string = `substring-after ($after-first-term, ",")`);
+      }
+    }
+    when [starts-with ($string, "(")] { // composite formula
+      parse-composite-formula (#string = $string);
+    }
+    otherwise {
+      parse-atomic-formula (#string = $string);
+    }
+  }
+}
+
+tpl sniff-attributes (#attributes) {
+  if [$attributes] {
+    $attribute = `$attributes[1]`;
+    for-each [$attribute] {
+      for-each [text ()] {
+        $text = `string (.)`;
+        $normalized = `normalize-space ($text)`;
+        if [starts-with ($normalized, "label(")] {
+          $after-label = `substring-after ($normalized, "label")`;
+          $label = drop-enclosing-parentheses (#string = $after-label);
+          choose {
+            when [$label = "non_clause"] {
+              sniff-attributes (#attributes = `$attributes[position() > 1]`);
+            }
+            when [$label = "axiom"] {
+              sniff-attributes (#attributes = `$attributes[position() > 1]`);
+            }
+            otherwise {
+              $label;
+            }
+          }
+        } else {
+          sniff-attributes (#attributes = `$attributes[position() > 1]`);
+        }
+      }
+    }
+  } else {
+    "";
+  }
+}
+
+tpl sniff-formula-name {
+  if [attribute] {
+    $candidate-name = sniff-attributes (#attributes = `attribute`);
+    if [$candidate-name = ""] {
+      @"name" = `@id`;
+    } else {
+      @"name" = $candidate-name;
+    }
+  } else {
+    @"name" = `@id`;
+  }
+}
+
+tpl [clause[@type = "assumption"]] {
+  <formula {
+    sniff-formula-name ();
+    @syntax = "formula";
+    @status = "axiom";
+    emit-literals (#literals = `literal`);
+    <source;
+    <useful-info {
+      <non-logical-data {
+        for-each [literal] {
+          for-each [text()] {
+            $s = `string (.)`;
+            @text = `normalize-space ($s)`;
+          }
+        }
+      }
+    }
+  }
+}
+
+tpl emit-literals (#literals) {
+  if [$literals] {
+    $literal = `$literals[1]`;
+    if [$literals[2]] {
+      <disjunction {
+        for-each [$literal] {
+          for-each [text()] {
+            $s = `string (.)`;
+            parse-ladr-formula (#string = `normalize-space ($s)`);
+          }
+        }
+        emit-literals (#literals = `$literals[position() > 1]`);
+      }
+    } else {
+      for-each [$literal] {
+        for-each [text()] {
+          $s = `string (.)`;
+          parse-ladr-formula (#string = `normalize-space ($s)`);
+        }
+      }
+      emit-literals (#literals = `$literals[position() > 1]`);
+    }
+  }
+}
+
+tpl [clause[@type = "clausify"]] {
+  <formula {
+    @"name" = `@id`;
+    @syntax = "formula";
+    @status = "plain";
+    emit-literals (#literals = `literal`);
+    <source {
+      <non-logical-data {
+        @"name" = "inference";
+        for-each [justification] {
+          for-each [j1] {
+            <non-logical-data {
+              @"name" = `@rule`;
+            }
+            <non-logical-data {
+              <non-logical-data {
+                @"name" = "status";
+                <non-logical-data {
+                  @"name" = "esa";
+                }
+              }
+            }
+            <non-logical-data {
+              $parents = `string (@parents)`;
+              emit-parents (#parents-string = $parents);
+            }
+          }
+        }
+      }
+    }
+    <useful-info {
+      <non-logical-data {
+        for-each [literal] {
+          for-each [text()] {
+            $s = `string (.)`;
+            @text = `normalize-space ($s)`;
+          }
+        }
+      }
+    }
+  }
+}
+
+tpl emit-parents (#parents-string) {
+  choose {
+    when [$parents-string = ""] {
+      // nothing more to do
+    }
+    when [contains ($parents-string, " ")] {
+      $first-parent = `substring-before ($parents-string, " ")`;
+      $tail = `substring-after ($parents-string, " ")`;
+      if [key ("assumptions", $first-parent)] {
+        for-each [key ("assumptions", $first-parent)] {
+          $candidate-name = sniff-attributes (#attributes = `attribute`);
+          <non-logical-data {
+            if [$candidate-name = ""] {
+              @"name" = $first-parent;
+            } else {
+              @"name" = $candidate-name;
+            }
+          }
+        }
+      } else {
+        <non-logical-data {
+          @"name" = $first-parent;
+        }
+      }
+
+      emit-parents (#parents-string = $tail);
+
+    }
+    otherwise {
+      if [key ("clauses", $parents-string)] {
+        for-each [key ("clauses", $parents-string)] {
+          $candidate-name = sniff-attributes (#attributes = `attribute`);
+          <non-logical-data {
+            if [$candidate-name = ""] {
+              @"name" = $parents-string;
+            } else {
+              @"name" = $candidate-name;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+tpl [clause[not(@type = "clausify") and not(@type = "assumption")]] {
+  <formula {
+    @"name" = `@id`;
+    @syntax = "formula";
+    @status = "plain";
+    emit-literals (#literals = `literal`);
+    <source {
+      <non-logical-data {
+        @"name" = "inference";
+        for-each [justification] {
+          for-each [j1] {
+            <non-logical-data {
+              @"name" = `@rule`;
+            }
+            <non-logical-data {
+              <non-logical-data {
+                @"name" = "status";
+                <non-logical-data {
+                  @"name" = "thm";
+                }
+              }
+            }
+            <non-logical-data {
+              $parents = `string (@parents)`;
+              msg $parents;
+              emit-parents (#parents-string = $parents);
+            }
+          }
+        }
+      }
+    }
+    <useful-info {
+      <non-logical-data {
+        for-each [literal] {
+          for-each [text()] {
+            $s = `string (.)`;
+            @text = `normalize-space ($s)`;
+          }
+        }
+      }
+    }
+  }
+}

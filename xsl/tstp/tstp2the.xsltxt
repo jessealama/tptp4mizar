@@ -15,20 +15,9 @@ output omit-xml-declaration="no";
 // The directory in which we will look for the dco file
 #prel-directory = { ""; }
 
-// Generate only skolem "definitions"
-#only-skolems = { ""; }
-
-// If '1', ignore all skolem functions
-#no-skolems = { ""; }
-
-#skolem-prefix = { "esk"; }
-
 // Name of a dco file (sans extension) in which we shall look for
 // other functions and predicates.
 #reference-dco = { ""; }
-
-// Where we can find skolem functions
-#skolem-dco = { ""; }
 
 //////////////////////////////////////////////////////////////////////
 // Keys
@@ -75,54 +64,14 @@ tpl [tstp] {
       }
     }
 
-    if [not($only-skolems = "1")] {
-      // Generate the axioms
-      for-each [formula[@status = "axiom"]] {
-        <Theorem {
-          @kind = "T";
-          apply [.] (#variable-alist = ",,") mode="render-definiens";
-        }
+    // Generate the axioms
+    for-each [formula[@status = "axiom"]] {
+      <Theorem {
+        @kind = "T";
+        apply [.] (#variable-alist = ",,") mode="render-definiens";
       }
     }
 
-    if [not($no-skolems = "1")] {
-      $num-skolem-functions
-        = `count(descendant::function[starts-with (@name, $skolem-prefix)
-                                      and not(@name = preceding::function/@name)
-                                      and not(@name = ancestor::function/@name)])`;
-      for-each [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]] {
-        $this-formula-name = `@name`;
-        <Theorem {
-          @kind = "D";
-          @constrkind = "K";
-          @constrnr = `position()`;
-          <Not {
-            <And {
-              for-each [source] {
-                for-each [non-logical-data[@name = "inference"]] {
-                  for-each [non-logical-data[position() = last()]] {
-                    for-each [non-logical-data[@name and not(*)] | number[@name]] {
-                      $other-formula-name = `@name`;
-                      if [key ("formulas", $other-formula-name)] {
-                        for-each [key ("formulas", $other-formula-name)] {
-                          apply [*[1]] (#variable-alist = ",,") mode="render-definiens";
-                        }
-                      } else {
-                        $message = `concat ("Error: formula ", $this-formula-name, " depends on formula ", $other-formula-name, ", but there appears to be no such formula.")`;
-                        apply [.] (#message = $message) mode="die";
-                      }
-                    }
-                  }
-                }
-              }
-              <Not {
-                apply [.] (#variable-alist = ",,") mode="render-definiens";
-              }
-            }
-          }
-        }
-      }
-    }
   }
 }
 

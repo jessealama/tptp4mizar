@@ -7,24 +7,36 @@ require v5.10.0; # for the 'say' feature
 use feature 'say';
 
 use Getopt::Long;
+use Pod::Usage;
 use IPC::Cmd qw(can_run);
 use IPC::Run qw(harness);
 use Readonly;
 use File::Temp qw(tempfile);
+use charnames qw(:full);
 
 use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
+use Utils qw(sort_tstp_solution
+	     tptp_xmlize
+	     tptp_fofify
+	     apply_stylesheet
+	     sort_tstp_solution
+	     normalize_tstp_steps);
 
 my $opt_man = 0;
 my $opt_help = 0;
+my $opt_format = 'tptp';
 
+# Strings
 Readonly my $EMPTY_STRING => q{};
+Readonly my $LF => "\N{LF}";
 
 sub process_commandline {
 
     my $options_ok = GetOptions (
 	'help' => \$opt_help,
 	'man' => \$opt_man,
+	'format=s' => \$opt_format,
     );
 
     if (! $options_ok) {
@@ -51,6 +63,13 @@ sub process_commandline {
 	pod2usage (
 	    -exitval => 1,
 	);
+    }
+
+    if ($opt_format ne 'tptp' && $opt_format ne 'xml') {
+	pod2usage (
+	    -message => error_message ('The only acceptable values for the format option are \'tptp\' and \'xml\'.'),
+	    -exitval => 1,
+	    );
     }
 
     return;
@@ -110,7 +129,29 @@ if ($ccl_exit_code != 0) {
     exit 1;
 }
 
-print $ccl_output;
+my $fofifed = tptp_fofify ($ccl_output);
+my $ivy_xml = tptp_xmlize ($fofifed);
+my $sorted_ivy_xml = sort_tstp_solution ($ivy_xml);
+my $normalized_steps_xml = normalize_tstp_steps ($sorted_ivy_xml);
+
+if ($opt_format eq 'xml') {
+    print $normalized_steps_xml;
+    exit $?;
+}
+
+my $render_tptp_stylesheet = "$RealBin/../xsl/tptp/render-tptp.xsl";
+
+my $rendered = apply_stylesheet ($render_tptp_stylesheet,
+				 $normalized_steps_xml,
+				 undef,
+				 {
+				     'tstp' => '1',
+				 }
+			     );
+
+print $rendered;
+
+exit $?;
 
 __END__
 
