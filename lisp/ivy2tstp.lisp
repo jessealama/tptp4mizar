@@ -151,7 +151,7 @@
 (defun render-flip-step (step)
   (destructuring-bind (formula-name disjunct-address)
       step
-    (format nil "inference(flip,[status(thm)],~a),disjuncts(~a)"
+    (format nil "inference(flip,[status(thm)],[~a]),disjuncts([~a])"
 	    formula-name
 	    (comma-separated-list disjunct-address))))
 
