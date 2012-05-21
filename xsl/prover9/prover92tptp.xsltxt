@@ -810,8 +810,8 @@ tpl emit-parents (#parents-string) {
 
     }
     otherwise {
-      if [key ("assumptions", $parents-string)] {
-        for-each [key ("assumptions", $parents-string)] {
+      if [key ("clauses", $parents-string)] {
+        for-each [key ("clauses", $parents-string)] {
           $candidate-name = sniff-attributes (#attributes = `attribute`);
           <non-logical-data {
             if [$candidate-name = ""] {
