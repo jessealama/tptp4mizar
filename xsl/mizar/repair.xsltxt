@@ -57,36 +57,6 @@ tpl all-errors-present-in-text (#errs) {
   }
 }
 
-//////////////////////////////////////////////////////////////////////
-// Templates
-//////////////////////////////////////////////////////////////////////
-
-tpl [/] {
-  if [Text-Proper] {
-    if [$errors = ""] {
-      <problems {
-        apply [Text-Proper] (#errs = ",,");
-      }
-    } else {
-      $ok = is-valid-token-string (#string = $errors);
-      if [$ok = "1"] {
-        $all-known = all-errors-present-in-text (#errs = $errors);
-        if [$all-known = "1"] {
-          <problems {
-            apply [Text-Proper] (#errs = $errors);
-          }
-        } else {
-          msg terminate="yes" "Error: at least one error could not be found in the text.";
-        }
-      } else {
-        msg terminate="yes" "Error: the value for the errors stylesheet parameter is not a valid token string.";
-      }
-    }
-  } else {
-    msg terminate="yes" "Error: the required Text-Proper document element is missing.";
-  }
-}
-
 tpl token-is-valid (#token) {
   "1";
 }
@@ -135,6 +105,36 @@ tpl some-error-in-same-justification (#errs, #line, #column) {
         }
       }
     }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+tpl [/] {
+  if [Text-Proper] {
+    if [$errors = ""] {
+      <problems {
+        apply [Text-Proper] (#errs = ",,");
+      }
+    } else {
+      $ok = is-valid-token-string (#string = $errors);
+      if [$ok = "1"] {
+        $all-known = all-errors-present-in-text (#errs = $errors);
+        if [$all-known = "1"] {
+          <problems {
+            apply [Text-Proper] (#errs = $errors);
+          }
+        } else {
+          msg terminate="yes" "Error: at least one error could not be found in the text.";
+        }
+      } else {
+        msg terminate="yes" "Error: the value for the errors stylesheet parameter is not a valid token string.";
+      }
+    }
+  } else {
+    msg terminate="yes" "Error: the required Text-Proper document element is missing.";
   }
 }
 
