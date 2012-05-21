@@ -39,6 +39,8 @@ tpl [tstp] {
   "op(400,infix,\"|\")."; "\n";
   "op(400,infix,\"->\")."; "\n";
   "op(ordinary,[\"=\"])."; "\n";
+  "redeclare(negated_equality,\"@\")."; "\n";
+  "op(ordinary,[\"@\"])."; "\n";
   "formulas(sos)."; "\n";
   if [formula[@status = "conjecture"]] {
     for-each [formula[@status = "conjecture"]] {
