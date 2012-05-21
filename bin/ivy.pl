@@ -48,6 +48,7 @@ my $opt_format = 'tptp';
 
 sub process_commandline {
     my $options_ok = GetOptions (
+	'debug' => \$opt_debug,
 	'timeout=i' => \$opt_timeout,
 	'format=s' => \$opt_format,
 
