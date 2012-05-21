@@ -452,12 +452,25 @@ tpl parse-atomic-formula (#string = $string) {
 tpl parse-composite-formula (#string) {
   $sans-outer-parens = drop-enclosing-parentheses (#string = $string);
   choose {
+    when [starts-with ($sans-outer-parens, "&(")] {
+      $after-conjunction-sign = `substring-after ($sans-outer-parens, "&")`;
+      $sans-parens = drop-enclosing-parentheses (#string = $after-conjunction-sign);
+      $first-formula = first-term-of-term-string (#string = $sans-parens);
+      $after-first-term = `substring-after ($sans-parens, $first-formula)`;
+      <conjunction {
+        parse-ladr-formula (#string = $first-formula);
+        parse-ladr-formula (#string = `substring-after ($after-first-term, ",")`);
+      }
+    }
     when [starts-with ($sans-outer-parens, "(")] {
       $balanced = balance-parens (#string = `substring-after ($sans-outer-parens, "(")`,
       	      		        #solution = "(",
   				#counter = "1");
       $after-balanced = `substring-after ($sans-outer-parens, $balanced)`;
       choose {
+        when [substring-after ($sans-outer-parens, $after-balanced) = ""] {
+          parse-ladr-formula (#string = $sans-outer-parens);
+        }
         when [starts-with ($after-balanced, " & ")] {
           $after-conjunction-sign = `substring-after ($after-balanced, " & ")`;
           <conjunction {
@@ -647,6 +660,16 @@ tpl parse-ladr-formula (#string) {
       $after-negation = `substring-after ($string, "-")`;
       <negation {
         parse-ladr-formula (#string = $after-negation);
+      }
+    }
+    when [starts-with ($string, "&(")] {
+      $after-conjunction-sign = `substring-after ($string, "&")`;
+      $sans-parens = drop-enclosing-parentheses (#string = $after-conjunction-sign);
+      $first-formula = first-term-of-term-string (#string = $sans-parens);
+      $after-first-term = `substring-after ($sans-parens, $first-formula)`;
+      <conjunction {
+        parse-ladr-formula (#string = $first-formula);
+        parse-ladr-formula (#string = `substring-after ($after-first-term, ",")`);
       }
     }
     when [starts-with ($string, "(")] { // composite formula
