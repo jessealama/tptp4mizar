@@ -2,6 +2,7 @@ stylesheet "1.0";
 include "../utils/token-strings.xsl";
 include "../utils/die.xsl";
 include "../utils/trace.xsl";
+include "mizar-to-tptp.xsl";
 output method="xml" indent="yes";
 
 //////////////////////////////////////////////////////////////////////
@@ -233,113 +234,5 @@ tpl [Proposition[Label[@spelling]]] mode="conjecture" {
     @status = "conjecture";
     @syntax = "formula";
     apply [*[position() = last()]] mode="mizar-to-tptp";
-  }
-}
-
-//////////////////////////////////////////////////////////////////////
-// Rendering formulas proper
-//////////////////////////////////////////////////////////////////////
-
-tpl [*] mode="mizar-to-tptp" {
-  $n = `name (.)`;
-  $message = `concat("Error: we have arrived at an unhandled ", $n, " node in mizar-to-tptp mode.")`;
-  apply [.] (#message = $message) mode="die";
-}
-
-tpl [Disjunctive-Formula] mode="mizar-to-tptp" {
-  <disjunction {
-    apply [*[1]] mode="mizar-to-tptp";
-    apply [*[2]] mode="mizar-to-tptp";
-  }
-}
-
-tpl [Conditional-Formula] mode="mizar-to-tptp" {
-  <implication {
-    apply [*[1]] mode="mizar-to-tptp";
-    apply [*[2]] mode="mizar-to-tptp";
-  }
-}
-
-tpl [Biconditional-Formula] mode="mizar-to-tptp" {
-  <equivalence {
-    apply [*[1]] mode="mizar-to-tptp";
-    apply [*[2]] mode="mizar-to-tptp";
-  }
-}
-
-tpl [Existential-Quantifier-Formula[Implicitly-Qualified-Segment]] mode="mizar-to-tptp" {
-  <quantifier {
-    @type = "existential";
-    for-each [Implicitly-Qualified-Segment] {
-      apply [Variable] mode="mizar-to-tptp";
-    }
-    apply [*[position() = last()]] mode="mizar-to-tptp";
-  }
-}
-
-tpl [Universal-Quantifier-Formula[Implicitly-Qualified-Segment]] mode="mizar-to-tptp" {
-  <quantifier {
-    @type = "universal";
-    for-each [Implicitly-Qualified-Segment] {
-      apply [Variable] mode="mizar-to-tptp";
-    }
-    apply [*[position() = last()]] mode="mizar-to-tptp";
-  }
-}
-
-tpl [Negated-Formula] mode="mizar-to-tptp" {
-  <negation {
-    apply [*[1]] mode="mizar-to-tptp";
-  }
-}
-
-tpl [Conjunctive-Formula] mode="mizar-to-tptp" {
-  <conjunction {
-    apply [*[1]] mode="mizar-to-tptp";
-    apply [*[2]] mode="mizar-to-tptp";
-  }
-}
-
-tpl [Predicative-Formula[@spelling and Arguments]] mode="mizar-to-tptp" {
-  <predicate {
-    @"name" = `@spelling`;
-    for-each [Arguments] {
-      apply [*] mode="mizar-to-tptp";
-    }
-  }
-}
-
-tpl [Contradiction] mode="mizar-to-tptp" {
-  <defined-predicate {
-    @"name" = "false";
-  }
-}
-
-tpl [Simple-Term[@spelling]] mode="mizar-to-tptp" {
-  $n = `@spelling`;
-  $looks-like-variable = starts-with-capital-letter (#string = $n);
-  if [$looks-like-variable = "1"] {
-    <variable {
-      @"name" = $n;
-    }
-  } else {
-    <function {
-      @"name" = $n;
-    }
-  }
-}
-
-tpl [Variable[@spelling]] mode="mizar-to-tptp" {
-  <variable {
-    @"name" = `@spelling`;
-  }
-}
-
-tpl [Infix-Term[@spelling]] mode="mizar-to-tptp" {
-  <function {
-    @"name" = `@spelling`;
-    for-each [Arguments[2]] {
-      apply [*] mode="mizar-to-tptp";
-    }
   }
 }
