@@ -1,6 +1,7 @@
 stylesheet "1.0";
 include "../utils/token-strings.xsl";
 include "../utils/die.xsl";
+include "../utils/trace.xsl";
 output method="xml" indent="yes";
 
 //////////////////////////////////////////////////////////////////////
@@ -24,25 +25,6 @@ key "formulas"
 //////////////////////////////////////////////////////////////////////
 // Utilities
 //////////////////////////////////////////////////////////////////////
-
-tpl [*] mode="trace" {
-  msg "We are about to terminate the XSLT processor.  Here's where we are:";
-  apply [.] mode="trace-recursive";
-}
-
-tpl [*] mode="trace-recursive" {
-  $n = `name (.)`;
-  $position = `count (preceding-sibling::*[name() = $n]) + 1`;
-  if [parent::*] {
-    apply [..] mode="trace-recursive";
-  }
-  `$n`; "["; `$position`; "]"; "\n";
-}
-
-tpl [*] (#message) mode="die" {
-  apply [.] mode="trace";
-  msg terminate="yes" $message;
-}
 
 //////////////////////////////////////////////////////////////////////
 // Templates
