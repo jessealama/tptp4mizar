@@ -37,16 +37,17 @@ tpl [tstp] {
   "set(prolog_style_variables)."; "\n";
   // "op(400,infix,\"&\")."; "\n";
   "op(400,infix,\"|\")."; "\n";
-  "op(400,infix,\"->\")."; "\n";
+  // "op(400,infix,\"->\")."; "\n";
+  "op(400,infix,\"<->\")."; "\n";
   "redeclare(negated_equality,\"@\")."; "\n";
-  // "redeclare(implication,\"implies\")."; "\n";
+  "redeclare(implication,\"implies\")."; "\n";
   // "redeclare(equivalence,\"equivalent\")."; "\n";
   // "redeclare(negation,\"not\")."; "\n";
   "op(ordinary,[\"@\"])."; "\n";
   "op(ordinary,[\"&\"])."; "\n";
   // "op(ordinary,[\"|\"])."; "\n";
   // "op(ordinary,[\"->\"])."; "\n";
-  // "op(ordinary,[\"implies\"])."; "\n";
+  "op(ordinary,[\"implies\"])."; "\n";
   // "op(ordinary,[\"equivalent\"])."; "\n";
   // "op(ordinary,[\"not\"])."; "\n";
   // "op(ordinary,[\"<->\"])."; "\n";
@@ -81,8 +82,8 @@ tpl [formula] {
 //////////////////////////////////////////////////////////////////////
 
 tpl [implication] {
-  // "implies("; apply [*[1]]; ","; apply [*[2]]; ")";
-  "("; apply [*[1]]; " -> "; apply [*[2]]; ")";
+  "implies("; apply [*[1]]; ","; apply [*[2]]; ")";
+  // "("; apply [*[1]]; " -> "; apply [*[2]]; ")";
 }
 
 tpl [equivalence] {
