@@ -24,7 +24,8 @@ use List::MoreUtils qw(any);
 
 use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
-use Xsltproc qw(apply_stylesheet);
+use Utils qw(apply_stylesheet
+	     slurp);
 
 # Strings
 Readonly my $EMPTY_STRING => q{};
