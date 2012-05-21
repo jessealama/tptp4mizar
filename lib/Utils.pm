@@ -94,8 +94,8 @@ sub apply_stylesheet {
     my $xsltproc_harness
 	= harness (\@xsltproc_call,
 		   '<', (is_file ($document) ? $document : \$document),
-		   '>', \$xsltproc_out,
-		   '2>', \$xsltproc_err);
+		   '>', \$xsltproc_out);
+		   # '2>', \$xsltproc_err);
 
     $xsltproc_harness->start ();
     $xsltproc_harness->finish ();
