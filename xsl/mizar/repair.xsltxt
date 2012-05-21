@@ -1,5 +1,6 @@
 stylesheet "1.0";
 include "../utils/token-strings.xsl";
+include "../utils/die.xsl";
 output method="xml" indent="yes";
 
 //////////////////////////////////////////////////////////////////////
