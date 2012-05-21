@@ -321,23 +321,32 @@ tpl balance-parens (#string, #solution, #counter) {
 }
 
 tpl first-term-of-term-string (#string) {
-  choose {
-    when [$string = ""] {
-      msg terminate="yes" "Error: from the empty string we cannot extract the first term.";
-    }
-    when [contains ($string, "(")] {
-      $before-first-paren = `substring-before ($string, "(")`;
-      $after-head = `substring-after ($string, "(")`;
-      $balanced-parens = balance-parens (#string = $after-head,
-                                         #solution = "(",
-                                         #counter = "1");
-      `concat ($before-first-paren, $balanced-parens)`;
-    }
-    when [contains ($string, ",")] {
-      `substring-before ($string, ",")`;
-    }
-    otherwise {
-      $string;
+  if [$string = ""] {
+    msg terminate="yes" "Error: from the empty string we cannot extract the first term.";
+  } else {
+    $pos-of-first-left-paren = position-in-string (#string = $string, #thing = "(");
+    $pos-of-first-comma = position-in-string (#string = $string, #thing = ",");
+    choose {
+      when [$pos-of-first-left-paren < "0" and $pos-of-first-comma < "0"] {
+        $string;
+      }
+      when [$pos-of-first-left-paren < "0"] {
+        `substring-before ($string, ",")`;
+      }
+      when [$pos-of-first-left-paren < "0"] {
+        $string;
+      }
+      when [$pos-of-first-left-paren < $pos-of-first-comma] {
+        $before-first-paren = `substring-before ($string, "(")`;
+        $after-head = `substring-after ($string, "(")`;
+        $balanced-parens = balance-parens (#string = $after-head,
+                                           #solution = "(",
+                                           #counter = "1");
+        `concat ($before-first-paren, $balanced-parens)`;
+      }
+      otherwise {
+        `substring-before ($string, ",")`;
+      }
     }
   }
 }
