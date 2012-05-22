@@ -17,3 +17,6 @@ clean:
 	make -C vampire clean
 	make -C ivy clean
 	make -C prover9 clean
+
+check:
+	# nothing to do yet
