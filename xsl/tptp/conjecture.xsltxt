@@ -1,0 +1,48 @@
+stylesheet "1.0";
+output method="xml" indent="yes";
+
+tpl [*] {
+  $n = `name (.)`;
+  <$n {
+    for-each [@*] { copy-of `.`; }
+    apply [*];
+  }
+}
+
+tpl [/] {
+  if [tstp] {
+    apply [tstp];
+  } else {
+    msg terminate="yes" "Error: the required tstp document element is missing.";
+  }
+}
+
+tpl [tstp] {
+  <tstp {
+    if [formula[@status = "conjecture"]] {
+      apply [formula[@status = "conjecture"]];
+      apply [formula[@status = "conjecture"]] mode="negate-conjecture";
+    }
+    for-each [formula[not(@status = "conjecture")]] {
+      apply [.];
+    }
+  }
+}
+
+tpl [formula[@status = "conjecture"]] {
+  $n = `@name`;
+  <formula {
+    for-each [@*] { copy-of `.`; }
+    @"name" = `concat ($n, "_conjecture")`;
+    apply [*];
+  }
+}
+
+tpl [formula[@status = "conjecture"]] mode="negate-conjecture" {
+  $n = `@name`;
+  <formula {
+    for-each [@*] { copy-of `.`; }
+    @status = "negated_conjecture";
+    apply [*];
+  }
+}
