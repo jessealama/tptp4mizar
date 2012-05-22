@@ -186,17 +186,28 @@ sub equal_formula_nodes {
 }
 
 my $render_tptp_stylesheet = "$RealBin/../xsl/tptp/render-tptp.xsl";
+my $conjecture_stylesheet = "$RealBin/../xsl/tptp/conjecture.xsl";
+my $ignore_axioms_stylesheet = "$RealBin/../xsl/tptp/ignore-axioms.xsl";
 
 sub merge_prover9_solutions {
     my $original_problem_xml = shift;
     my $clausification_xml = shift;
     my $refutation_xml = shift;
 
-    # ignore the original problem, for now
-
     my $normalized_clausification_xml = normalize_variables ($clausification_xml);
+
+    my $no_axioms_clausification_xml
+	= apply_stylesheet ($ignore_axioms_stylesheet,
+			    $normalized_clausification_xml);
+
     my $parser = XML::LibXML->new ();
 
+    # Extract the conjecture from the original problem
+
+    my $conjecture_xml = apply_stylesheet ($conjecture_stylesheet,
+					   $original_problem_xml);
+
+    my $problem_doc = $parser->parse_string ($original_problem_xml);
     my $clausification_doc = $parser->parse_string ($normalized_clausification_xml);
     my $refutation_doc = $parser->parse_string ($refutation_xml);
 
@@ -239,16 +250,19 @@ sub merge_prover9_solutions {
 				'replacements' => $replacements,
 			    });
 
-    my $ignore_axioms_stylesheet = "$RealBin/../xsl/tptp/ignore-axioms.xsl";
     my $axiom_free_refutation = apply_stylesheet ($ignore_axioms_stylesheet,
 						  $replaced_refutation);
 
+    my $conjecture_tptp = apply_stylesheet ($render_tptp_stylesheet,
+					    $conjecture_xml);
+    my $problem_tptp = apply_stylesheet ($render_tptp_stylesheet,
+					 $original_problem_xml);
     my $clausification_tptp = apply_stylesheet ($render_tptp_stylesheet,
-						$normalized_clausification_xml);
+						$no_axioms_clausification_xml);
     my $refutation_tptp = apply_stylesheet ($render_tptp_stylesheet,
 					    $axiom_free_refutation);
 
-    return "${clausification_tptp}${refutation_tptp}";
+    return "${conjecture_tptp}${clausification_tptp}${refutation_tptp}";
 
 }
 
@@ -265,7 +279,6 @@ if (scalar @ARGV == 1) {
 }
 
 my $problem_xml = tptp_xmlize ($problem);
-
 
 my @prover9_call = ($PROVER9);
 my @prooftrans_expand_call = ($PROOFTRANS);
