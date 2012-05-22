@@ -190,8 +190,10 @@ my $mizar_repair_stylesheet = "${MIZAR_STYLESHEET_HOME}/repair.xsl";
 
 # Warning: we are inside $db at this point
 my $repair_dir = 'repair';
-mkdir $repair_dir
-    or die error_message ('Cannot make the repair directory: ', $!);
+if (! -d $repair_dir) {
+    mkdir $repair_dir
+	or die error_message ('Cannot make the repair directory: ', $!);
+}
 
 my $repair_problems = "${repair_dir}/problems.xml";
 apply_stylesheet (
