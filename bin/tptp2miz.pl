@@ -81,7 +81,7 @@ sub summarize_styles {
     return $summary;
 }
 
-sub ensure_tptp_pograms_available {
+sub ensure_tptp_programs_available {
     foreach my $program (@TPTP_PROGRAMS) {
 	if (! can_run ($program)) {
 	    error_message ('The required program ', $program, ' does not appear to be available.');
@@ -150,7 +150,7 @@ if (! defined $STYLES{$opt_style}) {
 }
 
 # Confirm that essential programs are available.
-ensure_tptp_pograms_available ();
+ensure_tptp_programs_available ();
 
 my $tptp_file = $ARGV[0];
 
