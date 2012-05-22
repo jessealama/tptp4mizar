@@ -2,6 +2,48 @@ stylesheet "1.0";
 include "../tstp/tstp2wsx.xsl";
 output method="xml" indent="yes";
 
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+tpl [tstp] {
+  $aid-uc = uc (#s = $article);
+  <Text-Proper {
+    @articleid = $aid-uc;
+    <Item { @kind = "Section-Pragma"; }
+    reserve-variables ();
+    for-each [formula[@status = "axiom"]] {
+      apply [.] mode="axiom";
+    }
+    <Item {
+      @kind = "Regular-Statement";
+      @shape = "Diffuse-Statement";
+      <Label {
+        @spelling = "Refutation";
+      }
+      <Block {
+        @kind = "Now-Reasoning";
+        for-each [formula[not(@status = "axiom")]] {
+          apply [.] mode="lemma";
+        }
+      }
+    }
+    <Item {
+      @kind = "Theorem-Item";
+      <Proposition {
+        for-each [formula[@status = "conjecture"]] {
+          apply [*[1]];
+        }
+      }
+      <Straightforward-Justification {
+        <Local-Reference {
+          @spelling = "Refutation";
+        }
+      }
+    }
+  }
+}
+
 tpl [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "clausify"]]] mode="lemma" {
   <Item {
     @kind = "Regular-Statement";
