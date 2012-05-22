@@ -291,7 +291,8 @@ foreach my $problem (@problems) {
     my $tptp_to_miz_exit_code = ($tptp_to_miz_harness->results)[0];
 
     if ($tptp_to_miz_exit_code != 0) {
-	confess error_message ('The TPTP-to-Mizar script did not terminate cleanly when working with', $SP, $ivy_solution_path);
+	confess error_message ('The TPTP-to-Mizar script did not terminate cleanly when working with', $SP, $ivy_solution_path, '. Here is its error output:', $LF, $tptp_to_miz_errs);
+	exit 1;
     }
 
     say 'done.';
