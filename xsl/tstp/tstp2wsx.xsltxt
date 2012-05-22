@@ -186,6 +186,21 @@ tpl [formula[@name and source/non-logical-data[@name = "inference"]]] mode="lemm
   }
 }
 
+tpl [formula] mode="assumption" {
+  <Item {
+    @kind = "Assumption";
+    <Single-Assumption {
+      <Proposition {
+        <Label {
+          @spelling = `@name`;
+        }
+        // apply [*[1]] mode="strip-universal-prefix";
+        apply [*[1]];
+      }
+    }
+  }
+}
+
 tpl [formula] mode="conjecture" {
   <Item {
     @kind = "Theorem-Item";
