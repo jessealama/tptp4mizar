@@ -13,8 +13,8 @@ use File::Spec;
 use File::Temp qw(tempfile);
 use IPC::Run qw(harness);
 
-use Xsltproc qw(apply_stylesheet);
-use Utils qw(error_message);
+use Utils qw(error_message
+	     apply_stylesheet);
 
 extends 'TSTPDerivation';
 

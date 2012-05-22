@@ -22,7 +22,6 @@ use Term::ANSIColor qw(colored);
 
 use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
-use Xsltproc qw(apply_stylesheet);
 use Utils qw(is_readable_file
 	     error_message
 	     slurp
@@ -30,6 +29,7 @@ use Utils qw(is_readable_file
 	     normalize_variables
 	     tptp_fofify
 	     tptp_xmlize
+	     apply_stylesheet
 	     sort_tstp_solution);
 
 # Strings

@@ -33,12 +33,12 @@ use Utils qw(is_readable_file
 	     normalize_variables
 	     run_mizar_tool
 	     tptp_xmlize
+	     apply_stylesheet
 	     tptp_fofify);
 use TPTPProblem qw(is_valid_tptp_file);
 use EproverDerivation;
 use VampireDerivation;
 use IvyDerivation;
-use Xsltproc qw(apply_stylesheet);
 
 # Colors
 Readonly my $STYLE_COLOR => 'blue';
