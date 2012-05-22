@@ -1,4 +1,5 @@
 stylesheet "1.0";
+include "../utils/trace.xsl";
 output method="xml" indent="yes";
 
 //////////////////////////////////////////////////////////////////////
@@ -7,20 +8,6 @@ output method="xml" indent="yes";
 
 key "non-axioms" [formula[@name and not(@status = "axiom")]] `@name`;
 key "axioms" [formula[@name and @status = "axiom"]] `@name`;
-
-//////////////////////////////////////////////////////////////////////
-// Utilities
-//////////////////////////////////////////////////////////////////////
-
-tpl [*] mode="trace" {
-  $n = `name (.)`;
-  $position = `count (preceding-sibling::*[name() = $n]) + 1`;
-  if [parent::*] {
-    apply [..] mode="trace";
-  }
-  $step = `concat ($n, "[", $position, "]")`;
-  msg $step;
-}
 
 //////////////////////////////////////////////////////////////////////
 // Templates
