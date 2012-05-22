@@ -23,8 +23,23 @@ tpl [tstp] {
       }
       <Block {
         @kind = "Now-Reasoning";
-        for-each [formula[not(@status = "axiom")]] {
+        for-each [formula[@status = "negated_conjecture"]] {
+          apply [.] mode="assumption";
+        }
+        for-each [formula[not(@status = "axiom")
+                          and not(@status = "conjecture")
+                          and not(@status = "negated_conjecture")]] {
           apply [.] mode="lemma";
+        }
+        <Item {
+          @kind = "Conclusion";
+          @shape = "Compact-Statement";
+          <Proposition {
+            <Contradiction;
+          }
+          <Straightforward-Justification {
+            <Link;
+          }
         }
       }
     }
