@@ -299,7 +299,7 @@ foreach my $problem (@problems) {
 
     print 'Compressing the Mizarization of', $SP, $problem_name, '...';
 
-    my @compress_call = ($compress_mizar_script, 'text/article.miz');
+    my @compress_call = ($compress_mizar_script, "text/${problem_name}.miz");
 
     my $compress_out = $EMPTY_STRING;
     my $compress_errs = $EMPTY_STRING;
