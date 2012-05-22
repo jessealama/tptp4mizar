@@ -10,7 +10,7 @@
 * Outstanding problems with tptp2mizar
 ** Repaired articles are not merged with the original article
 *** DONE Names of repaired articles should not all be 'article'
-*** Vocabularies should be uniqueified
-*** Original article needs to have its straightforward justifications rewritten
-*** Repaired articles need to be exported
-*** Ultimate test: whether the repaired original article is now verifiable
+*** TODO Vocabularies should be uniqueified
+*** TODO Original article needs to have its straightforward justifications rewritten
+*** TODO Repaired articles need to be exported
+*** TODO Ultimate test: whether the repaired original article is now verifiable
