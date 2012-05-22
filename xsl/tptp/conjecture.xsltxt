@@ -46,6 +46,9 @@ tpl [formula[@status = "conjecture"]] mode="negate-conjecture" {
   <formula {
     for-each [@*] { copy-of `.`; }
     @status = "negated_conjecture";
-    apply [*];
+    <negation {
+      apply [*[1]];
+    }
+    apply [*[position() > 1]];
   }
 }
