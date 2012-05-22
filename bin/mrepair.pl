@@ -307,7 +307,6 @@ foreach my $problem (@problems) {
 
     $compress_harness->start ();
     $compress_harness->finish ();
-    chdir $cwd;
 
     my $compress_exit_code = ($compress_harness->results)[0];
 
