@@ -17,7 +17,7 @@ use Cwd qw(getcwd);
 use Carp qw(croak carp);
 use IPC::Run qw(harness);
 use IPC::Cmd qw(can_run);
-use File::Copy qw(copy);
+use File::Copy qw(copy move);
 use File::Basename qw(basename dirname);
 use Term::ANSIColor qw(colored);
 use List::MoreUtils qw(any);
@@ -385,6 +385,7 @@ sub apply_recommendations {
 my $article = process_commandline ();
 my $article_dirname = dirname ($article);
 my $article_basename = basename ($article, '.miz');
+my $article_miz = "${article_dirname}/${article_basename}.miz";
 
 my $fresh_article = "${article_dirname}/compress.miz";
 my $fresh_article_wsx = "${article_dirname}/compress.wsx";
@@ -408,11 +409,11 @@ if ($opt_debug) {
 while ($compression_recommendations ne ',,'
 	   && ( ! defined $applied_recommendations{$compression_recommendations}
 		    || $applied_recommendations{$compression_recommendations} < 2)) {
-#              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # permit looking at a recommentation 2 times, in case we are able to
 # perform some compresisons that don't trigger errors (and hence may
-# lead to identical recommendations coming up)
+# lead to identical recommendations coming up more than once)
 
     # Save our work
     if (-e $fresh_article_wsx) {
@@ -435,6 +436,23 @@ while ($compression_recommendations ne ',,'
     }
 
     run_mizar_tool ('wsmparser', $fresh_article);
+}
+
+# Clean up: remove all the 'compress.*' files, save a copy of the
+# supplied article, rename compress.miz to the name of the given article
+my $article_miz_copy = "${article_dirname}/${article_basename}.miz.orig";
+
+copy ($article_miz, $article_miz_copy)
+    or die error_message ('Unable to save a copy of', $SP, $article_miz, $SP, 'to', $SP, $article_miz_copy, ':', $SP, $!);
+
+move ($fresh_article, $article_miz)
+    or die error_message ('Unable to rename the compressed article', $SP, $fresh_article, $SP, 'to \'',  $article_miz, '\':', $SP, $!);
+
+my @compressed_files = glob "${article_dirname}/compress.*";
+
+foreach my $file (@compressed_files) {
+    unlink $file
+	or die error_message ('Unable to delete', $SP, $file, ':', $SP, $!);
 }
 
 __END__
