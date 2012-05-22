@@ -318,6 +318,20 @@ foreach my $problem (@problems) {
 	confess error_message ('The Mizar compressor script did not terminate cleanly when working with', $SP, $problem_name, '.  Here is its error output:', $LF, $compress_errs);
     }
 
+    print 'Exporting', $SP, $problem_name, $SP, 'to the local database...';
+
+    my $exporter_ok = run_mizar_tool ('exporter', $problem_miz);
+
+    if (! $exporter_ok) {
+	die error_message ('The exporter did not exit cleanly working with', $SP, $problem_miz);
+    }
+
+    my $transfer_ok = run_mizar_tool ('transfer', $problem_miz);
+
+    if (! $transfer_ok) {
+	die error_message ('The Mizar transfer utility did not exit cleanly working with', $SP, $problem_miz);
+    }
+
     say 'done.';
 
 }
