@@ -98,6 +98,7 @@ my $verbose = 0;
 my $opt_debug = 0;
 my $opt_nested = 0;
 my $opt_style = 'tstp';
+my $opt_article_name = 'article';
 
 my $options_ok = GetOptions (
     "db=s"     => \$db,
@@ -107,6 +108,7 @@ my $options_ok = GetOptions (
     'man' => \$man,
     'nested' => \$opt_nested,
     'style=s' => \$opt_style,
+    'article-name=s' => \$opt_article_name,
 );
 
 if (! $options_ok) {
@@ -159,8 +161,6 @@ if (! is_readable_file ($tptp_file) ) {
 
 my $tptp_basename = basename ($tptp_file);
 my $tptp_sans_extension = strip_extension ($tptp_basename);
-
-my $tptp_short_name = 'article'; # fixed boring name
 
 ######################################################################
 ## Sanity checking: the input TPTP theory file is coherent
@@ -261,6 +261,7 @@ if ($opt_style eq 'eprover') {
 }
 
 $derivation->to_miz ($db,
+		     $opt_article_name,
 		     { 'shape' => $opt_nested ? 'nested' : 'flat' });
 
 my $repair_script = "$RealBin/mrepair.pl";
@@ -269,7 +270,7 @@ my $repair_status = system ($repair_script,
 			    "--style=${opt_style}",
 			    '--debug',
 			    "--tptp-proof=${tptp_xml_in_db}",
-			    "${db}/text/article.miz");
+			    "${db}/text/${opt_article_name}.miz");
 my $repair_exit_code = $repair_status >> 8;
 if ($repair_exit_code != 0) {
     die error_message ('The repair script did not terminate cleanly.');

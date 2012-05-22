@@ -276,6 +276,7 @@ foreach my $problem (@problems) {
     my @tptp_to_miz_call = ($tptp_to_mizar_script,
 			    '--style=ivy',
 			    "--db=${repaired_db}",
+			    "--article-name=${problem_name}",
 			    $ivy_solution_path);
 
     my $tptp_to_miz_out = $EMPTY_STRING;

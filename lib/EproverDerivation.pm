@@ -37,6 +37,7 @@ my @extensions_to_generate = ('voc', 'evl', 'dno', 'dco', 'the', 'wsx');
 sub to_miz {
     my $self = shift;
     my $directory = shift;
+    my $article_name = shift;
     my $options_ref = shift;
 
     my %options = defined $options_ref ? %{$options_ref} : ();
@@ -59,7 +60,7 @@ sub to_miz {
 
 	my %parameters =
 	    (
-		'article' => 'article',
+		'article' => $article_name,
 		'prel-directory' => $prel_subdir_full,
 		# 'no-skolems' => '1',
 		# 'skolem-prefix' => 'skolem',
@@ -79,7 +80,7 @@ sub to_miz {
 	    $parameters{'shape'} = 'flat';
 	}
 	my $stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2${extension}.xsl";
-	my $result = "${subdir}/article.${extension}";
+	my $result = "${subdir}/${article_name}.${extension}";
 	apply_stylesheet ($stylesheet,
 			  $path,
 			  $result,
@@ -88,9 +89,9 @@ sub to_miz {
     }
 
     my $pp_stylesheet = "${MIZAR_STYLESHEET_HOME}/pp.xsl";
-    my $evl_path = "${directory}/text/article.evl";
-    my $wsx_path = "${directory}/text/article.wsx";
-    my $miz_path = "${directory}/text/article.miz";
+    my $evl_path = "${directory}/text/${article_name}.evl";
+    my $wsx_path = "${directory}/text/${article_name}.wsx";
+    my $miz_path = "${directory}/text/${article_name}.miz";
 
     return apply_stylesheet ($pp_stylesheet,
 			     $wsx_path,

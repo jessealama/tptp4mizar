@@ -65,6 +65,7 @@ my %directory_for_extension = (
 sub to_miz {
     my $self = shift;
     my $directory = shift;
+    my $article_name = shift;
     my $options_ref = shift;
 
     my %options = defined $options_ref ? %{$options_ref} : ();
@@ -86,7 +87,7 @@ sub to_miz {
 	my $subdir = "${directory}/${subdir_name}";
 
 	my @xsltproc_call = ('xsltproc',
-			     '--stringparam', 'article', 'article',
+			     '--stringparam', 'article', $article_name,
 			     '--stringparam', 'prel-directory', $prel_subdir_full);
 
 	if (defined $options{'shape'}) {
@@ -107,7 +108,7 @@ sub to_miz {
 
 	my $xsltproc_err = $EMPTY_STRING;
 	my $xsltproc_harness = harness (\@xsltproc_call,
-					'>', "${subdir}/article.${extension}",
+					'>', "${subdir}/${article_name}.${extension}",
 					'2>', \$xsltproc_err);
 
 	$xsltproc_harness->start ();
@@ -121,8 +122,8 @@ sub to_miz {
     }
 
     my $pp_stylesheet = "${MIZAR_STYLESHEET_HOME}/pp.xsl";
-    my $wsx_path = "${directory}/text/article.wsx";
-    my $miz_path = "${directory}/text/article.miz";
+    my $wsx_path = "${directory}/text/${article_name}.wsx";
+    my $miz_path = "${directory}/text/${article_name}.miz";
     my $xsltproc_status = system ("xsltproc $pp_stylesheet $wsx_path > $miz_path");
     my $xsltproc_exit_code = $xsltproc_status >> 8;
     if ($xsltproc_exit_code != 0) {
