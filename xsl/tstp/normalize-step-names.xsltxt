@@ -1,5 +1,6 @@
 stylesheet "1.0";
 include "../utils/trace.xsl";
+include "../utils/copy.xsl";
 output method="xml" indent="yes";
 
 //////////////////////////////////////////////////////////////////////
@@ -12,14 +13,6 @@ key "axioms" [formula[@name and @status = "axiom"]] `@name`;
 //////////////////////////////////////////////////////////////////////
 // Templates
 //////////////////////////////////////////////////////////////////////
-
-tpl [*] mode="copy" {
-  $n = `name (.)`;
-  <$n {
-    for-each [@*] { copy-of `.`; }
-    apply [*] mode="copy";
-  }
-}
 
 // If we don't handle something explicitly, we don't handle it at all.
 tpl [*] {
