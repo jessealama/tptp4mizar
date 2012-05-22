@@ -3,42 +3,9 @@ include "../utils/die.xsl";
 include "../utils/strings.xsl";
 output method="xml" indent="yes";
 
-key "clauses" [clause] `@id`;
-key "assumptions" [clause[@type = "assumption"]] `@id`;
-
-tpl [*] {
-  $n = `name (.)`;
-  $message = `concat ("We have arrived at an unhandled ", $n, "node.")`;
-  apply [.] (#message = $message) mode="die";
-}
-
-tpl [/] {
-  if [proofs] {
-    apply [proofs];
-  } else {
-    msg terminate="yes" "Error: the required proofs root element is missing.";
-  }
-}
-
-tpl [proofs] {
-  choose {
-    when [proof[2]] {
-      msg terminate="yes" "Error: there are multiple proof children of the proofs root element; don't know what to do.";
-    }
-    when [proof] {
-      <tstp {
-        apply [proof];
-      }
-    }
-    otherwise {
-      msg terminate="yes" "Error: no proof children were found under the proofs root element.";
-    }
-  }
-}
-
-tpl [proof] {
-  apply [clause];
-}
+//////////////////////////////////////////////////////////////////////
+// Utilities
+//////////////////////////////////////////////////////////////////////
 
 tpl drop-enclosing-parentheses (#string) {
   $length = `string-length ($string)`;
@@ -751,26 +718,6 @@ tpl sniff-formula-name {
   }
 }
 
-tpl [clause[@type = "assumption"]] {
-  <formula {
-    sniff-formula-name ();
-    @syntax = "formula";
-    @status = "axiom";
-    emit-literals (#literals = `literal`);
-    <source;
-    <useful-info {
-      <non-logical-data {
-        for-each [literal] {
-          for-each [text()] {
-            $s = `string (.)`;
-            @text = `normalize-space ($s)`;
-          }
-        }
-      }
-    }
-  }
-}
-
 tpl emit-literals (#literals) {
   if [$literals] {
     $literal = `$literals[1]`;
@@ -792,49 +739,6 @@ tpl emit-literals (#literals) {
         }
       }
       emit-literals (#literals = `$literals[position() > 1]`);
-    }
-  }
-}
-
-tpl [clause[@type = "clausify"]] {
-  <formula {
-    @"name" = `@id`;
-    @syntax = "formula";
-    @status = "plain";
-    emit-literals (#literals = `literal`);
-    <source {
-      <non-logical-data {
-        @"name" = "inference";
-        for-each [justification] {
-          for-each [j1] {
-            <non-logical-data {
-              @"name" = `@rule`;
-            }
-            <non-logical-data {
-              <non-logical-data {
-                @"name" = "status";
-                <non-logical-data {
-                  @"name" = "esa";
-                }
-              }
-            }
-            <non-logical-data {
-              $parents = `string (@parents)`;
-              emit-parents (#parents-string = $parents);
-            }
-          }
-        }
-      }
-    }
-    <useful-info {
-      <non-logical-data {
-        for-each [literal] {
-          for-each [text()] {
-            $s = `string (.)`;
-            @text = `normalize-space ($s)`;
-          }
-        }
-      }
     }
   }
 }
@@ -877,6 +781,114 @@ tpl emit-parents (#parents-string) {
             } else {
               @"name" = $candidate-name;
             }
+          }
+        }
+      }
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// Keys
+//////////////////////////////////////////////////////////////////////
+
+key "clauses" [clause] `@id`;
+key "assumptions" [clause[@type = "assumption"]] `@id`;
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+tpl [*] {
+  $n = `name (.)`;
+  $message = `concat ("We have arrived at an unhandled ", $n, "node.")`;
+  apply [.] (#message = $message) mode="die";
+}
+
+tpl [/] {
+  if [proofs] {
+    apply [proofs];
+  } else {
+    msg terminate="yes" "Error: the required proofs root element is missing.";
+  }
+}
+
+tpl [proofs] {
+  choose {
+    when [proof[2]] {
+      msg terminate="yes" "Error: there are multiple proof children of the proofs root element; don't know what to do.";
+    }
+    when [proof] {
+      <tstp {
+        apply [proof];
+      }
+    }
+    otherwise {
+      msg terminate="yes" "Error: no proof children were found under the proofs root element.";
+    }
+  }
+}
+
+tpl [proof] {
+  apply [clause];
+}
+
+tpl [clause[@type = "assumption"]] {
+  <formula {
+    sniff-formula-name ();
+    @syntax = "formula";
+    @status = "axiom";
+    emit-literals (#literals = `literal`);
+    <source;
+    <useful-info {
+      <non-logical-data {
+        for-each [literal] {
+          for-each [text()] {
+            $s = `string (.)`;
+            @text = `normalize-space ($s)`;
+          }
+        }
+      }
+    }
+  }
+}
+
+tpl [clause[@type = "clausify"]] {
+  <formula {
+    @"name" = `@id`;
+    @syntax = "formula";
+    @status = "plain";
+    emit-literals (#literals = `literal`);
+    <source {
+      <non-logical-data {
+        @"name" = "inference";
+        for-each [justification] {
+          for-each [j1] {
+            <non-logical-data {
+              @"name" = `@rule`;
+            }
+            <non-logical-data {
+              <non-logical-data {
+                @"name" = "status";
+                <non-logical-data {
+                  @"name" = "esa";
+                }
+              }
+            }
+            <non-logical-data {
+              $parents = `string (@parents)`;
+              emit-parents (#parents-string = $parents);
+            }
+          }
+        }
+      }
+    }
+    <useful-info {
+      <non-logical-data {
+        for-each [literal] {
+          for-each [text()] {
+            $s = `string (.)`;
+            @text = `normalize-space ($s)`;
           }
         }
       }
