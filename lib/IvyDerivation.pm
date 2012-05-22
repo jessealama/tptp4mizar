@@ -13,7 +13,7 @@ use File::Spec;
 use File::Temp qw(tempfile);
 use IPC::Run qw(harness);
 
-use Utils qw(error_message);
+use Utils qw(error_message apply_stylesheet);
 
 extends 'TSTPDerivation';
 
@@ -58,40 +58,19 @@ sub to_miz {
     foreach my $extension (@extensions_to_generate) {
 	my $subdir_name = $directory_for_extension{$extension};
 	my $subdir = "${directory}/${subdir_name}";
+	my $shape = defined $options{'shape'} ? $options{'shape'} : 'flat';
+	my $stylesheet_for_extension = "${IVY_STYLESHEET_HOME}/ivy2${extension}.xsl";
+	my $file_to_generate = "${subdir}/${article_name}.${extension}";
 
-	my @xsltproc_call = ('xsltproc',
-			     '--stringparam', 'article', $article_name,
-			     '--stringparam', 'prel-directory', $prel_subdir_full);
+	apply_stylesheet ($stylesheet_for_extension,
+			  $path,
+			  $file_to_generate,
+			  {
+			      'article' => $article_name,
+			      'prel-directory' => $prel_subdir_full,
+			      'shape' => $shape,
+			  });
 
-	if (defined $options{'shape'}) {
-	    my $shape = $options{'shape'};
-	    if ($shape eq 'nested') {
-		push (@xsltproc_call, '--stringparam', 'shape', 'nested');
-	    } elsif ($shape eq 'flat') {
-		push (@xsltproc_call, '--stringparam', 'shape', 'flat');
-	    } else {
-		confess error_message ('Unknown proof shape \'', $shape, '\'.');
-	    }
-	} else {
-	    push (@xsltproc_call, '--stringparam', 'shape', 'flat');
-	}
-
-	push (@xsltproc_call, "${IVY_STYLESHEET_HOME}/ivy2${extension}.xsl");
-	push (@xsltproc_call, $path);
-
-	my $xsltproc_err = $EMPTY_STRING;
-	my $xsltproc_harness = harness (\@xsltproc_call,
-					'>', "${subdir}/${article_name}.${extension}",
-					'2>', \$xsltproc_err);
-
-	$xsltproc_harness->start ();
-	$xsltproc_harness->finish ();
-
-	my $xsltproc_exit_code = ($xsltproc_harness->results)[0];
-
-	if ($xsltproc_exit_code != 0) {
-	    confess error_message ('xsltproc did not exit cleanly when generating the .', $extension, ' file for', "\n", "\n", '  ', $path, "\n", "\n", 'The exit code was ', $xsltproc_exit_code, '. The error message was:',  "\n", "\n", '  ', $xsltproc_err);
-	}
     }
 
     my $pp_stylesheet = "${MIZAR_STYLESHEET_HOME}/pp.xsl";
