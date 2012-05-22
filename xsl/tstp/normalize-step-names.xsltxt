@@ -72,6 +72,35 @@ tpl [formula[not(@status = "axiom") and source]] {
   }
 }
 
+tpl [formula[@status = "negated_conjecture"]] {
+  $pos = `count (preceding-sibling::formula[not(@status = "axiom")]) + 1`;
+  <formula {
+    for-each [@*] { copy-of `.`; }
+    @"name" = `concat ("step", $pos)`;
+    apply [*[1]] mode="copy";
+    if [source] {
+      apply [source];
+    }
+    if [useful-info] {
+      apply [useful-info] mode="copy";
+    }
+  }
+}
+
+tpl [formula[@status = "conjecture"]] {
+  <formula {
+    for-each [@*] { copy-of `.`; }
+    @"name" = "goal";
+    apply [*[1]] mode="copy";
+    if [source] {
+      apply [source];
+    }
+    if [useful-info] {
+      apply [useful-info] mode="copy";
+    }
+  }
+}
+
 tpl [source[ancestor::formula[@status = "axiom"]]] {
   <source;
 }
