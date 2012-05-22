@@ -18,6 +18,9 @@ tpl [/] {
 }
 
 tpl [tstp] {
+  if [formula[@status = "negated_conjecture"]] {
+    msg terminate="yes" "Error: there is already a negated conjecture in the current TPTP document.";
+  }
   <tstp {
     if [formula[@status = "conjecture"]] {
       apply [formula[@status = "conjecture"]];
