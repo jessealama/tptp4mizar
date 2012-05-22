@@ -275,7 +275,7 @@ foreach my $problem (@problems) {
 
     my @tptp_to_miz_call = ($tptp_to_mizar_script,
 			    '--style=ivy',
-			    "--db=${repaired_db}",
+			    "--db=${cwd}",
 			    "--article-name=${problem_name}",
 			    $ivy_solution_path);
 
@@ -305,8 +305,6 @@ foreach my $problem (@problems) {
     my $compress_errs = $EMPTY_STRING;
     my $compress_harness = harness (\@compress_call);
 
-    chdir $repaired_db
-	or confess error_message ('Unable to change to the directory', $SP, $repaired_db, ':', $SP, $!);
     $compress_harness->start ();
     $compress_harness->finish ();
     chdir $cwd;

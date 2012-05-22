@@ -181,13 +181,10 @@ if (! defined $db) {
     $db = "${tptp_sans_extension}-mizar";
 }
 
-if (-e $db) {
-    error_message ('The specified directory', "\n", "\n", '  ', $db, "\n", "\n", 'in which we are to save our work already exists.', "\n", 'Please use a different name');
-    exit 1;
+if (! -d $db) {
+    mkdir $db
+	or die error_message ('Unable to make a directory at ', $db, ': ', $!);
 }
-
-mkdir $db
-    or die error_message ('Unable to make a directory at ', $db, ': ', $!);
 
 my $tptp_file_basename = basename ($tptp_file);
 my $tptp_file_in_db = "${db}/problem.tptp";
