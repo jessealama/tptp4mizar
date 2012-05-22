@@ -1,5 +1,6 @@
 stylesheet "1.0";
 include "../tptp/tptp2wsx.xsl";
+include "../utils/trace.xsl";
 output method="xml" indent="yes";
 
 //////////////////////////////////////////////////////////////////////
@@ -15,20 +16,6 @@ output method="xml" indent="yes";
 
 key "axiom" [formula[@name and @status = "axiom"]] `@name`;
 key "formulas" [formula[@name]] `@name`;
-
-//////////////////////////////////////////////////////////////////////
-// Utilities
-//////////////////////////////////////////////////////////////////////
-
-tpl [*] mode="trace" {
-  $n = `name (.)`;
-  $position = `count (preceding-sibling::*[name() = $n]) + 1`;
-  if [parent::*] {
-    apply [..] mode="trace";
-  }
-  $step = `concat ($n, "[", $position, "]")`;
-  msg $step;
-}
 
 //////////////////////////////////////////////////////////////////////
 // Templates
