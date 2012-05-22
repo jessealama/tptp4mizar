@@ -9,7 +9,7 @@
 ** TODO Export proofs back from Mizar to TPTP (if possible)
 * Outstanding problems with tptp2mizar
 ** Repaired articles are not merged with the original article
-*** Names of repaired articles should not all be 'article'
+*** DONE Names of repaired articles should not all be 'article'
 *** Vocabularies should be uniqueified
 *** Original article needs to have its straightforward justifications rewritten
 *** Repaired articles need to be exported
