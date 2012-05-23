@@ -47,7 +47,7 @@ tpl [tstp] {
 tpl [predicate[@name and not(@name = "=")]] {
   $n = `@name`;
   if [$background-article-name = ""] {
-    `concat ("R", $n)`;
+    `concat ("R", $n)`; "\n";
   } else {
     for-each [document ($background-tptp-xml, /tstp)] {
       msg "hey predicate";
@@ -63,7 +63,7 @@ tpl [predicate[@name and not(@name = "=")]] {
 tpl [function[@name]] {
   $n = `@name`;
   if [$background-article-name = ""] {
-    `concat ("O", $n)`;
+    `concat ("O", $n)`; "\n";
   } else {
     for-each [document ($background-tptp-xml, /tstp)] {
       msg "hey function";
