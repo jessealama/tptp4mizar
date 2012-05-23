@@ -325,7 +325,7 @@ my $clausification_tptp = apply_stylesheet ($render_tptp_stylesheet,
 
 if ($opt_debug) {
     warn 'clausification tptp = ', $LF, $clausification_tptp;
-    warn 'clausification tptp xml = ', $LF, $clausification_tptp_xml;
+#    warn 'clausification tptp xml = ', $LF, $clausification_tptp_xml;
 }
 
 $clausification_tptp = tptp_fofify ($clausification_tptp);
