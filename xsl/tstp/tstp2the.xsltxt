@@ -227,7 +227,8 @@ tpl [predicate[@name = "="]] (#variable-alist) mode="render-definiens" {
 }
 
 tpl count-predicates {
-  `count (descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)])`;
+  `count (descendant::predicate[not(@name = "=")
+                                and not(@name = preceding::predicate/@name)])`;
 }
 
 tpl [predicate[not(@name = "=")]] (#variable-alist) mode="render-definiens" {
@@ -237,7 +238,8 @@ tpl [predicate[not(@name = "=")]] (#variable-alist) mode="render-definiens" {
     if [$background-article-name = ""] {
       for-each [ancestor::tstp] {
         for-each [descendant::predicate[@name = $n][1]] {
-          $position = `count (preceding::predicate[not(@name = preceding::predicate/@name)]) + 1`;
+          $position = `count (preceding::predicate[not(@name = "=")
+                                                   and not(@name = preceding::predicate/@name)]) + 1`;
           @nr = `$position + 2`;
         }
       }
@@ -245,7 +247,8 @@ tpl [predicate[not(@name = "=")]] (#variable-alist) mode="render-definiens" {
       for-each [document ($background-tptp-xml, /tstp)] {
         if [descendant::predicate[@name = $n][1]] {
           for-each [descendant::predicate[@name = $n][1]] {
-            $position = `count (preceding::predicate[not(@name = preceding::predicate/@name)]) + 1`;
+            $position = `count (preceding::predicate[not(@name = "=")
+                                                     and not(@name = preceding::predicate/@name)]) + 1`;
             @nr = `$position + 2`;
           }
         } else {
