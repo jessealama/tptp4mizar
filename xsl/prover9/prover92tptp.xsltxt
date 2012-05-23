@@ -246,10 +246,10 @@ tpl string-is-constant (#string) {
 }
 
 tpl balance-parens (#string, #solution, #counter) {
-  if [$debug = "1"] {
-    $diagnostic-message = `concat ("balance-parens: string = '", $string, "', solution = '", $solution, "', counter = ", $counter)`;
-    msg $diagnostic-message;
-  }
+  // if [$debug = "1"] {
+  //   $diagnostic-message = `concat ("balance-parens: string = '", $string, "', solution = '", $solution, "', counter = ", $counter)`;
+  //   msg $diagnostic-message;
+  // }
   choose {
     when [$counter = ""] {
       $message = `concat ("Error: balance-parens is in a state where the count is the empty string (the current string is '", $string, "').")`;
