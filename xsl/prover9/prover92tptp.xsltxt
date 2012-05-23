@@ -507,6 +507,16 @@ tpl parse-composite-formula (#string) {
         parse-ladr-formula (#string = `substring-after ($after-first-term, ",")`);
       }
     }
+    when [starts-with ($sans-outer-parens, "|(")] {
+      $after-disjunction-sign = `substring-after ($sans-outer-parens, "|")`;
+      $sans-parens = drop-enclosing-parentheses (#string = $after-disjunction-sign);
+      $first-formula = first-term-of-term-string (#string = $sans-parens);
+      $after-first-term = `substring-after ($sans-parens, $first-formula)`;
+      <disjunction {
+        parse-ladr-formula (#string = $first-formula);
+        parse-ladr-formula (#string = `substring-after ($after-first-term, ",")`);
+      }
+    }
     when [starts-with ($sans-outer-parens, "-")] {
       $after-negation-sign = `substring-after ($sans-outer-parens, "-")`;
       if [starts-with ($after-negation-sign, "(")] {
@@ -685,6 +695,16 @@ tpl parse-ladr-formula (#string) {
       $first-formula = first-term-of-term-string (#string = $sans-parens);
       $after-first-term = `substring-after ($sans-parens, $first-formula)`;
       <conjunction {
+        parse-ladr-formula (#string = $first-formula);
+        parse-ladr-formula (#string = `substring-after ($after-first-term, ",")`);
+      }
+    }
+    when [starts-with ($string, "|(")] {
+      $after-disjunction-sign = `substring-after ($string, "|")`;
+      $sans-parens = drop-enclosing-parentheses (#string = $after-disjunction-sign);
+      $first-formula = first-term-of-term-string (#string = $sans-parens);
+      $after-first-term = `substring-after ($sans-parens, $first-formula)`;
+      <disjunction {
         parse-ladr-formula (#string = $first-formula);
         parse-ladr-formula (#string = `substring-after ($after-first-term, ",")`);
       }
