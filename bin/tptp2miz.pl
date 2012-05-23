@@ -196,7 +196,7 @@ copy ($tptp_file, $tptp_file_in_db)
     or die error_message ('Unable to save a copy of the derivation to', $SP, $db);
 
 # XMLize
-my $tptp_xml_in_db = "${db}/problem.xml";
+my $tptp_xml_in_db = "${db}/${opt_article_name}.xml";
 tptp_fofify ($tptp_file_in_db, $tptp_file_in_db);
 tptp_xmlize ($tptp_file_in_db, $tptp_xml_in_db);
 normalize_variables ($tptp_xml_in_db);
