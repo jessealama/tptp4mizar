@@ -164,8 +164,7 @@ tpl [tstp] {
             @nr = $num-predicates;
           }
         } else {
-          $num-new-predicates = count-new-predicates (#candidates = `descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)]`);
-          $num-new-functions = count-new-functions (#candidates = `descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]`);
+          $num-new-functions = count-new-functions (#candidates = `descendant::function[not(@name = preceding::function/@name) and not(@name = ancestor::function/@name)]`);
 
           <SymbolCount {
             @kind = "O";
@@ -174,7 +173,7 @@ tpl [tstp] {
 
           <SymbolCount {
             @kind = "R";
-            @nr = $num-new-predicates;
+            @nr = "0";
           }
 
         }
