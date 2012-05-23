@@ -140,6 +140,8 @@ my $article = $ARGV[0];
 my $article_full = File::Spec->rel2abs ($article);
 my $article_dirname = dirname ($article_full);
 
+my $source_xml_path = File::Spec->rel2abs ($opt_tptp_proof);
+
 # Go to the right directory
 chdir $article_dirname
     or die error_message ('Unable to change directory to', $SP, $article_dirname, ':', $SP, $!);
@@ -274,11 +276,14 @@ foreach my $problem (@problems) {
 
     $ivy_solution_path = File::Spec->rel2abs ($ivy_solution_path);
     my $repaired_db = "${repair_dir}/${problem_name}";
+    my $source_article_name = basename ($source_xml_path, '.xml');
 
     my @tptp_to_miz_call = ($tptp_to_mizar_script,
 			    '--style=ivy',
 			    "--db=${cwd}",
 			    "--article-name=${problem_name}",
+			    "--source-tptp=${source_xml_path}",
+			    "--source-article-name=${source_article_name}",
 			    $ivy_solution_path);
 
     my $tptp_to_miz_out = $EMPTY_STRING;
