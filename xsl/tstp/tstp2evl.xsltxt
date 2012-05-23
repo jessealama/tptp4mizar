@@ -9,6 +9,8 @@ output method="xml" indent="yes";
 
 #article = { ""; }
 
+#background = { ""; }
+
 //////////////////////////////////////////////////////////////////////
 // Templates
 //////////////////////////////////////////////////////////////////////
@@ -41,33 +43,44 @@ tpl [/] {
   }
 }
 
+tpl ident (#s) {
+  <Ident {
+    @"name" = $s;
+  }
+}
+
 tpl [tstp] {
   $article-uc = uc (#s = $article);
+  $article-with-suffix = `concat ($article-uc, "_E")`;
+  $background-uc = uc (#s = $background);
+  $background-with-suffix = `concat ($background-uc, "_E")`;
   <Environ {
     @aid = $article-uc;
     <Directive {
       @"name" = "Vocabularies";
-      <Ident {
-        @"name" = $article-uc;
+      if [not($background = "")] {
+        ident (#s = $background-uc);
       }
+      ident (#s = $article-uc);
     }
     <Directive {
       @"name" = "Notations";
-      <Ident {
-        @"name" = $article-uc;
+      if [not($background = "")] {
+        ident (#s = $background-with-suffix);
       }
+      ident (#s = $article-with-suffix);
     }
     <Directive {
       @"name" = "Constructors";
-      <Ident {
-        @"name" = $article-uc;
+      if [not($background = "")] {
+        ident (#s = $background-with-suffix);
       }
+      ident (#s = $article-with-suffix);
     }
     <Directive {
       @"name" = "Theorems";
-      <Ident {
-        @"name" = $article-uc;
-      }
+      // ident (#s = $background-with-suffix);
+      ident (#s = $article-with-suffix);
     }
   }
 }
