@@ -38,6 +38,7 @@ sub to_miz {
     my $self = shift;
     my $directory = shift;
     my $article_name = shift;
+    my $source_article_name = shift;
     my $options_ref = shift;
 
     my %options = defined $options_ref ? %{$options_ref} : ();
@@ -65,6 +66,9 @@ sub to_miz {
 		# 'no-skolems' => '1',
 		# 'skolem-prefix' => 'skolem',
 		# 'skolem-dco' => "${prel_subdir_full}/skolem.dco",
+		'background' => defined $source_article_name ?
+		    $source_article_name
+			: $EMPTY_STRING,
 	    );
 
 	if (defined $options{'shape'}) {
@@ -79,8 +83,11 @@ sub to_miz {
 	} else {
 	    $parameters{'shape'} = 'flat';
 	}
+
 	my $stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2${extension}.xsl";
-	my $result = "${subdir}/${article_name}.${extension}";
+	my $result = ($subdir_name eq 'prel' ?
+			  "${subdir}/${article_name}_e.${extension}"
+			      : "${subdir}/${article_name}.${extension}");
 	apply_stylesheet ($stylesheet,
 			  $path,
 			  $result,

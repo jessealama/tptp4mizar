@@ -37,6 +37,7 @@ sub to_miz {
     my $self = shift;
     my $directory = shift;
     my $article_name = shift;
+    my $source_article_name = shift;
     my $options_ref = shift;
 
     my %options = defined $options_ref ? %{$options_ref} : ();
@@ -60,16 +61,23 @@ sub to_miz {
 	my $subdir = "${directory}/${subdir_name}";
 	my $shape = defined $options{'shape'} ? $options{'shape'} : 'flat';
 	my $stylesheet_for_extension = "${IVY_STYLESHEET_HOME}/ivy2${extension}.xsl";
-	my $file_to_generate = "${subdir}/${article_name}.${extension}";
 
-	apply_stylesheet ($stylesheet_for_extension,
-			  $path,
-			  $file_to_generate,
-			  {
-			      'article' => $article_name,
-			      'prel-directory' => $prel_subdir_full,
-			      'shape' => $shape,
-			  });
+	my $file_to_generate = $subdir_name eq 'prel' ?
+	    "${subdir}/${article_name}_e.${extension}"
+		: "${subdir}/${article_name}.${extension}";
+
+	apply_stylesheet
+	    ($stylesheet_for_extension,
+	     $path,
+	     $file_to_generate,
+	     {
+		 'article' => $article_name,
+		 'prel-directory' => $prel_subdir_full,
+		 'shape' => $shape,
+		 'background' => defined $source_article_name ?
+		     $source_article_name
+			 : $EMPTY_STRING,
+	     });
 
     }
 
