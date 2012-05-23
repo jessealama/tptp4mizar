@@ -343,9 +343,18 @@ if (! can_run ($ivy_to_tstp_script)) {
 my @ivy_to_tstp_call = ($ivy_to_tstp_script, '--format=xml');
 my $ivy_tstp_xml = run_harness (\@ivy_to_tstp_call, $ivy_proof_object);
 
+my $normalize_step_names_stylesheet = "$RealBin/../xsl/tstp/normalize-step-names.xsl";
+my $prefixed_ivy_tstp_xml = apply_stylesheet
+    ($normalize_step_names_stylesheet,
+     $ivy_tstp_xml,
+     undef,
+     {
+	 'step-prefix' => 'ivy_refutation_step',
+     });
+
 my $merged_solution = merge_prover9_solutions ($problem_xml,
 					       $clausification_tptp_xml,
-					       $ivy_tstp_xml);
+					       $prefixed_ivy_tstp_xml);
 
 
 
