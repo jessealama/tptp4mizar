@@ -317,7 +317,9 @@ my $clausification_stylesheet = "$RealBin/../xsl/prover9/clausification.xsl";
 my $clausification_prooftrans_xml = apply_stylesheet ($clausification_stylesheet,
 						      $prooftrans_xml);
 my $clausification_tptp_xml = apply_stylesheet ($prover9_to_tptp_stylesheet,
-						$clausification_prooftrans_xml);
+						$clausification_prooftrans_xml,
+						undef,
+						{ 'debug' => $opt_debug ? '1' : '0' });
 
 # fofify
 my $clausification_tptp = apply_stylesheet ($render_tptp_stylesheet,
