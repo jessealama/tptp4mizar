@@ -4,6 +4,14 @@ include "../utils/copy.xsl";
 output method="xml" indent="yes";
 
 //////////////////////////////////////////////////////////////////////
+// Stylesheet parameters
+//////////////////////////////////////////////////////////////////////
+
+#axiom-prefix = { "ax"; }
+
+#step-prefix = { "step"; }
+
+//////////////////////////////////////////////////////////////////////
 // Keys
 //////////////////////////////////////////////////////////////////////
 
@@ -41,7 +49,7 @@ tpl [formula[not(source)]] {
   $pos = `count (preceding-sibling::formula[@status = "axiom"]) + 1`;
   <formula {
     for-each [@*] { copy-of `.`; }
-    @"name" = `concat ("ax", $pos)`;
+    @"name" = `concat ($axiom-prefix, $pos)`;
     apply [*[1]] mode="copy";
   }
 }
@@ -50,7 +58,7 @@ tpl [formula[@status = "axiom" and source]] {
   $pos = `count (preceding-sibling::formula[@status = "axiom"]) + 1`;
   <formula {
     for-each [@*] { copy-of `.`; }
-    @"name" = `concat ("ax", $pos)`;
+    @"name" = `concat ($axiom-prefix, $pos)`;
     apply [*[1]] mode="copy";
     apply [source];
     if [useful-info] {
@@ -63,7 +71,7 @@ tpl [formula[not(@status = "axiom") and source]] {
   $pos = `count (preceding-sibling::formula[not(@status = "axiom")]) + 1`;
   <formula {
     for-each [@*] { copy-of `.`; }
-    @"name" = `concat ("step", $pos)`;
+    @"name" = `concat ($step-prefix, $pos)`;
     apply [*[1]] mode="copy";
     apply [source];
     if [useful-info] {
@@ -76,7 +84,7 @@ tpl [formula[@status = "negated_conjecture"]] {
   $pos = `count (preceding-sibling::formula[not(@status = "axiom")]) + 1`;
   <formula {
     for-each [@*] { copy-of `.`; }
-    @"name" = `concat ("step", $pos)`;
+    @"name" = `concat ($step-prefix, $pos)`;
     apply [*[1]] mode="copy";
     if [source] {
       apply [source];
@@ -122,7 +130,7 @@ tpl [source[ancestor::formula[not(@status = "axiom")]]] {
                   for-each [key ("axioms", $n)] {
                     <non-logical-data {
                       $other-position = `count (preceding-sibling::formula[@status = "axiom"]) + 1`;
-                      @"name" = `concat ("ax", $other-position)`;
+                      @"name" = `concat ($axiom-prefix, $other-position)`;
                     }
                   }
                 }
@@ -130,7 +138,7 @@ tpl [source[ancestor::formula[not(@status = "axiom")]]] {
                   for-each [key ("non-axioms", $n)] {
                     <non-logical-data {
                       $other-position = `count (preceding-sibling::formula[not(@status = "axiom")]) + 1`;
-                      @"name" = `concat ("step", $other-position)`;
+                      @"name" = `concat ($step-prefix, $other-position)`;
                     }
                   }
                 }
