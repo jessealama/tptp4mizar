@@ -48,11 +48,12 @@ tpl [tstp] {
   $num-functions
     = `count(descendant::function[not(@name = preceding::function/@name)
                                   and not(@name = ancestor::function/@name)])`;
+
   <Notations {
 
     <Signature {
       <ArticleID { @"name" = "HIDDEN"; }
-      <ArticleID { @"name" = `$article-uc`; }
+      <ArticleID { @"name" = $article-with-suffix; }
     }
 
 
