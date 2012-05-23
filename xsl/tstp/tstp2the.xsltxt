@@ -235,6 +235,7 @@ tpl [predicate[not(@name = "=")]] (#variable-alist) mode="render-definiens" {
   $n = `@name`;
   <Pred {
     @kind = "R";
+    @spelling = `@name`;
     if [$background-article-name = ""] {
       for-each [ancestor::tstp] {
         for-each [descendant::predicate[@name = $n][1]] {
@@ -310,6 +311,7 @@ tpl [function[@name]] (#variable-alist) mode="render-definiens" {
   $function = `.`;
   <Func {
     @kind = "K";
+    @spelling = `@name`;
     if [$background-article-name = ""] {
       for-each [ancestor::tstp] {
         for-each [descendant::function[@name = $n][1]] {
