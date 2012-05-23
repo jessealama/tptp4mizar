@@ -70,7 +70,8 @@ tpl count-new-functions (#candidates) {
 }
 
 tpl count-predicates {
-  `count (descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)])`;
+  `count (descendant::predicate[not(@name = "=")
+                                and not(@name = preceding::predicate/@name)])`;
 }
 
 tpl count-old-predicates  {
