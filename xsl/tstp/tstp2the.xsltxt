@@ -19,6 +19,12 @@ output omit-xml-declaration="no";
 // other functions and predicates.
 #reference-dco = { ""; }
 
+#original = { ""; }
+
+#background-article-name = { ""; }
+
+#background-tptp-xml = { ""; }
+
 //////////////////////////////////////////////////////////////////////
 // Keys
 //////////////////////////////////////////////////////////////////////
@@ -220,14 +226,32 @@ tpl [predicate[@name = "="]] (#variable-alist) mode="render-definiens" {
   }
 }
 
+tpl count-predicates {
+  `count (descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)])`;
+}
+
 tpl [predicate[not(@name = "=")]] (#variable-alist) mode="render-definiens" {
   $n = `@name`;
   <Pred {
     @kind = "R";
-    for-each [ancestor::tstp] {
-      for-each [descendant::predicate[@name = $n][1]] {
-        $position = `count (preceding::predicate[not(@name = preceding::predicate/@name)]) + 1`;
-        @nr = `$position + 2`;
+    if [$background-article-name = ""] {
+      for-each [ancestor::tstp] {
+        for-each [descendant::predicate[@name = $n][1]] {
+          $position = `count (preceding::predicate[not(@name = preceding::predicate/@name)]) + 1`;
+          @nr = `$position + 2`;
+        }
+      }
+    } else {
+      for-each [document ($background-tptp-xml, /tstp)] {
+        if [descendant::predicate[@name = $n][1]] {
+          for-each [descendant::predicate[@name = $n][1]] {
+            $position = `count (preceding::predicate[not(@name = preceding::predicate/@name)]) + 1`;
+            @nr = `$position + 2`;
+          }
+        } else {
+          $message = `concat ("Error: cannot find predicate '", $n, "' in ", $background-tptp-xml, ".")`;
+          apply [.] (#message = $message) mode="die";
+        }
       }
     }
     apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
@@ -249,17 +273,69 @@ tpl [variable[@name]] (#variable-alist) mode="render-definiens" {
   }
 }
 
+tpl position-of-new-function-1 (#function-name, #candidates) {
+  if [$candidates] {
+    $candidate = `$candidates[1]`;
+    $candidate-name = `$candidate/@name`;
+    for-each [document ($background-tptp-xml, /tstp)] {
+      if [descendant::function[@name = $candidate-name]] {
+        position-of-new-function-1 (#function-name = $function-name,
+				    #candidates = `$candidates[position() > 1]`);
+      } else {
+        $pos-previous = position-of-new-function-1 (#function-name = $function-name,
+				                    #candidates = `$candidates[position() > 1]`);
+        `$pos-previous + 1`;
+      }
+    }
+  } else {
+    "1";
+  }
+}
+
+tpl position-of-new-function (#function-name) {
+  position-of-new-function-1 (#function-name = $function-name,
+                              #candidates = `preceding::function[not(@name = preceding::function/@name) and not(@name = ancestor::function/@name)]`);
+}
+
+tpl count-functions {
+  `count(descendant::function[not(@name = preceding::function/@name)
+                              and not(@name = ancestor::function/@name)])`;
+}
+
 tpl [function[@name]] (#variable-alist) mode="render-definiens" {
   $n = `@name`;
+  $function = `.`;
   <Func {
     @kind = "K";
-    for-each [ancestor::tstp] {
-      for-each [descendant::function[@name = $n][1]] {
-        $position
-          = `count (preceding::function[not(@name = preceding::function/@name)
-                                        and not(@name = ancestor::function/@name)])
-             + 1`;
-        @nr = $position;
+    if [$background-article-name = ""] {
+      for-each [ancestor::tstp] {
+        for-each [descendant::function[@name = $n][1]] {
+          $position
+            = `count (preceding::function[not(@name = preceding::function/@name)
+                                          and not(@name = ancestor::function/@name)])
+               + 1`;
+          @nr = $position;
+        }
+      }
+    } else {
+      for-each [document ($background-tptp-xml, /tstp)] {
+        if [descendant::function[@name = $n][1]] {
+          for-each [descendant::function[@name = $n][1]] {
+            $position = `count (preceding::function[not(@name = preceding::function/@name)]) + 1`;
+            @nr = `$position`;
+          }
+        } else {
+          $num-old-functions = count-functions ();
+          for-each [$function] {
+            for-each [ancestor::tstp] {
+              for-each [descendant::function[@name = $n][1]] {
+                $nr = position-of-new-function (#function-name = $n);
+                msg `concat ("position of new function ", $n, " is ", $nr)`;
+                @nr = `$num-old-functions + $nr`;
+              }
+            }
+          }
+        }
       }
     }
     apply [*] (#variable-alist = $variable-alist) mode="render-definiens";

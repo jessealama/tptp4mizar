@@ -11,13 +11,18 @@ tpl [tstp] {
       <ArticleID {
         @"name" = "HIDDEN";
       }
-      if [not($reference-dco = "")] {
+
+      if [not($background-article-name = "")] {
         <ArticleID {
-          @"name" = $reference-dco-uc;
+          $background-uc = uc (#s = $background-article-name);
+          $background-with-suffix = `concat ($background-uc, "E")`;
+          @"name" = $background-with-suffix;
         }
       }
+
       <ArticleID {
-        @"name" = $article-uc;
+        $article-with-suffix = `concat ($article-uc, "E")`;
+        @"name" = $article-with-suffix;
       }
     }
 

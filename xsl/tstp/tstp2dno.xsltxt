@@ -4,22 +4,139 @@ output method="xml" indent="yes";
 output omit-xml-declaration="no";
 
 //////////////////////////////////////////////////////////////////////
+// Stylesheet parameters
+//////////////////////////////////////////////////////////////////////
+
+#original = { ""; }
+
+#background-article-name = { ""; }
+
+#background-tptp-xml = { ""; }
+
+//////////////////////////////////////////////////////////////////////
+// Utilities
+//////////////////////////////////////////////////////////////////////
+
+tpl arg-types {
+  <ArgTypes {
+    for-each [*] {
+      set ();
+    }
+  }
+}
+
+tpl visible {
+  <Visible {
+    for-each [*] {
+      <Int {
+        @x = `position()`;
+      }
+    }
+  }
+}
+
+tpl count-new-predicates (#candidates) {
+  if [$candidates] {
+    $candidate = `$candidates[1]`;
+    $candidate-name = `$candidate/@name`;
+    $count-rest = count-new-predicates (#candidates = `$candidates[position() > 1]`);
+    for-each [document ($background-tptp-xml, /tstp)] {
+      if [descendant::predicate[@name = $candidate-name]] {
+        `$count-rest`;
+      } else {
+        `$count-rest + 1`;
+      }
+    }
+  } else {
+    "0";
+  }
+}
+
+tpl count-new-functions (#candidates) {
+  if [$candidates] {
+    $candidate = `$candidates[1]`;
+    $candidate-name = `$candidate/@name`;
+    $count-rest = count-new-functions (#candidates = `$candidates[position() > 1]`);
+    for-each [document ($background-tptp-xml, /tstp)] {
+      if [descendant::function[@name = $candidate-name][1]] {
+        `$count-rest`;
+      } else {
+        `$count-rest + 1`;
+      }
+    }
+  } else {
+    "0";
+  }
+}
+
+tpl count-predicates {
+  `count (descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)])`;
+}
+
+tpl count-old-predicates  {
+  for-each [document ($background-tptp-xml, /tstp)] {
+    count-predicates ();
+  }
+}
+
+tpl count-functions {
+  `count(descendant::function[not(@name = preceding::function/@name)
+                              and not(@name = ancestor::function/@name)])`;
+}
+
+tpl count-old-functions  {
+  for-each [document ($background-tptp-xml, /tstp)] {
+    count-functions ();
+  }
+}
+
+tpl position-of-new-function-1 (#function-name, #candidates) {
+  if [$candidates] {
+    $candidate = `$candidates[1]`;
+    $candidate-name = `$candidate/@name`;
+    for-each [document ($background-tptp-xml, /tstp)] {
+      if [descendant::function[@name = $candidate-name]] {
+        position-of-new-function-1 (#function-name = $function-name,
+				    #candidates = `$candidates[position() > 1]`);
+      } else {
+        $pos-previous = position-of-new-function-1 (#function-name = $function-name,
+				                    #candidates = `$candidates[position() > 1]`);
+        `$pos-previous + 1`;
+      }
+    }
+  } else {
+    "1";
+  }
+}
+
+tpl position-of-new-function (#function-name) {
+  position-of-new-function-1 (#function-name = $function-name,
+                              #candidates = `preceding::function[not(@name = preceding::function/@name | ancestor::function/@name)]`);
+}
+
+//////////////////////////////////////////////////////////////////////
 // Templates
 //////////////////////////////////////////////////////////////////////
 
 tpl [tstp] {
+
   $article-uc = uc (#s = `$article`);
+  $original-uc = uc (#s = $original);
+  $article-with-suffix = `concat ($article-uc, "E")`;
+  $original-with-suffix = `concat ($original-uc, "E")`;
+
   $num-predicates
     = `count(descendant::predicate[not(@name = "=")
                                    and not(@name = preceding::predicate/@name)])`;
   $num-functions
     = `count(descendant::function[not(@name = preceding::function/@name)
                                   and not(@name = ancestor::function/@name)])`;
+
   <Notations {
 
     <Signature {
       <ArticleID { @"name" = "HIDDEN"; }
-      <ArticleID { @"name" = `$article-uc`; }
+      <ArticleID { @"name" = $article-with-suffix; }
     }
 
 
@@ -36,36 +153,72 @@ tpl [tstp] {
         <SymbolCount { @kind = "L"; @nr = "0"; }
         <SymbolCount { @kind = "M"; @nr = "0"; }
 
-        <SymbolCount {
-          @kind = "O";
-          @nr = $num-functions;
-        }
+        if [$background-article-name = ""] {
+          <SymbolCount {
+            @kind = "O";
+            @nr = $num-functions;
+          }
 
-        <SymbolCount {
-          @kind = "R";
-          @nr = $num-predicates;
+          <SymbolCount {
+            @kind = "R";
+            @nr = $num-predicates;
+          }
+        } else {
+          $num-new-functions = count-new-functions (#candidates = `descendant::function[not(@name = preceding::function/@name) and not(@name = ancestor::function/@name)]`);
+
+          <SymbolCount {
+            @kind = "O";
+            @nr = $num-new-functions;
+          }
+
+          <SymbolCount {
+            @kind = "R";
+            @nr = "0";
+          }
+
         }
 
       }
     }
 
-    for-each [descendant::predicate[not(@name = "=")
-                                    and not(@name = preceding::predicate/@name)]] {
-      apply [.] (#nr = `position ()`,
-                 #constrnr = `position() + 2`,
-                 #aid = $article-uc);
+    if [$background-article-name = ""] {
+      for-each [descendant::predicate[not(@name = "=")
+                                      and not(@name = preceding::predicate/@name)]] {
+        apply [.] (#nr = `position ()`,
+                   #constrnr = `position() + 2`,
+                   #aid = $article-uc);
+      }
     }
 
     for-each [descendant::function[not(@name = preceding::function/@name)
                                    and not(@name = ancestor::function/@name)]] {
-      apply [.] (#aid = $article-uc,
-               #nr = `position ()`,
-               #constrnr = `position ()`);
+      if [$background-article-name = ""] {
+        apply [.] (#aid = $article-uc,
+                   #nr = `position ()`,
+                   #constrnr = `position ()`);
+      } else {
+        $n = `@name`;
+        $function = `.`;
+        for-each [document ($background-tptp-xml, /tstp)] {
+          if [descendant::function[@name = $n]] {
+            // ignore
+          } else {
+            for-each [$function] {
+              $nr = position-of-new-function (#function-name = $n);
+              apply [.] (#aid = $article-uc,
+                         #nr = $nr,
+                         #constrnr = $nr);
+            }
+          }
+        }
+      }
     }
   }
 }
 
 tpl [function] (#nr, #constrnr, #aid) {
+  $n = `@name`;
+  $function = `.`;
   <Pattern {
     @kind = "K";
     @nr = $nr;
@@ -79,22 +232,14 @@ tpl [function] (#nr, #constrnr, #aid) {
       @leftargnr = "0";
       @spelling = `@name`;
     }
-    <ArgTypes {
-      for-each [*] {
-        set ();
-      }
-    }
-    <Visible {
-      for-each [*] {
-        <Int {
-          @x = `position()`;
-        }
-      }
-    }
+    arg-types ();
+    visible ();
   }
 }
 
 tpl [predicate] (#nr, #constrnr, #aid) {
+  $n = `@name`;
+  $predicate = `.`;
   <Pattern {
     @kind = "R";
     @nr = $nr;
@@ -108,17 +253,7 @@ tpl [predicate] (#nr, #constrnr, #aid) {
       @leftargnr = "0";
       @spelling = `@name`;
     }
-    <ArgTypes {
-      for-each [*] {
-        set ();
-      }
-    }
-    <Visible {
-      for-each [*] {
-        <Int {
-          @x = `position()`;
-        }
-      }
-    }
+    arg-types ();
+    visible ();
   }
 }

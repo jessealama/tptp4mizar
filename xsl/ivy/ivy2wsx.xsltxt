@@ -75,7 +75,8 @@ tpl [formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name
       // clausification axiom
       <Definition-Reference {
         $article-uc = uc (#s = $article);
-        @spelling = $article-uc;
+        $article-with-prefix = `concat ($article-uc, "E")`;
+        @spelling = $article-with-prefix;
         @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "clausify"]]) + 1`;
       }
     }

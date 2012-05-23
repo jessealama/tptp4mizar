@@ -1,3 +1,77 @@
 stylesheet "1.0";
 include "../tptp/tptp2voc.xsl";
 output method="text";
+
+//////////////////////////////////////////////////////////////////////
+// Stylesheet parameters
+//////////////////////////////////////////////////////////////////////
+
+#background-article-name = { ""; }
+
+#background-tptp-xml = { ""; }
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+tpl [/] {
+  choose {
+    when [not(tstp)] {
+      msg terminate="yes" "Error: this does not appear to be a TSTP XML document, because it lacks a 'tstp' root element.";
+    }
+    otherwise {
+      if [$background-article-name = ""] {
+        apply [tstp];
+      } else {
+        if [document ($background-tptp-xml, /tstp)] {
+          apply [tstp];
+        } else {
+          $message = `concat ("Error: we expected to find an XMLized TPTP document at '", $background-tptp-xml, "', but there seems to be nothing there.")`;
+          msg terminate="yes" $message;
+        }
+      }
+    }
+  }
+}
+
+tpl [tstp] {
+  msg `concat ("background xml = ", $background-tptp-xml, " and background article name = ", $background-article-name)`;
+  for-each [descendant::predicate[@name and not(@name = "=") and not(@name = preceding::predicate[@name]/@name)]] {
+    apply [.];
+  }
+  for-each [descendant::function[@name and not(@name = preceding::function[@name]/@name) and not(@name = ancestor::function[@name]/@name)]] {
+    apply [.];
+  }
+}
+
+tpl [predicate[@name and not(@name = "=")]] {
+  $n = `@name`;
+  if [$background-article-name = ""] {
+    `concat ("R", $n)`;
+  } else {
+    for-each [document ($background-tptp-xml, /tstp)] {
+      msg "hey predicate";
+      if [descendant::predicate[@name = $n]] {
+        ""; // ignore
+      } else {
+        `concat ("R", $n)`; "\n";
+      }
+    }
+  }
+}
+
+tpl [function[@name]] {
+  $n = `@name`;
+  if [$background-article-name = ""] {
+    `concat ("O", $n)`;
+  } else {
+    for-each [document ($background-tptp-xml, /tstp)] {
+      msg "hey function";
+      if [descendant::function[@name = $n]] {
+        ""; // ignore
+      } else {
+        `concat ("O", $n)`; "\n";
+      }
+    }
+  }
+}
