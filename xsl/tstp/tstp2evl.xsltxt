@@ -54,14 +54,14 @@ tpl ident (#s) {
 tpl maybe-emit-background-ident {
   if [not($background-article-name = "")] {
     $background-uc = uc (#s = $background-article-name);
-    $background-with-suffix = `concat ($background-uc, "_E")`;
+    $background-with-suffix = `concat ($background-uc, "E")`;
     ident (#s = $background-with-suffix);
   }
 }
 
 tpl [tstp] {
   $article-uc = uc (#s = $article);
-  $article-with-suffix = `concat ($article-uc, "_E")`;
+  $article-with-suffix = `concat ($article-uc, "E")`;
   <Environ {
     @aid = $article-uc;
     <Directive {

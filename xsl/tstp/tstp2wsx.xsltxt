@@ -112,7 +112,7 @@ tpl [formula[@name]] mode="axiom" {
     <Straightforward-Justification {
       <Theorem-Reference {
         $article-uc = uc (#s = $article);
-        $article-with-prefix = `concat ($article-uc, "_E")`;
+        $article-with-prefix = `concat ($article-uc, "E")`;
         @spelling = $article-with-prefix;
         @"number" = `count (preceding::formula[@status = "axiom"]) + 1`;
       }

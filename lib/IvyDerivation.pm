@@ -64,7 +64,7 @@ sub to_miz {
 	my $stylesheet_for_extension = "${IVY_STYLESHEET_HOME}/ivy2${extension}.xsl";
 
 	my $file_to_generate = $subdir_name eq 'prel' ?
-	    "${subdir}/${article_name}_e.${extension}"
+	    "${subdir}/${article_name}e.${extension}"
 		: "${subdir}/${article_name}.${extension}";
 
 	apply_stylesheet

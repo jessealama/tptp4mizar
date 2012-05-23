@@ -17,8 +17,8 @@ tpl [tstp] {
 
   $article-uc = uc (#s = `$article`);
   $original-uc = uc (#s = $original);
-  $article-with-suffix = `concat ($article-uc, "_E")`;
-  $original-with-suffix = `concat ($original-uc, "_E")`;
+  $article-with-suffix = `concat ($article-uc, "E")`;
+  $original-with-suffix = `concat ($original-uc, "E")`;
   $reference-dco-uc = uc (#s = `$reference-dco`);
 
   <Theorems {

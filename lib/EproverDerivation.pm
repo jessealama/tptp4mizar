@@ -90,7 +90,7 @@ sub to_miz {
 
 	my $stylesheet = "${EPROVER_STYLESHEET_HOME}/eprover2${extension}.xsl";
 	my $result = ($subdir_name eq 'prel' ?
-			  "${subdir}/${article_name}_e.${extension}"
+			  "${subdir}/${article_name}e.${extension}"
 			      : "${subdir}/${article_name}.${extension}");
 	apply_stylesheet ($stylesheet,
 			  $path,

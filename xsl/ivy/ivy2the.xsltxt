@@ -15,13 +15,13 @@ tpl [tstp] {
       if [not($background-article-name = "")] {
         <ArticleID {
           $background-uc = uc (#s = $background-article-name);
-          $background-with-suffix = `concat ($background-uc, "_E")`;
+          $background-with-suffix = `concat ($background-uc, "E")`;
           @"name" = $background-with-suffix;
         }
       }
 
       <ArticleID {
-        $article-with-suffix = `concat ($article-uc, "_E")`;
+        $article-with-suffix = `concat ($article-uc, "E")`;
         @"name" = $article-with-suffix;
       }
     }

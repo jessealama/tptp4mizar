@@ -158,8 +158,9 @@ tpl [source] {
     }
     if [non-logical-data[@name = "skolemize"]] {
       $aid-uc = uc (#s = $article);
+      $aid-with-suffix = `concat ($aid-uc, "E")`;
       <Definition-Reference {
-        @spelling = $aid-uc;
+        @spelling = $aid-with-suffix;
         @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]) + 1`;
       }
     }

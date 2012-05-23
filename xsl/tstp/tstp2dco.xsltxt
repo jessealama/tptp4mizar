@@ -106,7 +106,7 @@ tpl [tstp] {
       }
       if [not($background-article-name = "")] {
         $background-article-uc = uc (#s = $background-article-name);
-        $background-with-suffix = `concat ($background-article-uc, "_E")`;
+        $background-with-suffix = `concat ($background-article-uc, "E")`;
         <ArticleID {
           @"name" = $background-with-suffix;
         }
