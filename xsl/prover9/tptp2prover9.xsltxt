@@ -34,9 +34,9 @@ tpl [/] {
 }
 
 tpl [tstp] {
+  // "op(400,infix,\"|\")."; "\n";
   "set(prolog_style_variables)."; "\n";
   // "op(400,infix,\"&\")."; "\n";
-  "op(400,infix,\"|\")."; "\n";
   // "op(400,infix,\"->\")."; "\n";
   "op(400,infix,\"<->\")."; "\n";
   "redeclare(negated_equality,\"@\")."; "\n";
@@ -45,7 +45,7 @@ tpl [tstp] {
   // "redeclare(negation,\"not\")."; "\n";
   "op(ordinary,[\"@\"])."; "\n";
   "op(ordinary,[\"&\"])."; "\n";
-  // "op(ordinary,[\"|\"])."; "\n";
+  "op(ordinary,[\"|\"])."; "\n";
   // "op(ordinary,[\"->\"])."; "\n";
   "op(ordinary,[\"implies\"])."; "\n";
   // "op(ordinary,[\"equivalent\"])."; "\n";
@@ -97,8 +97,8 @@ tpl [conjunction] {
 }
 
 tpl [disjunction] {
-  // "|("; apply [*[1]]; ","; apply [*[2]]; ")";
-  "("; apply [*[1]]; " | "; apply [*[2]]; ")";
+  "|("; apply [*[1]]; ","; apply [*[2]]; ")";
+  // "("; apply [*[1]]; " | "; apply [*[2]]; ")";
 }
 
 tpl [negation] {
