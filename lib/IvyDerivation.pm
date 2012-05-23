@@ -38,6 +38,7 @@ sub to_miz {
     my $directory = shift;
     my $article_name = shift;
     my $source_article_name = shift;
+    my $source_tptp = shift;
     my $options_ref = shift;
 
     my %options = defined $options_ref ? %{$options_ref} : ();
@@ -74,9 +75,13 @@ sub to_miz {
 		 'article' => $article_name,
 		 'prel-directory' => $prel_subdir_full,
 		 'shape' => $shape,
-		 'background' => defined $source_article_name ?
+		 'background-article-name' => defined $source_article_name ?
 		     $source_article_name
 			 : $EMPTY_STRING,
+		 'background-tptp-xml' => defined $source_tptp ?
+		     $source_tptp
+			 : $EMPTY_STRING,
+
 	     });
 
     }
