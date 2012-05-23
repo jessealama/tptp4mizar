@@ -4,11 +4,44 @@ output method="xml" indent="yes";
 output omit-xml-declaration="no";
 
 //////////////////////////////////////////////////////////////////////
+// Stylesheet parameters
+//////////////////////////////////////////////////////////////////////
+
+#original = { ""; }
+
+//////////////////////////////////////////////////////////////////////
+// Utilities
+//////////////////////////////////////////////////////////////////////
+
+tpl arg-types {
+  <ArgTypes {
+    for-each [*] {
+      set ();
+    }
+  }
+}
+
+tpl visible {
+  <Visible {
+    for-each [*] {
+      <Int {
+        @x = `position()`;
+      }
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
 // Templates
 //////////////////////////////////////////////////////////////////////
 
 tpl [tstp] {
+
   $article-uc = uc (#s = `$article`);
+  $original-uc = uc (#s = $original);
+  $article-with-suffix = `concat ($article-uc, "_E")`;
+  $original-with-suffix = `concat ($original-uc, "_E")`;
+
   $num-predicates
     = `count(descendant::predicate[not(@name = "=")
                                    and not(@name = preceding::predicate/@name)])`;
@@ -79,18 +112,8 @@ tpl [function] (#nr, #constrnr, #aid) {
       @leftargnr = "0";
       @spelling = `@name`;
     }
-    <ArgTypes {
-      for-each [*] {
-        set ();
-      }
-    }
-    <Visible {
-      for-each [*] {
-        <Int {
-          @x = `position()`;
-        }
-      }
-    }
+    arg-types ();
+    visible ();
   }
 }
 
@@ -108,17 +131,7 @@ tpl [predicate] (#nr, #constrnr, #aid) {
       @leftargnr = "0";
       @spelling = `@name`;
     }
-    <ArgTypes {
-      for-each [*] {
-        set ();
-      }
-    }
-    <Visible {
-      for-each [*] {
-        <Int {
-          @x = `position()`;
-        }
-      }
-    }
+    arg-types ();
+    visible ();
   }
 }
