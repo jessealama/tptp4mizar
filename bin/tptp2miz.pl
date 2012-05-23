@@ -100,6 +100,7 @@ my $opt_nested = 0;
 my $opt_style = 'tstp';
 my $opt_article_name = 'proof';
 my $opt_source_article_name = undef;
+my $opt_source_tptp = undef;
 
 my $options_ok = GetOptions (
     "db=s"     => \$db,
@@ -110,7 +111,8 @@ my $options_ok = GetOptions (
     'nested' => \$opt_nested,
     'style=s' => \$opt_style,
     'article-name=s' => \$opt_article_name,
-    'source-article=s' => \$opt_source_article_name,
+    'source-article-name=s' => \$opt_source_article_name,
+    'source-tptp=s', \$opt_source_tptp,
 );
 
 if (! $options_ok) {
@@ -262,6 +264,7 @@ if ($opt_style eq 'eprover') {
 $derivation->to_miz ($db,
 		     $opt_article_name,
 		     $opt_source_article_name,
+		     $opt_source_tptp,
 		     { 'shape' => $opt_nested ? 'nested' : 'flat' });
 
 my $repair_script = "$RealBin/mrepair.pl";
