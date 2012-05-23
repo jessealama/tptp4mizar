@@ -56,9 +56,9 @@ tpl count-new-functions (#candidates) {
   if [$candidates] {
     $candidate = `$candidates[1]`;
     $candidate-name = `$candidate/@name`;
-    $count-rest = count-new-predicates (#candidates = `$candidates[position() > 1]`);
+    $count-rest = count-new-functions (#candidates = `$candidates[position() > 1]`);
     for-each [document ($background-tptp-xml, /tstp)] {
-      if [descendant::function[@name = $candidate-name]] {
+      if [descendant::function[@name = $candidate-name][1]] {
         `$count-rest`;
       } else {
         `$count-rest + 1`;
