@@ -301,7 +301,7 @@ tpl next-inacc-begin (#recs) {
   if [contains ($recs, $pseudo-token)] {
     $before-pseudo-token = `substring-before ($recs, $pseudo-token)`;
     substring-after-final (#string = $before-pseudo-token,
-    			   #substring = ",");
+                           #substring = ",");
   } else {
     "";
   }
@@ -312,7 +312,7 @@ tpl next-inacc-end (#recs) {
   if [contains ($recs, $pseudo-token)] {
     $before-pseudo-token = `substring-before ($recs, $pseudo-token)`;
     substring-after-final (#string = $before-pseudo-token,
-    			   #substring = ",");
+                           #substring = ",");
   } else {
     "";
   }
@@ -352,8 +352,8 @@ tpl within-inacc-block-1 (#line, #col, #recs) {
             "0";
           } else {
             within-inacc-block-1 (#line = $line,
-	    			  #col = $col,
-				  #recs = `concat (",", $after-pseudo-token)`);
+                                  #col = $col,
+                                  #recs = `concat (",", $after-pseudo-token)`);
           }
         }
       }
@@ -403,7 +403,7 @@ tpl [Label[@spelling]] (#ignore-inacc) {
     $after-token = `substring-after ($recommendations, $pseudo-token)`;
     $recommendation = `substring-before ($after-token, ",")`;
     consider-recommendation (#recommendation = $recommendation,
-    			     #ignore-inacc = $ignore-inacc);
+                             #ignore-inacc = $ignore-inacc);
   } else {
     <Label {
       for-each [@*] { copy-of `.`; }
@@ -500,7 +500,7 @@ tpl [Local-Reference[@line and @col]] (#ignore-inacc) {
     $after-token = `substring-after ($recommendations, $pseudo-token)`;
     $recommendation = `substring-before ($after-token, ",")`;
     consider-recommendation (#recommendation = $recommendation,
-    			     #ignore-inacc = $ignore-inacc);
+                             #ignore-inacc = $ignore-inacc);
   } else {
     <Local-Reference {
       for-each [@*] { copy-of `.`; }
@@ -516,7 +516,7 @@ tpl [Definition-Reference[@line and @col]] (#ignore-inacc) {
     $after-token = `substring-after ($recommendations, $pseudo-token)`;
     $recommendation = `substring-before ($after-token, ",")`;
     consider-recommendation (#recommendation = $recommendation,
-    			     #ignore-inacc = $ignore-inacc);
+                             #ignore-inacc = $ignore-inacc);
   } else {
     <Definition-Reference {
       for-each [@*] { copy-of `.`; }
@@ -532,7 +532,7 @@ tpl [Theorem-Reference[@line and @col]] (#ignore-inacc) {
     $after-token = `substring-after ($recommendations, $pseudo-token)`;
     $recommendation = `substring-before ($after-token, ",")`;
     consider-recommendation (#recommendation = $recommendation,
-    			     #ignore-inacc = $ignore-inacc);
+                             #ignore-inacc = $ignore-inacc);
   } else {
     <Theorem-Reference {
       for-each [@*] { copy-of `.`; }
@@ -550,7 +550,7 @@ tpl [Straightforward-Justification[Link and @line and @col]] (#ignore-inacc) {
       $after-token = `substring-after ($recommendations, $pseudo-token)`;
       $recommendation = `substring-before ($after-token, ",")`;
       consider-recommendation (#recommendation = $recommendation,
-      			     #ignore-inacc = $ignore-inacc);
+                               #ignore-inacc = $ignore-inacc);
       apply [*[not(self::Link)]] (#ignore-inacc = $ignore-inacc);
     } else {
       apply [*] (#ignore-inacc = $ignore-inacc);
