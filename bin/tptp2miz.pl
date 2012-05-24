@@ -201,7 +201,7 @@ copy ($tptp_file, $tptp_file_in_db)
 my $tptp_xml_in_db = "${db}/${opt_article_name}.xml";
 tptp_fofify ($tptp_file_in_db, $tptp_file_in_db);
 tptp_xmlize ($tptp_file_in_db, $tptp_xml_in_db);
-normalize_variables ($tptp_xml_in_db);
+# normalize_variables ($tptp_xml_in_db);
 
 my $sort_tstp_stylesheet = "${TSTP_STYLESHEET_HOME}/sort-tstp.xsl";
 my $dependencies_stylesheet = "${TSTP_STYLESHEET_HOME}/tstp-dependencies.xsl";
