@@ -1,0 +1,58 @@
+stylesheet "1.0";
+include "../utils/strings.xsl";
+include "../utils/copy.xsl";
+output method="xml" indent="yes";
+
+//////////////////////////////////////////////////////////////////////
+// Stylesheet parameters
+//////////////////////////////////////////////////////////////////////
+
+// A token string listing the errors that should be repaired.  The
+// tokens of the token string should look like
+//
+// <line-number>:<column-number>:<error-number>
+#errors = { ""; }
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+tpl [*] {
+  $n = `name (.)`;
+  <$n {
+    for-each [@*] { copy-of `.`; }
+    apply [*];
+  }
+}
+
+tpl [/] {
+  if [Text-Proper] {
+    apply [Text-Proper];
+  } else {
+    msg terminate="yes" "Error: the required Text-Proper document element is missing.";
+  }
+}
+
+tpl [Straightforward-Justification] {
+  $line = `@line`;
+  $col = `@col`;
+  $pseudo-token = `concat (",", $line, ":", $col, ":")`;
+  if [contains ($errors, $pseudo-token)] {
+    <Straightforward-Justification {
+      <Theorem-Reference {
+        for-each [ancestor::Item[Proposition/Label][1]] {
+          for-each [Proposition] {
+            for-each [Label] {
+              $label = `@spelling`;
+              $label-uc = uc (#s = $label);
+              @spelling = $label-uc;
+              @"number" = "1";
+            }
+          }
+        }
+      }
+    }
+  } else {
+    apply [.] mode="copy";
+  }
+}
