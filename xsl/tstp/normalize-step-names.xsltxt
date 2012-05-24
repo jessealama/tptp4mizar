@@ -15,8 +15,8 @@ output method="xml" indent="yes";
 // Keys
 //////////////////////////////////////////////////////////////////////
 
-key "non-axioms" [formula[@name and not(@status = "axiom")]] `@name`;
-key "axioms" [formula[@name and @status = "axiom"]] `@name`;
+key "non-axioms" [formula[not(@status = "axiom")]] `@name`;
+key "axioms" [formula[@status = "axiom"]] `@name`;
 
 //////////////////////////////////////////////////////////////////////
 // Templates
