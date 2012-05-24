@@ -14,7 +14,7 @@ output method="xml" indent="yes";
 // Keys
 //////////////////////////////////////////////////////////////////////
 
-key "axiom" [formula[@name and @status = "axiom"]] `@name`;
+key "axiom" [formula[@status = "axiom"]] `@name`;
 key "formulas" [formula[@name]] `@name`;
 
 //////////////////////////////////////////////////////////////////////
