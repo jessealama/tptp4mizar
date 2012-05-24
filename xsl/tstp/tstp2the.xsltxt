@@ -317,7 +317,9 @@ tpl [function[@name]] (#variable-alist) mode="render-definiens" {
         for-each [descendant::function[@name = $n][1]] {
           $position
             = `count (preceding::function[not(@name = preceding::function/@name)
-                                          and not(@name = ancestor::function/@name)])
+                                          and not(@name = ancestor::function/@name)]
+                      | ancestor::function[not(@name = preceding::function/@name)
+                                           and not(@name = ancestor::function/@name)])
                + 1`;
           @nr = $position;
         }
@@ -326,7 +328,11 @@ tpl [function[@name]] (#variable-alist) mode="render-definiens" {
       for-each [document ($background-tptp-xml, /tstp)] {
         if [descendant::function[@name = $n][1]] {
           for-each [descendant::function[@name = $n][1]] {
-            $position = `count (preceding::function[not(@name = preceding::function/@name)]) + 1`;
+            $position
+              = `count (preceding::function[not(@name = preceding::function/@name)
+                                            and not(@name = ancestor::function/@name)]
+                        | ancestor::function[not(@name = preceding::function/@name)
+                                             and not(@name = ancestor::function/@name)]) + 1`;
             @nr = `$position`;
           }
         } else {
