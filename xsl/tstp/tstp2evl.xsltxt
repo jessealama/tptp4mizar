@@ -59,6 +59,57 @@ tpl maybe-emit-background-ident {
   }
 }
 
+tpl any-new-function-1 (#candidates) {
+  if [$candidates] {
+    $candidate = `$candidates[1]`;
+    $candidate-name = `$candidate/@name`;
+    for-each [document ($background-tptp-xml, /tstp)] {
+      if [not(descendant::function[@name = $candidate-name])] {
+        "1";
+      } else {
+        any-new-function-1 (#candidates = `$candidates[position() > 1]`);
+      }
+    }
+  } else {
+    "0";
+  }
+}
+
+tpl any-new-function {
+  any-new-function-1 (#candidates = `descendant::function[not(@name = preceding::function/@name) and not(@name = ancestor::function/@name)]`);
+}
+
+tpl any-new-predicate-1 (#candidates) {
+  if [$candidates] {
+    $candidate = `$candidates[1]`;
+    $candidate-name = `$candidate/@name`;
+    for-each [document ($background-tptp-xml, /tstp)] {
+      if [not(descendant::predicate[@name = $candidate-name])] {
+        "1";
+      } else {
+        any-new-predicate-1 (#candidates = `$candidates[position() > 1]`);
+      }
+    }
+  } else {
+    "0";
+  }
+}
+
+tpl any-new-predicate {
+  any-new-predicate-1 (#candidates = `descendant::predicate[not(@name = "=")
+                                                            and not(@name = preceding::predicate/@name)]`);
+}
+
+tpl any-new-constructor {
+  $any-new-function = any-new-function ();
+  if [$any-new-function = "1"] {
+    msg "new function";
+    "1";
+  } else {
+    any-new-predicate ();
+  }
+}
+
 tpl [tstp] {
   $article-uc = uc (#s = $article);
   $article-with-suffix = `concat ($article-uc, "E")`;
@@ -75,12 +126,36 @@ tpl [tstp] {
     <Directive {
       @"name" = "Notations";
       maybe-emit-background-ident ();
-      ident (#s = $article-with-suffix);
+      // Is there any new notation at all?
+      if [$background-article-name = ""] {
+        ident (#s = $article-with-suffix);
+      } else {
+        msg "looking for new stuff";
+        $anything = any-new-constructor ();
+        if [$anything = "1"] {
+          msg "new constructor";
+          ident (#s = $article-with-suffix);
+        } else {
+          msg "no new notations";
+        }
+      }
     }
     <Directive {
       @"name" = "Constructors";
       maybe-emit-background-ident ();
-      ident (#s = $article-with-suffix);
+      // Is there any new notation at all?
+      if [$background-article-name = ""] {
+        ident (#s = $article-with-suffix);
+      } else {
+        msg "looking for new stuff";
+        $anything = any-new-constructor ();
+        if [$anything = "1"] {
+          msg "new constructor";
+          ident (#s = $article-with-suffix);
+        } else {
+          msg "no new notations";
+        }
+      }
     }
     <Directive {
       @"name" = "Theorems";
