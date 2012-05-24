@@ -151,7 +151,8 @@ tpl [formula] (#label) mode="reiterate" {
 tpl [source] {
   for-each [non-logical-data[@name = "inference"]] {
     for-each [non-logical-data[position() = last()]] {
-      for-each [*[@name]] {
+      for-each [descendant::*[@name]] {
+        msg "hey";
         $n = `@name`;
         // Is this a known formula?  If it is, then emit a reference
         // to it.  Otherwise, just skip it.
