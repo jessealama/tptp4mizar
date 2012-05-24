@@ -1,0 +1,57 @@
+stylesheet "1.0";
+include "../utils/token-strings.xsl";
+include "../utils/strings.xsl";
+output method="xml" indent="yes";
+
+//////////////////////////////////////////////////////////////////////
+// Stylesheet parameter
+//////////////////////////////////////////////////////////////////////
+
+#new-theorems = { ""; }
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+tpl [*] {
+  $n = `name (.)`;
+  <$n {
+    for-each [@*] { copy-of `.`; }
+    apply [*];
+  }
+}
+
+tpl [/] {
+  if [Environ] {
+    apply [Environ];
+  } else {
+    msg terminate="yes" "Error: the required Environ document element is missing.";
+  }
+}
+
+tpl emit-new-theorems (#theorems) {
+  $empty = token-string-is-empty (#token-string = $theorems);
+  if [$empty = "1"] {
+    // we're done
+  } else {
+    $head = token-string-head (#token-string = $theorems);
+    $head-uc = uc (#s = $head);
+    $tail = token-string-tail (#token-string = $theorems);
+    <Ident {
+      @"name" = $head-uc;
+    }
+    emit-new-theorems (#theorems = $tail);
+  }
+}
+
+tpl [Directive[@name = "Theorems"]] {
+  <Directive {
+    for-each [@*] { copy-of `.`; }
+    for-each [*] {
+      apply [.];
+    }
+    if [not($new-theorems = "")] {
+      emit-new-theorems (#theorems = $new-theorems);
+    }
+  }
+}
