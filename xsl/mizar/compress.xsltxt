@@ -118,6 +118,17 @@ tpl consider-recommendation (#recommendation, #ignore-inacc) {
         }
       }
     }
+    when [$recommendation = "607"] {
+      $line = `@line`;
+      $col = `@col`;
+      $message = `concat ("607 recommendation at line ", $line, " and column ", $col, " accepted; rewriting proof as a straightforward justification.")`;
+      msg $message;
+      <Straightforward-Justification {
+        for-each [descendant::Theorem-Reference | descendant::Definition-Reference | descendant::Local-Reference] {
+          apply [.] mode="copy";
+        }
+      }
+    }
     when [$recommendation = "610" and not($ignore-inacc = "1")] {
       // Start to ignore some formulas (inacc)
       msg "Starting to ignore inaccessible formulas...";
@@ -421,6 +432,23 @@ tpl [Block[@kind = "Proof" and Item[1][@kind = "Conclusion"]]] (#ignore-inacc) {
   for-each [Item[@kind = "Conclusion"]] {
     for-each [Straightforward-Justification] {
       apply [.] (#ignore-inacc = $ignore-inacc);
+    }
+  }
+}
+
+tpl [Block[@kind = "Proof"]] (#ignore-inacc) {
+  $line = `@line`;
+  $col = `@col`;
+  $pseudo-token = `concat (",", $line, ":", $col, ":")`;
+  if [contains ($recommendations, $pseudo-token)] {
+    $after-token = `substring-after ($recommendations, $pseudo-token)`;
+    $recommendation = `substring-before ($after-token, ",")`;
+    consider-recommendation (#recommendation = $recommendation,
+                             #ignore-inacc = $ignore-inacc);
+  } else {
+    <Block {
+      for-each [@*] { copy-of `.`; }
+      apply [*] (#ignore-inacc = $ignore-inacc);
     }
   }
 }
