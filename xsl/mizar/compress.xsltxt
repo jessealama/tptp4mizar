@@ -520,6 +520,28 @@ tpl [Item[Block]] (#ignore-inacc) {
   }
 }
 
+// a block whose sole item is a conclusion.  Replace the proof by a straightforward justification
+tpl [Item[@kind = "Regular-Statement" and @shape = "Diffuse-Statement" and Block[@kind = "Now-Reasoning" and Item[1][@kind = "Conclusion"]]]] (#ignore-inacc) {
+  $line = `@line`;
+  $col = `@col`;
+  $message = `concat ("Replacing a diffuse statement whose diffuse reasoning block contains a single item by a straightforward justification at line ", $line, " and column ", $col)`;
+  msg $message;
+  <Item {
+    @kind = "Regular-Statement";
+    @shape = "Compact-Statement";
+    for-each [Block[@kind = "Now-Reasoning"]] {
+      for-each [Item[@kind = "Conclusion"]] {
+        for-each [Proposition] {
+          apply [.] mode="copy";
+        }
+        for-each [Straightforward-Justification] {
+          apply [.] (#ignore-inacc = $ignore-inacc);
+        }
+      }
+    }
+  }
+}
+
 tpl [Local-Reference[@line and @col]] (#ignore-inacc) {
   $line = `@line`;
   $col = `@col`;
