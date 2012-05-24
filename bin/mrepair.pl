@@ -116,8 +116,8 @@ sub process_commandline {
 	my $message = 'Unknown derivation style \'' . $opt_style . '\'.  The available styles are:' . $LF . $LF;
 	$message .= summarize_styles ();
 	pod2usage (
-	    -message => error_message ($message),
 	    -exitval => 1,
+	    -message => error_message ($message),
 	);
     }
 
