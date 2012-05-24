@@ -237,12 +237,6 @@ apply_stylesheet ($normalize_step_names_stylesheet,
 		  $tptp_xml_in_db,
 		  $tptp_xml_in_db);
 
-# Nomalize the skolems
-my $normalize_skolems_stylesheet = "${EPROVER_STYLESHEET_HOME}/normalize-skolems.xsl";
-apply_stylesheet ($normalize_skolems_stylesheet,
-		  $tptp_xml_in_db,
-		  $tptp_xml_in_db);
-
 my $tptp_dirname = dirname ($tptp_file);
 
 # XMLize the TPTP file and save it under a temporary file
