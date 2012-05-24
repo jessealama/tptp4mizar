@@ -115,10 +115,14 @@ tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-
       for-each [source] {
         for-each [non-logical-data[@name = "inference"]] {
           for-each [non-logical-data[position() = last()]] {
-            for-each [non-logical-data[@name] | number[@name]] {
+            for-each [descendant::*[@name]] {
               $n = `@name`;
-              <Local-Reference {
-                @spelling = $n;
+              if [key ("formulas", $n)] {
+                <Local-Reference {
+                  @spelling = $n;
+                }
+              } else {
+                msg `concat ("Warning: unknown formula '", $n, "'.")`;
               }
             }
           }
@@ -150,9 +154,15 @@ tpl [formula[@name and not(source/non-logical-data[@name = "inference"]/non-logi
 tpl [source] {
   for-each [non-logical-data[@name = "inference"]] {
     for-each [non-logical-data[position() = last()]] {
-      for-each [non-logical-data[@name] | number[@name]] {
-        <Local-Reference {
-          @spelling = `@name`;
+      for-each [descendant::*[@name]] {
+        $n = `@name`;
+        msg `concat ("Considering '", $n, "'")`;
+        if [key ("formulas", $n)] {
+          <Local-Reference {
+            @spelling = `@name`;
+          }
+        } else {
+          msg `concat ("Warning (eprover2wsx): unknown formula '", $n, "'.")`;
         }
       }
     }
