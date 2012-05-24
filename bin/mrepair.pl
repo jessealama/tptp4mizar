@@ -153,6 +153,7 @@ my $article_basename = basename ($article_full, '.miz');
 my $article_miz = "text/${article_basename}.miz";
 my $article_err = "text/${article_basename}.err";
 my $article_wsx = "text/${article_basename}.wsx";
+my $article_evl = "text/${article_basename}.evl";
 
 my $makeenv_ok = run_mizar_tool ('makeenv', $article_miz);
 
@@ -340,6 +341,43 @@ foreach my $problem (@problems) {
     say 'done.';
 
 }
+
+my $patch_stylesheet = "$RealBin/../xsl/mizar/patch.xsl";
+apply_stylesheet ($patch_stylesheet,
+		  $article_wsx,
+		  $article_wsx,
+		  {
+		      'errors' => $err_token_string,
+		  }
+	      );
+
+my @problem_names = map { scalar $_->findvalue ('@name') } @problems;
+
+my $problems_as_tokens = ',' . join (',', @problem_names) . ',';
+
+my $add_to_evl_stylesheet = "$RealBin/../xsl/mizar/add-theorems-to-evl.xsl";
+apply_stylesheet ($add_to_evl_stylesheet,
+		  $article_evl,
+		  $article_evl,
+		  {
+		      'new-theorems' => $problems_as_tokens,
+		  }
+	      );
+
+my $pp_stylesheet = "$RealBin/../xsl/mizar/pp.xsl";
+apply_stylesheet ($pp_stylesheet,
+		  $article_wsx,
+		  $article_miz,
+		  {
+		      'indenting' => '1',
+		      'evl' => $article_evl,
+		  }
+	      );
+
+# Weird: Mizar is fussy about line and column info in the .evl
+unlink $article_evl;
+
+exit $?;
 
 __END__
 
