@@ -62,7 +62,7 @@ Readonly my %STYLES => (
 sub summarize_styles {
     my $summary = $EMPTY_STRING;
     foreach my $style (sort keys %STYLES) {
-	$summary .= '  * ' . colored ($style, $STYLE_COLOR);
+	$summary .= '  * ' . colored ($style, $STYLE_COLOR) . "\N{LF}";
     }
     return $summary;
 }
