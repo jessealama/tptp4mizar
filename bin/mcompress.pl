@@ -44,7 +44,7 @@ Readonly my @DANGEROUS_ENHANCERS => (
     'relprem',
 );
 Readonly my @SAFE_ENHANCERS => (
-    # 'trivdemo',
+    'trivdemo',
     'chklab',
     'inacc',
 );
