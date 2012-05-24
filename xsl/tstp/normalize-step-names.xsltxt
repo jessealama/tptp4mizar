@@ -109,48 +109,86 @@ tpl [formula[@status = "conjecture"]] {
   }
 }
 
-tpl [source[ancestor::formula[@status = "axiom"]]] {
-  <source;
+tpl [*] mode="maybe-rewrite" {
+  $n = `name (.)`;
+  $message = `concat ("Error: we have arrived at an unhandled ", $n, " node in maybe-rewrite mode.")`;
+  apply [.] mode="trace";
+  msg terminate="yes" $message;
 }
 
-tpl [source[ancestor::formula[not(@status = "axiom")]]] {
-  <source {
-    <non-logical-data {
-      for-each [non-logical-data] {
-        for-each [@*] { copy-of `.`; }
-        for-each [non-logical-data[position() < last()]] {
-          apply [.] mode="copy";
-        }
-        for-each [non-logical-data[position() = last()]] {
-          <non-logical-data {
-            for-each [*[@name]] {
-              $n = `@name`;
-              choose {
-                when [key ("axioms", $n)] {
-                  for-each [key ("axioms", $n)] {
-                    <non-logical-data {
-                      $other-position = `count (preceding-sibling::formula[@status = "axiom"]) + 1`;
-                      @"name" = `concat ($axiom-prefix, $other-position)`;
-                    }
-                  }
-                }
-                when [key ("non-axioms", $n)] {
-                  for-each [key ("non-axioms", $n)] {
-                    <non-logical-data {
-                      $other-position = `count (preceding-sibling::formula[not(@status = "axiom")]) + 1`;
-                      @"name" = `concat ($step-prefix, $other-position)`;
-                    }
-                  }
-                }
-                otherwise {
-                  $message = `concat ("Warning: unknown formula '", $n, "'.")`;
-                  msg terminate="no" $message;
-                }
-              }
-            }
+tpl [non-logical-data[@name]] mode="maybe-rewrite" {
+  $n = `@name`;
+  $nld = `.`;
+  choose {
+    when [key ("axioms", $n)] {
+      for-each [key ("axioms", $n)] {
+        <non-logical-data {
+          $other-position = `count (preceding-sibling::formula[@status = "axiom"]) + 1`;
+          @"name" = `concat ($axiom-prefix, $other-position)`;
+          for-each [$nld] {
+            apply [*] mode="maybe-rewrite";
           }
         }
       }
+    }
+    when [key ("non-axioms", $n)] {
+      for-each [key ("non-axioms", $n)] {
+        <non-logical-data {
+          $other-position = `count (preceding-sibling::formula[not(@status = "axiom")]) + 1`;
+          @"name" = `concat ($step-prefix, $other-position)`;
+          for-each [$nld] {
+            apply [*] mode="maybe-rewrite";
+          }
+        }
+      }
+    }
+    otherwise {
+      $message = `concat ("Warning: unknown formula '", $n, "'.")`;
+      msg terminate="no" $message;
+      <non-logical-data {
+        for-each [@*] { copy-of `.`; }
+        apply [*] mode="maybe-rewrite";
+      }
+    }
+  }
+}
+
+tpl [number[@name]] mode="maybe-rewrite" {
+  $n = `@name`;
+  choose {
+    when [key ("axioms", $n)] {
+      for-each [key ("axioms", $n)] {
+        <non-logical-data {
+          $other-position = `count (preceding-sibling::formula[@status = "axiom"]) + 1`;
+          @"name" = `concat ($axiom-prefix, $other-position)`;
+        }
+      }
+    }
+    when [key ("non-axioms", $n)] {
+      for-each [key ("non-axioms", $n)] {
+        <non-logical-data {
+          $other-position = `count (preceding-sibling::formula[not(@status = "axiom")]) + 1`;
+          @"name" = `concat ($step-prefix, $other-position)`;
+        }
+      }
+    }
+    otherwise {
+      $message = `concat ("Warning: unknown formula '", $n, "'.")`;
+      msg terminate="no" $message;
+    }
+  }
+}
+
+tpl [non-logical-data[not(@name)]] mode="maybe-rewrite" {
+  <non-logical-data {
+    apply [*] mode="maybe-rewrite";
+  }
+}
+
+tpl [source] {
+  <source {
+    for-each [*] {
+      apply [.] mode="maybe-rewrite";
     }
   }
 }
