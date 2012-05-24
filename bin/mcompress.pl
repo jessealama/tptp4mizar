@@ -448,6 +448,8 @@ copy ($article_miz, $article_miz_copy)
 move ($fresh_article, $article_miz)
     or die error_message ('Unable to rename the compressed article', $SP, $fresh_article, $SP, 'to \'',  $article_miz, '\':', $SP, $!);
 
+run_mizar_tool ('wsmparser', $article_miz);
+
 my @compressed_files = glob "${article_dirname}/compress.*";
 
 foreach my $file (@compressed_files) {
