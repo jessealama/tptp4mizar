@@ -101,6 +101,7 @@ my $opt_style = 'tstp';
 my $opt_article_name = 'proof';
 my $opt_source_article_name = undef;
 my $opt_source_tptp = undef;
+my $opt_repair = 1;
 
 my $options_ok = GetOptions (
     "db=s"     => \$db,
@@ -112,7 +113,8 @@ my $options_ok = GetOptions (
     'style=s' => \$opt_style,
     'article-name=s' => \$opt_article_name,
     'source-article-name=s' => \$opt_source_article_name,
-    'source-tptp=s', \$opt_source_tptp,
+    'source-tptp=s' => \$opt_source_tptp,
+    'repair!' => \$opt_repair,
 );
 
 if (! $options_ok) {
@@ -266,6 +268,10 @@ $derivation->to_miz ($db,
 		     $opt_source_article_name,
 		     $opt_source_tptp,
 		     { 'shape' => $opt_nested ? 'nested' : 'flat' });
+
+exit 0 if $opt_style eq 'tptp'; # we don't try to check TPTP problems
+
+exit 0 if ! $opt_repair;
 
 my $repair_script = "$RealBin/mrepair.pl";
 
