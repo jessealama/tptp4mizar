@@ -193,7 +193,7 @@ if (! -d $db) {
 }
 
 my $tptp_file_basename = basename ($tptp_file);
-my $tptp_file_in_db = "${db}/problem.tptp";
+my $tptp_file_in_db = "${db}/${opt_article_name}.tptp";
 copy ($tptp_file, $tptp_file_in_db)
     or die error_message ('Unable to save a copy of the derivation to', $SP, $db);
 
