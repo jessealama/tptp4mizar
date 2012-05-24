@@ -30,6 +30,7 @@ tpl fragile-recommendation-applied-to-any (#candidates) {
     $token-1 = `concat (",", $candidate-line, ":", $candidate-col, ":", "604", ",")`;
     $token-2 = `concat (",", $candidate-line, ":", $candidate-col, ":", "602", ",")`;
     $token-3 = `concat (",", $candidate-line, ":", $candidate-col, ":", "605", ",")`;
+    $token-4 = `concat (",", $candidate-line, ":", $candidate-col, ":", "603", ",")`;
     choose {
       when [contains ($recommendations, $token-1)] {
         "1";
@@ -38,6 +39,9 @@ tpl fragile-recommendation-applied-to-any (#candidates) {
         "1";
       }
       when [contains ($recommendations, $token-3)] {
+        "1";
+      }
+      when [contains ($recommendations, $token-4)] {
         "1";
       }
       otherwise {
@@ -135,6 +139,9 @@ tpl consider-recommendation (#recommendation, #ignore-inacc) {
         msg "Ignoring irrelevant reference.";
         // ignore
       }
+    }
+    when [$recommendation = "603"] {  // irrelevant linking
+      msg "Ignoring irrelevant linking.";
     }
     otherwise {
       $message = `concat ("Warning: Unable to make sense of the recommendation '", $recommendation, "'.")`;
