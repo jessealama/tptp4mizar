@@ -154,6 +154,12 @@ tpl consider-recommendation (#recommendation, #ignore-inacc) {
     when [$recommendation = "603"] {  // irrelevant linking
       msg "Ignoring irrelevant linking.";
     }
+    when [$recommendation = "706"] {
+      msg "Ignoring irrths recommendation (we cannot handle such errors with this stylesheet)";
+    }
+    when [$recommendation = "709"] {
+      msg "Ignoring irrvoc recommendation (we cannot handle such errors with this stylesheet)";
+    }
     otherwise {
       $message = `concat ("Warning: Unable to make sense of the recommendation '", $recommendation, "'.")`;
       msg terminate="yes" $message;
