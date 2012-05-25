@@ -408,7 +408,7 @@ sub apply_recommendations {
     my @irrths_errors = errors_with_code ($recommendation, "${IRRTHS_ERR_CODE}");
     my @irrvoc_errors = errors_with_code ($recommendation, "${IRRVOC_ERR_CODE}");
 
-    warn 'irrths and irrvoc errors', $LF, Dumper (@irrths_errors), Dumper (@irrvoc_errors);
+    # warn 'irrths and irrvoc errors', $LF, Dumper (@irrths_errors), Dumper (@irrvoc_errors);
 
     my $delete_evl_identifiers_stylesheet = "$RealBin/../xsl/mizar/delete-evl-identifiers.xsl";
     apply_stylesheet ($delete_evl_identifiers_stylesheet,
