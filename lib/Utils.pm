@@ -47,7 +47,9 @@ our @EXPORT_OK = qw(error_message
 		    run_harness
 		    is_file
 		    sort_tstp_solution
-		    normalize_tstp_steps);
+		    normalize_tstp_steps
+		    list_to_token_string
+		    items_of_token_string);
 
 sub error_message {
     return message_with_colored_prefix ('Error', $ERROR_COLOR, @_);
@@ -500,6 +502,36 @@ sub normalize_tstp_steps {
 
     return scalar apply_stylesheet ($NORMALIZE_STEPS_STYLESHEET,
 				    $solution);
+}
+
+sub list_to_token_string {
+    my @items = @_;
+    if (scalar @items == 0) {
+	',,';
+    } else {
+	',' . join (',', @items) . ',';
+    }
+}
+
+sub items_of_token_string {
+    my $token_string = shift;
+
+    my @items = ();
+
+    if ($token_string eq ',,') {
+	if (wantarray) {
+	    return @items;
+	} else {
+	    return \@items;
+	}
+    } else {
+	if ($token_string =~ /\A [,] (.+) [,] \z /) {
+	    my $trimmed_token_string = $1;
+	    return split (',', $trimmed_token_string);
+	} else {
+	    confess 'Unable to make sense of the token string \'', $token_string, '\'.';
+	}
+    }
 }
 
 1;
