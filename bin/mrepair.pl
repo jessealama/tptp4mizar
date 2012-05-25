@@ -377,7 +377,19 @@ apply_stylesheet ($pp_stylesheet,
 # Weird: Mizar is fussy about line and column info in the .evl
 unlink $article_evl;
 
-exit $?;
+$makeenv_ok = run_mizar_tool ('makeenv', $article_miz);
+
+if (! $makeenv_ok) {
+    say {*STDERR} error_message ('makeenv did not exit cleanly working with', $SP, $article_miz);
+    exit 1;
+}
+
+my $verifier_ok = run_mizar_tool ('verifier', $article_miz);
+
+if (! $verifier_ok) {
+    say {*STDERR} error_message ('makeenv did not exit cleanly working with', $SP, $article_miz);
+    exit 1;
+}
 
 __END__
 
