@@ -1,0 +1,42 @@
+stylesheet "1.0";
+include "../utils/token-strings.xsl";
+include "../utils/strings.xsl";
+include "../utils/copy.xsl";
+output method="xml" indent="yes";
+
+//////////////////////////////////////////////////////////////////////
+// Stylesheet parameter
+//////////////////////////////////////////////////////////////////////
+
+#to-delete = { ""; }
+
+//////////////////////////////////////////////////////////////////////
+// Templates
+//////////////////////////////////////////////////////////////////////
+
+tpl [*] {
+  $n = `name (.)`;
+  <$n {
+    for-each [@*] { copy-of `.`; }
+    apply [*];
+  }
+}
+
+tpl [/] {
+  if [Environ] {
+    apply [Environ];
+  } else {
+    msg terminate="yes" "Error: the required Environ document element is missing.";
+  }
+}
+
+tpl [Ident] {
+  $line = `@line`;
+  $col = `@col`;
+  $token = `concat (",", $line, ":", $col, ",")`;
+  if [contains ($to-delete, $token)] {
+
+  } else {
+    apply [.] mode="copy";
+  }
+}

@@ -14,7 +14,7 @@ use Pod::Usage;
 use Getopt::Long;
 use File::Temp qw(tempdir tempfile);
 use Cwd qw(getcwd);
-use Carp qw(croak carp);
+use Carp qw(croak carp confess);
 use IPC::Run qw(harness);
 use IPC::Cmd qw(can_run);
 use File::Copy qw(copy move);
@@ -25,7 +25,9 @@ use List::MoreUtils qw(any);
 use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
 use Utils qw(apply_stylesheet
-	     slurp);
+	     slurp
+	     list_to_token_string
+	     items_of_token_string);
 
 # Strings
 Readonly my $EMPTY_STRING => q{};
@@ -33,6 +35,10 @@ Readonly my $SP => q{ };
 Readonly my $COLON => q{:};
 Readonly my $FS => q{.};
 Readonly my $LF => "\N{LF}";
+
+# Mizar error codes
+Readonly my $IRRTHS_ERR_CODE => 706;
+Readonly my $IRRVOC_ERR_CODE => 709;
 
 # Programs
 Readonly my @CORE_PROGRAMS => (
@@ -47,6 +53,8 @@ Readonly my @SAFE_ENHANCERS => (
     'trivdemo',
     'chklab',
     'inacc',
+    'irrths',
+    'irrvoc',
 );
 Readonly my @ENHANCERS => (@DANGEROUS_ENHANCERS, @SAFE_ENHANCERS);
 
@@ -350,6 +358,32 @@ sub recommend_compressions {
 
 }
 
+sub errors_with_code {
+    my $token_string = shift;
+    my $error_code = shift;
+
+    my @errors = ();
+
+    my @items = items_of_token_string ($token_string);
+
+    foreach my $item (@items) {
+	if ($item =~ / (\d+) [:] (\d+) [:] (\d+) /) {
+	    (my $line, my $col, my $code) = ($1, $2, $3);
+	    if ($code eq $error_code) {
+		push (@errors, "${line}:${col}");
+	    }
+	} else {
+	    confess 'Unable to make sense of the item \'', $item, '\' appearing in the token string \'', $token_string, '\'.';
+	}
+    }
+
+    if (wantarray) {
+	return @errors;
+    } else {
+	return \@errors;
+    }
+}
+
 sub apply_recommendations {
     my $article = shift;
     my $recommendation = shift;
@@ -366,6 +400,30 @@ sub apply_recommendations {
 		      $article_wsx,
 		      {
 			  'recommendations' => $recommendation,
+		      }
+		  );
+
+    # Recommendations from irrths and irrvoc won't be handled by the
+    # WSX stylesheet.  We need to treat them separately.
+    my @irrths_errors = errors_with_code ($recommendation, "${IRRTHS_ERR_CODE}");
+    my @irrvoc_errors = errors_with_code ($recommendation, "${IRRVOC_ERR_CODE}");
+
+    warn 'irrths and irrvoc errors', $LF, Dumper (@irrths_errors), Dumper (@irrvoc_errors);
+
+    my $delete_evl_identifiers_stylesheet = "$RealBin/../xsl/mizar/delete-evl-identifiers.xsl";
+    apply_stylesheet ($delete_evl_identifiers_stylesheet,
+		      $article_evl,
+		      $article_evl,
+		      {
+			  'to-delete' => list_to_token_string (@irrths_errors),
+		      }
+		  );
+
+    apply_stylesheet ($delete_evl_identifiers_stylesheet,
+		      $article_evl,
+		      $article_evl,
+		      {
+			  'to-delete' => list_to_token_string (@irrvoc_errors),
 		      }
 		  );
 
