@@ -197,6 +197,17 @@ tpl [implication] (#variable-alist) mode="render-definiens" {
   }
 }
 
+tpl [reverse-implication] (#variable-alist) mode="render-definiens" {
+  <Not {
+    <And {
+      apply [*[2]] (#variable-alist = $variable-alist) mode="render-definiens";
+      <Not {
+        apply [*[1]] (#variable-alist = $variable-alist) mode="render-definiens";
+      }
+    }
+  }
+}
+
 tpl [equivalence] (#variable-alist) mode="render-definiens" {
   <And {
     <Not {
@@ -212,6 +223,29 @@ tpl [equivalence] (#variable-alist) mode="render-definiens" {
         apply [*[2]] (#variable-alist = $variable-alist) mode="render-definiens";
         <Not {
           apply [*[1]] (#variable-alist = $variable-alist) mode="render-definiens";
+        }
+      }
+    }
+  }
+}
+
+tpl [nonequivalence] (#variable-alist) mode="render-definiens" {
+  <Not {
+    <And {
+      <Not {
+        <And {
+          apply [*[1]] (#variable-alist = $variable-alist) mode="render-definiens";
+          <Not {
+            apply [*[2]] (#variable-alist = $variable-alist) mode="render-definiens";
+          }
+        }
+      }
+      <Not {
+        <And {
+          apply [*[2]] (#variable-alist = $variable-alist) mode="render-definiens";
+          <Not {
+            apply [*[1]] (#variable-alist = $variable-alist) mode="render-definiens";
+          }
         }
       }
     }

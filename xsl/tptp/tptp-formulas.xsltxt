@@ -80,10 +80,26 @@ tpl [implication[count(*) = 2]] {
   }
 }
 
+tpl [reverse-implication[count(*) = 2]] {
+  <Conditional-Formula {
+    apply [*[2]];
+    apply [*[1]];
+  }
+}
+
 tpl [equivalence[count(*) = 2]] {
   <Biconditional-Formula {
     apply [*[1]];
     apply [*[2]];
+  }
+}
+
+tpl [nonequivalence[count(*) = 2]] {
+  <Negated-Formula {
+    <Biconditional-Formula {
+      apply [*[1]];
+      apply [*[2]];
+    }
   }
 }
 
