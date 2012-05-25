@@ -14,7 +14,7 @@ use Pod::Usage;
 use Getopt::Long;
 use File::Temp qw(tempdir tempfile);
 use Cwd qw(getcwd);
-use Carp qw(croak carp);
+use Carp qw(croak carp confess);
 use IPC::Run qw(harness);
 use IPC::Cmd qw(can_run);
 use File::Copy qw(copy move);
