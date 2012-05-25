@@ -391,6 +391,19 @@ if (! $verifier_ok) {
     exit 1;
 }
 
+# Compress the final .miz
+my $compress_script = "$RealBin/mcompress.pl";
+my @compress_call = ($compress_script, $article_miz);
+my $compress_harness = harness (\@compress_call);
+$compress_harness->start ();
+$compress_harness->finish ();
+
+my $compress_exit_code = ($compress_harness->results)[0];
+
+if ((! defined $compress_exit_code) || $compress_exit_code != 0) {
+    say {*STDERR} error_message ('The compression script did not exit cleanly working with', $SP, $article_miz, '. The exit code was', $SP, $compress_exit_code, '.');
+}
+
 __END__
 
 =pod
