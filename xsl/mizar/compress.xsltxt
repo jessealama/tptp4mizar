@@ -616,16 +616,16 @@ tpl [Straightforward-Justification[Link and @line and @col]] (#ignore-inacc) {
 
 // When a straightforward justification refers to the previous
 // statement, make a link
-tpl [Straightforward-Justification[not(Link)]] (#ignore-inacc) {
-  <Straightforward-Justification {
-    for-each [@*] { copy-of `.`; }
-    if [Local-Reference[@spelling = ancestor::Item/preceding-sibling::Item[1]/Proposition/Label/@spelling | ancestor::Item/preceding-sibling::Item[1]/Label/@spelling]] {
-      msg "Adding a link";
-      <Link;
-    }
-    apply [*] (#ignore-inacc = $ignore-inacc);
-  }
-}
+// tpl [Straightforward-Justification[not(Link)]] (#ignore-inacc) {
+//   <Straightforward-Justification {
+//     for-each [@*] { copy-of `.`; }
+//     if [Local-Reference[@spelling = ancestor::Item/preceding-sibling::Item[1]/Proposition/Label/@spelling | ancestor::Item/preceding-sibling::Item[1]/Label/@spelling]] {
+//       msg "Adding a link";
+//       <Link;
+//     }
+//     apply [*] (#ignore-inacc = $ignore-inacc);
+//   }
+// }
 
 tpl [Item[@kind = "Conclusion"]] (#ignore-inacc) {
   // Do not delete conclusions
