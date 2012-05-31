@@ -3,6 +3,14 @@ include "../tstp/tstp2wsx.xsl";
 output method="xml" indent="yes";
 
 //////////////////////////////////////////////////////////////////////
+// Keys
+//////////////////////////////////////////////////////////////////////
+
+key "splits"
+    [formula[source/non-logical-data[@name = "introduced"]/non-logical-data[@name = "definition"]]]
+    `@name`;
+
+//////////////////////////////////////////////////////////////////////
 // Templates
 //////////////////////////////////////////////////////////////////////
 
@@ -157,12 +165,18 @@ tpl [source] {
       for-each [descendant::*[@name]] {
         $n = `@name`;
         msg `concat ("Considering '", $n, "'")`;
-        if [key ("formulas", $n)] {
-          <Local-Reference {
-            @spelling = `@name`;
+        choose {
+          when [key ("splits", $n)] {
+            // ignore
           }
-        } else {
-          msg `concat ("Warning (eprover2wsx): unknown formula '", $n, "'.")`;
+          when [key ("formulas", $n)] {
+            <Local-Reference {
+              @spelling = `@name`;
+            }
+          }
+          otherwise {
+            msg `concat ("Warning (eprover2wsx): unknown formula '", $n, "'.")`;
+          }
         }
       }
     }
