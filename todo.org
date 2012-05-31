@@ -8,9 +8,9 @@
 ** TODO Web frontend for this
 ** TODO Export proofs back from Mizar to TPTP (if possible)
 * Outstanding problems with tptp2mizar
-** Repaired articles are not merged with the original article
+** DONE Repaired articles are not merged with the original article
 *** DONE Names of repaired articles should not all be 'article'
-*** TODO Vocabularies should be uniqueified
-*** TODO Original article needs to have its straightforward justifications rewritten
-*** TODO Repaired articles need to be exported
-*** TODO Ultimate test: whether the repaired original article is now verifiable
+*** DONE Vocabularies should be uniqueified
+*** DONE Original article needs to have its straightforward justifications rewritten
+*** DONE Repaired articles need to be exported
+*** DONE Ultimate test: whether the repaired original article is now verifiable
