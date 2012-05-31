@@ -40,7 +40,7 @@ tpl [tstp] mode="flat" {
     }
     <Block {
       @kind = "Now-Reasoning";
-      for-each [formula[not(@status = "axiom") and not(@status = "conjecture") and source/non-logical-data[@name = "inference"]]] {
+      for-each [formula[not(@status = "axiom") and not(@status = "conjecture") and (source/non-logical-data[@name = "inference"] or source/non-logical-data[@name = "introduced"]/non-logical-data[@name = "definition"])]] {
         choose {
           when [@status = "negated_conjecture" and not(preceding-sibling::formula[@status = "negated_conjecture"])] {
             <Item {
@@ -132,7 +132,7 @@ tpl [formula[@name and source/non-logical-data[@name = "inference"]/non-logical-
   }
 }
 
-tpl [formula[@name and not(source/non-logical-data[@name = "inference"]/non-logical-data[@name = "csr" or @name = "fof_nnf" or @name = "spm"])]] mode="lemma" {
+tpl [formula[@name and not(source/non-logical-data[@name = "inference"]/non-logical-data[@name = "csr" or @name = "fof_nnf" or @name = "spm"]) and not(source/non-logical-data[@status = "introduced"]/non-logical-data[@name = "inference"])]] mode="lemma" {
   <Item {
     @kind = "Regular-Statement";
     @shape = "Compact-Statement";
@@ -172,6 +172,55 @@ tpl [source] {
       <Definition-Reference {
         @spelling = $aid-with-suffix;
         @"number" = `count (preceding::formula[source/non-logical-data[@name = "inference"]/non-logical-data[@name = "skolemize"]]) + 1`;
+      }
+    }
+  }
+}
+
+tpl [formula[source/non-logical-data[@name = "introduced"]/non-logical-data[@name = "definition"]]] mode="lemma" {
+  for-each [*[1]] {
+    if [not(self::equivalence)] {
+      msg terminate="yes" "Error: a predicate is being introduced, but not by an equivalence.";
+    }
+    <Item {
+      @kind = "Private-Predicate-Definition";
+      for-each [*[1]] {
+        choose {
+          when [self::negation] {
+            msg "negation case";
+            if [predicate[@name]] {
+              for-each [predicate[@name]] {
+                <Variable {
+                  @spelling = `@name`;
+                }
+                <Type-List;
+                <Negated-Formula {
+                  for-each [parent::negation] {
+                    apply [following-sibling::*[1]];
+                  }
+                }
+              }
+            } else {
+              $n = `name (.)`;
+              $message = `concat ("Error: Don't know how to handle a ", $n, " node.  Where is the predicate definition?")`;
+              apply [.] (#message = $message) mode="die";
+            }
+          }
+          when [predicate[@name]] {
+            for-each [predicate[@name]] {
+              <Variable {
+                @spelling = `@name`;
+              }
+              <Type-List;
+              apply [following-sibling::*[1]];
+            }
+          }
+          otherwise {
+            $n = `name (.)`;
+            $message = `concat ("Error: Don't know how to handle a ", $n, " node.  Where is the predicate definition?")`;
+            apply [.] (#message = $message) mode="die";
+          }
+        }
       }
     }
   }
