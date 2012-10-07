@@ -142,3 +142,11 @@ tpl [function] {
 tpl [variable] {
   `@name`;
 }
+
+tpl [defined-predicate[@name = "true"]] {
+  "$T";
+}
+
+tpl [defined-predicate[@name = "false"]] {
+  "$F";
+}
