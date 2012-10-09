@@ -131,7 +131,7 @@ if ($help) {
 
 if ($man) {
     pod2usage(
-	-exitstatus => 0,
+	-exitval => 0,
 	-verbose => 2,
     );
 }
@@ -147,10 +147,11 @@ if ($opt_debug) {
 }
 
 if (! defined $STYLES{$opt_style}) {
-    my $message = 'Unknown derivation style \'' . $opt_style . '\'.  The available  styles are:' . $LF . $LF;
-    $message .= message (summarize_styles ());
+    my $message = 'Unknown derivation style \'' . $opt_style . '\'.  The available styles are:' . $LF . $LF;
+    $message .= summarize_styles ();
+    my $error_message = error_message ($message);
     pod2usage (
-	-message => error_message ($message),
+	-message => $error_message,
 	-exitval => 1,
     );
 }
