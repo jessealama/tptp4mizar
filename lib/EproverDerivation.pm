@@ -102,9 +102,9 @@ sub to_miz {
     }
 
     my $pp_stylesheet = "${MIZAR_STYLESHEET_HOME}/pp.xsl";
-    my $evl_path = "${directory}/text/${article_name}.evl";
-    my $wsx_path = "${directory}/text/${article_name}.wsx";
-    my $miz_path = "${directory}/text/${article_name}.miz";
+    my $evl_path = "${directory_full}/text/${article_name}.evl";
+    my $wsx_path = "${directory_full}/text/${article_name}.wsx";
+    my $miz_path = "${directory_full}/text/${article_name}.miz";
 
     return apply_stylesheet ($pp_stylesheet,
 			     $wsx_path,
