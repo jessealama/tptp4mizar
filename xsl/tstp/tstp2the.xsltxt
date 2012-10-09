@@ -386,3 +386,7 @@ tpl [function[@name]] (#variable-alist) mode="render-definiens" {
     apply [*] (#variable-alist = $variable-alist) mode="render-definiens";
   }
 }
+
+tpl [number[@name]] mode="render-definiens" {
+  msg terminate="yes" "Error: we do not handle numbers properly yet.";
+}
