@@ -153,7 +153,7 @@ my $article_basename = basename ($article_full, '.miz');
 my $article_miz = "text/${article_basename}.miz";
 my $article_err = "text/${article_basename}.err";
 my $article_wsx = "text/${article_basename}.wsx";
-my $article_evl = "text/${article_basename}.evl";
+my $article_evl = File::Spec->rel2abs ("text/${article_basename}.evl");
 
 my $makeenv_ok = run_mizar_tool ('makeenv', $article_miz);
 
