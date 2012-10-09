@@ -420,6 +420,12 @@ for:
 
 =item Term::ANSIColor
 
+=item File::Temp
+
+=item XML::LibXML
+
+=item XML::LibXSLT
+
 =item FindBin
 
 =back
