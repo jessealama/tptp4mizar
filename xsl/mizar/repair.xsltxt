@@ -166,7 +166,7 @@ tpl [Text-Proper] (#errs) {
           }
 
           // Gather the premises
-          for-each [*[@spelling]] {
+          for-each [*[@spelling and not(@spelling = following-sibling::*[@spelling]/@spelling)]] {
             $n = `@spelling`;
             choose {
               when [key ("formulas", $n)] {
