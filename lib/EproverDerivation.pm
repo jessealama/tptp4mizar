@@ -50,8 +50,10 @@ sub to_miz {
 
     foreach my $subdir_name ('dict', 'prel', 'text') {
 	my $subdir = "${directory_full}/${subdir_name}";
-	mkdir $subdir
-	    or confess error_message ('Unable to make the \'', $subdir_name, '\' subdirectory of ', $directory_full, '.');
+	if (! -d $subdir) {
+	    mkdir $subdir
+		or confess error_message ('Unable to make the \'', $subdir_name, '\' subdirectory of ', $directory_full, '.');
+	}
     }
 
     my $prel_subdir_full = "${directory_full}/prel";
