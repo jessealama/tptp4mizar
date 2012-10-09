@@ -212,14 +212,23 @@ if ($opt_style ne 'tptp') {
 
     # Sort
     my $dependencies_str = undef;
-    my @xsltproc_deps_call = ('xsltproc', $dependencies_stylesheet, $tptp_xml_in_db);
+    my $temp = File::Temp->new ();
+    my $temp_filename = $temp->filename ();
+    my @raw_dependencies = apply_stylesheet ($dependencies_stylesheet,
+					     $tptp_xml_in_db,
+					     $temp_filename);
     my @tsort_call = ('tsort');
-    my $sort_harness = harness (\@xsltproc_deps_call,
-				'|',
-				\@tsort_call,
+    my $sort_harness = harness (\@tsort_call,
+				'<', $temp_filename,
 				'>', \$dependencies_str);
     $sort_harness->start ();
     $sort_harness->finish ();
+
+    my $sort_exit_code = ($sort_harness->full_results)[0];
+    if ($sort_exit_code != 0) {
+	print {*STDERR} 'tsort did not exit cleanly working with', $LF, $temp_filename;
+	exit 1;
+    }
 
     my @dependencies = split ($LF, $dependencies_str);
     my $dependencies_token_string = ',' . join (',', @dependencies) . ',';
