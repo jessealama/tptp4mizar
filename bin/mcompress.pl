@@ -391,7 +391,8 @@ sub apply_recommendations {
     my $article_dirname = dirname ($article);
     my $article_basename = basename ($article, '.miz');
     my $article_wsx = "${article_dirname}/${article_basename}.wsx";
-    my $article_evl = "${article_dirname}/${article_basename}.evl";
+    my $article_evl
+	= File::Spec->rel2abs ("${article_dirname}/${article_basename}.evl");
     my $article_wsx_temp = "${article_dirname}/${article_basename}.wsx1";
     my $article_miz = "${article_dirname}/${article_basename}.miz";
 
