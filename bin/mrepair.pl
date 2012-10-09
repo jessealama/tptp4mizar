@@ -269,7 +269,7 @@ foreach my $problem (@problems) {
     my $ivy_exit_code = ($ivy_harness->results)[0];
 
     if ($ivy_exit_code != 0) {
-	confess error_message ('The Ivy script did not terminate cleanly when working with', $SP, $problem_path);
+	confess error_message ('The Ivy script did not terminate cleanly when working with', $SP, $problem_path, '.', $LF, 'Its exit code was', $SP, $ivy_exit_code, '.  Here is its error output:', $LF, $ivy_errs);
     }
 
     say 'done.';
