@@ -13,6 +13,7 @@ use IPC::Run qw(harness);
 use IPC::Cmd qw(can_run);
 use List::MoreUtils qw(first_index);
 use XML::LibXML;
+use XML::LibXSLT;
 use FindBin qw($RealBin);
 
 # Strings
@@ -59,98 +60,77 @@ sub warning_message {
     return message_with_colored_prefix ('Warning', $WARNING_COLOR, @_);
 }
 
+sub is_readable_file {
+    my $file = shift;
+    return (-e $file && ! -d $file && -r $file);
+}
+
+Readonly my $RECURSION_DEPTH => 3000;
+
+XML::LibXSLT->max_depth ($RECURSION_DEPTH);
+
+my %parsed_stylesheet_table = ();
+
 sub apply_stylesheet {
 
     my ($stylesheet, $document, $result_path, $parameters_ref) = @_;
 
     if (! defined $stylesheet) {
-	confess ('Error: please supply a stylesheet.');
+	croak ('Error: please supply a stylesheet.');
     }
 
     if (! defined $document) {
-	confess ('Error: please supply a document.');
+	croak ('Error: please supply a document.');
     }
 
-    my %parameters = defined $parameters_ref ? %{$parameters_ref}
-	                                     : ()
-					     ;
+    my %parameters = XML::LibXSLT::xpath_to_string
+	(defined $parameters_ref ? %{$parameters_ref} : () );
 
+    my $parsed_stylesheet = $parsed_stylesheet_table{$stylesheet};
+    if (! defined $parsed_stylesheet) {
+	my $xslt = XML::LibXSLT->new ();
+	my $style_doc = XML::LibXML->load_xml (location => $stylesheet);
+	$parsed_stylesheet = eval { $xslt->parse_stylesheet ($style_doc) };
 
-    if (! is_readable_file ($stylesheet)) {
-	confess ('Error: there is no stylesheet at ', $stylesheet, '.');
-    }
-
-    my @xsltproc_call = ('xsltproc');
-    foreach my $parameter (keys %parameters) {
-	my $value = $parameters{$parameter};
-	push (@xsltproc_call, '--stringparam', $parameter, $value);
-    }
-
-    push (@xsltproc_call, $stylesheet);
-
-    push (@xsltproc_call, '-');
-
-    my $xsltproc_out = '';
-    my $xsltproc_err = '';
-
-    my $xsltproc_harness
-	= harness (\@xsltproc_call,
-		   '<', (is_file ($document) ? $document : \$document),
-		   '>', \$xsltproc_out);
-		   # '2>', \$xsltproc_err);
-
-    $xsltproc_harness->start ();
-    $xsltproc_harness->finish ();
-    my $xsltproc_result = ($xsltproc_harness->result)[0];
-
-    if ($xsltproc_result != 0) {
-	if (scalar keys %parameters == 0) {
-	    if (defined $result_path) {
-		confess ('Error: xsltproc did not exit cleanly when applying the stylesheet', $LF, $LF, $SP, $SP, $stylesheet, $LF, $LF, 'to', $LF, $SP, $SP, $document, $LF, $LF, 'to generate', $LF, $LF, $SP, $SP, $result_path, $LF, $LF, 'Its exit code was ', $xsltproc_result, '. No stylesheet parameters were given.  Here is the error output: ', "\n", $xsltproc_err);
-	    } else {
-		confess ('Error: xsltproc did not exit cleanly when applying the stylesheet', "\n", "\n", '  ', $stylesheet, $LF, $LF, 'to', $LF, $LF, $SP, $SP, $document, $LF, 'Its exit code was ', $xsltproc_result, '. No stylesheet parameters were given.  Here is the error output: ', "\n", $xsltproc_err);
-	    }
-	} else {
-
-	    my $parameters_message = $EMPTY_STRING;
-	    foreach my $parameter (sort keys %parameters) {
-		my $value = $parameters{$parameter};
-		$parameters_message .= $SP . $SP . "${parameter} ==> ${value}" . $LF;
-	    }
-
-	    if (defined $result_path) {
-		confess ('Error: xsltproc did not exit cleanly when applying the stylesheet', "\n", "\n", '  ', $stylesheet, "\n", "\n", 'to', "\n", "\n", '  ', $document, $LF, $LF, 'so that we could generate', $LF, $LF, $SP, $SP, $result_path, $LF, $LF, 'Its exit code was ', $xsltproc_result, '. These were the stylesheet parameters:', $LF, $LF, $parameters_message, $LF, 'Here is the error output: ', $LF, $LF, $xsltproc_err, $LF);
-	    } else {
-		confess ('Error: xsltproc did not exit cleanly when applying the stylesheet', "\n", "\n", '  ', $stylesheet, "\n", "\n", 'to', "\n", "\n", '  ', $document, $LF, $LF, 'Its exit code was ', $xsltproc_result, '. These were the stylesheet parameters:', $LF, $LF, $parameters_message, $LF, 'Here is the error output: ', $LF, $LF, $xsltproc_err, $LF);
-	    }
-
+	if (! defined $parsed_stylesheet) {
+	    croak error_message ('The stylesheet at', $SP, $stylesheet, $SP, 'could not be parsed.');
 	}
 
+	$parsed_stylesheet_table{$stylesheet} = $parsed_stylesheet;
     }
+
+    my $results = undef;
+
+    if ($document =~ /\N{LF}/m) { # looks like a string
+	my $doc = XML::LibXML->load_xml (string => $document);
+	$results = eval { $parsed_stylesheet->transform ($doc, %parameters) };
+    } elsif (-e $document) {
+	$results
+	    = eval { $parsed_stylesheet->transform_file ($document, %parameters) };
+    } else {
+	# default: guess that $document is a string
+	my $doc = XML::LibXML->load_xml (string => $document);
+	$results = eval { $parsed_stylesheet->transform ($doc, %parameters) };
+    }
+
+    if (! defined $results) {
+	croak error_message ('We failed to apply the stylesheet', $LF, $LF, $SP, $SP, $stylesheet, $LF, $LF, 'to', $LF, $LF, $SP, $SP, $document, $SP, '.', $LF, $LF, 'The stylesheet appears to be a valid XML file.  Is the input document valid XML?');
+    }
+
+    my $result_bytes = $parsed_stylesheet->output_as_bytes ($results);
 
     if (defined $result_path) {
-	open (my $result_fh, '>', $result_path)
-	    or confess 'Unable to open an output filehandle for ', $result_path, '.';
-	print {$result_fh} $xsltproc_out
-	    or confess 'Unable to print to the output filehandle for ', $result_path, '.';
-	close $result_fh
-	    or confess 'Unable to close the output filehandle for ', $result_path, '.';
-	return $xsltproc_out;
-    } elsif (wantarray) {
-	# carp 'HEY: wantarray; xsltproc output is ', $xsltproc_out;
-	chomp $xsltproc_out;
-	my @answer = split (/\n/, $xsltproc_out);
-	return @answer;
-    } else {
-	# carp 'HEY: do not wantarray';
-	return $xsltproc_out;
+	open (my $result_fh, '>', $result_path);
+	print {$result_fh} $result_bytes;
+	close $result_fh;
     }
 
-}
+    if (wantarray) {
+	return split ("\N{LF}", $result_bytes);
+    } else {
+	return $result_bytes;
+    }
 
-sub is_readable_file {
-    my $file = shift;
-    return (-e $file && ! -d $file && -r $file);
 }
 
 sub message_with_colored_prefix {
