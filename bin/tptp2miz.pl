@@ -21,6 +21,7 @@ use Term::ANSIColor qw(colored);
 use FindBin qw($RealBin);
 use Data::Dumper;
 use XML::LibXML;
+use File::Temp;
 
 # Our packages
 use lib "$RealBin/../lib";
