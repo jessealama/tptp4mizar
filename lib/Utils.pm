@@ -100,21 +100,25 @@ sub apply_stylesheet {
     }
 
     my $results = undef;
+    my $xslt_err = undef;
 
     if ($document =~ /\N{LF}/m) { # looks like a string
 	my $doc = XML::LibXML->load_xml (string => $document);
 	$results = eval { $parsed_stylesheet->transform ($doc, %parameters) };
+	$xslt_err = $!;
     } elsif (-e $document) {
 	$results
 	    = eval { $parsed_stylesheet->transform_file ($document, %parameters) };
+	$xslt_err = $!;
     } else {
 	# default: guess that $document is a string
 	my $doc = XML::LibXML->load_xml (string => $document);
 	$results = eval { $parsed_stylesheet->transform ($doc, %parameters) };
+	$xslt_err = $!;
     }
 
     if (! defined $results) {
-	croak error_message ('We failed to apply the stylesheet', $LF, $LF, $SP, $SP, $stylesheet, $LF, $LF, 'to', $LF, $LF, $SP, $SP, $document, $SP, '.', $LF, $LF, 'The stylesheet appears to be a valid XML file.  Is the input document valid XML?');
+	croak error_message ('We failed to apply the stylesheet', $LF, $LF, $SP, $SP, $stylesheet, $LF, $LF, 'to', $LF, $LF, $SP, $SP, $document, $SP, '.', $LF, $LF, 'The stylesheet appears to be a valid XML file.  Is the input document valid XML?  The error we got was:', $LF, $LF, $xslt_err);
     }
 
     my $result_bytes = $parsed_stylesheet->output_as_bytes ($results);
